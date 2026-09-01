@@ -690,31 +690,24 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       const SizedBox(height: 18),
-                      SizedBox(
-                        height: 42,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children:
-                              [
-                                    'All',
-                                    'Need Job',
-                                    'Need Worker',
-                                    'Buy Scrap',
-                                    'Sell Scrap',
-                                    'Driver',
-                                  ]
-                                  .map(
-                                    (label) => Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: ChoiceChip(
-                                        label: Text(label),
-                                        selected: filter == label,
-                                        onSelected: (_) =>
-                                            setState(() => filter = label),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            'All',
+                            'Need Job',
+                            'Need Worker',
+                            'Buy Scrap',
+                            'Sell Scrap',
+                            'Driver',
+                          ].map((label) => ChoiceChip(
+                            label: Text(label),
+                            selected: filter == label,
+                            onSelected: (_) => setState(() => filter = label),
+                          )).toList(),
                         ),
                       ),
                       const SizedBox(height: 18),
