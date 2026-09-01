@@ -1,0 +1,8 @@
+.tools/
+.tool-state/
+client/.dart_tool/
+client/build/
+client/android/local.properties
+.env
+.env.*
+!.env.example

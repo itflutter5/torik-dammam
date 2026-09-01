@@ -1,0 +1,12 @@
+.git
+.github
+.tool-state
+.tools
+client/.dart_tool
+client/build
+client/android/.gradle
+client/android/local.properties
+*.log
+.env
+.env.*
+

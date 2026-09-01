@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: scrapmarket-web
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    autoDeployTrigger: commit
+
