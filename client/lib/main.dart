@@ -37,7 +37,9 @@ class ScrapMarketApp extends StatelessWidget {
 }
 
 class PasswordAccessPage extends StatefulWidget {
-  const PasswordAccessPage({super.key});
+  const PasswordAccessPage({super.key, this.registrationMode = false});
+
+  final bool registrationMode;
 
   @override
   State<PasswordAccessPage> createState() => _PasswordAccessPageState();
@@ -48,9 +50,10 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   final phone = TextEditingController(text: '+9665');
   final password = TextEditingController();
   final storeNumber = TextEditingController();
-  bool registering = false;
   bool loading = false;
   bool obscurePassword = true;
+
+  bool get registering => widget.registrationMode;
 
   @override
   void dispose() {
@@ -83,7 +86,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                     ),
                     const SizedBox(height: 22),
                     Text(
-                      'Login / Sign up',
+                      registering ? 'Create account' : 'Login',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.w800),
@@ -171,10 +174,12 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                     TextButton(
                       onPressed: loading
                           ? null
-                          : () => setState(() => registering = !registering),
+                          : registering
+                              ? () => Navigator.of(context).pop(false)
+                              : _openRegistration,
                       child: Text(registering
-                          ? 'Already registered? Login'
-                          : 'New user? Create account'),
+                          ? 'Already registered? Back to login'
+                          : 'New user? Register'),
                     ),
                   ],
                 ),
@@ -222,6 +227,21 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
       if (mounted) setState(() => loading = false);
     }
   }
+
+  Future<void> _openRegistration() async {
+    final registered = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const RegistrationPage()),
+    );
+    if (registered == true && mounted) Navigator.of(context).pop(true);
+  }
+}
+
+class RegistrationPage extends StatelessWidget {
+  const RegistrationPage({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const PasswordAccessPage(registrationMode: true);
 }
 
 class Listing {
