@@ -1,4 +1,19 @@
-FROM ghcr.io/cirruslabs/flutter:3.47.2 AS build
+FROM debian:bookworm-slim AS build
+
+ARG FLUTTER_VERSION=3.47.2
+ARG FLUTTER_SHA256=447878859d01ca9bfdb99a85f245af07ed8a15fedcd9d189c4749e8e92d1f185
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl git unzip xz-utils \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl --fail --location --retry 3 \
+      "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" \
+      --output /tmp/flutter.tar.xz \
+    && echo "${FLUTTER_SHA256}  /tmp/flutter.tar.xz" | sha256sum --check --strict \
+    && tar --extract --xz --file=/tmp/flutter.tar.xz --directory=/opt \
+    && rm /tmp/flutter.tar.xz
+
+ENV PATH="/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:${PATH}"
 
 WORKDIR /app
 COPY client/pubspec.yaml client/pubspec.lock ./
