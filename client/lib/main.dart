@@ -883,10 +883,14 @@ class ListingCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     const Icon(Icons.bookmark_border, size: 21),
-                    const Spacer(),
-                    Chip(
-                      label: Text(listing.type),
-                      visualDensity: VisualDensity.compact,
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Chip(
+                          label: Text(listing.type),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
                     ),
                   ],
                 ),
