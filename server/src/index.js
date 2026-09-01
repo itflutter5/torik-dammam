@@ -117,7 +117,17 @@ app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, 
 
 const staticDirectory = process.env.STATIC_DIR ?? path.resolve('public');
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
-app.use(express.static(staticDirectory));
+app.use(express.static(staticDirectory, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('index.html') ||
+        filePath.endsWith('flutter_bootstrap.js') ||
+        filePath.endsWith('flutter_service_worker.js')) {
+      res.setHeader('Cache-Control', 'no-store');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    }
+  },
+}));
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();
   res.sendFile(path.join(staticDirectory, 'index.html'));
