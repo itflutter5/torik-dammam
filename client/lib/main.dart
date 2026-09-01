@@ -866,33 +866,46 @@ class ListingCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.schedule_outlined,
-                      size: 15,
-                      color: Colors.black45,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      listing.postedAt,
-                      style: const TextStyle(
-                        color: Colors.black54,
-                        fontSize: 12,
+                SizedBox(
+                  height: 40,
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: Row(
+                          key: const Key('post-time-left'),
+                          children: [
+                            const Icon(
+                              Icons.schedule_outlined,
+                              size: 15,
+                              color: Colors.black45,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              listing.postedAt,
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Icon(Icons.bookmark_border, size: 21),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(Icons.bookmark_border, size: 21),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
+                      Positioned(
+                        right: 0,
+                        top: 0,
                         child: Chip(
+                          key: const Key('post-category-right'),
                           label: Text(listing.type),
                           visualDensity: VisualDensity.compact,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 5),
                 Text(
