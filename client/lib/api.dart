@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://localhost:10000',
+  defaultValue: 'http://localhost:10000/api',
 );
 
 class ApiException implements Exception {

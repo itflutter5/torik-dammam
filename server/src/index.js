@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import express from 'express';
 import multer from 'multer';
+import path from 'node:path';
 import { z } from 'zod';
 import { createToken, requireAuth } from './auth.js';
 import { pool } from './db.js';
@@ -49,7 +50,7 @@ app.get('/health', async (_req, res, next) => {
   try { await pool.query('SELECT 1'); res.json({ status: 'ok' }); } catch (error) { next(error); }
 });
 
-app.post('/auth/register', async (req, res, next) => {
+app.post('/api/auth/register', async (req, res, next) => {
   try {
     const input = registerSchema.parse(req.body);
     const passwordHash = await bcrypt.hash(input.password, 12);
@@ -67,7 +68,7 @@ app.post('/auth/register', async (req, res, next) => {
   }
 });
 
-app.post('/auth/login', async (req, res, next) => {
+app.post('/api/auth/login', async (req, res, next) => {
   try {
     const input = loginSchema.parse(req.body);
     const result = await pool.query('SELECT * FROM users WHERE phone = $1', [input.phone]);
@@ -79,7 +80,7 @@ app.post('/auth/login', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-app.get('/posts', async (_req, res, next) => {
+app.get('/api/posts', async (_req, res, next) => {
   try {
     const result = await pool.query(
       `SELECT p.*, u.name AS user_name, u.phone
@@ -90,7 +91,7 @@ app.get('/posts', async (_req, res, next) => {
   } catch (error) { next(error); }
 });
 
-app.get('/posts/mine', requireAuth, async (req, res, next) => {
+app.get('/api/posts/mine', requireAuth, async (req, res, next) => {
   try {
     const result = await pool.query(
       'SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC', [req.auth.sub],
@@ -99,7 +100,7 @@ app.get('/posts/mine', requireAuth, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-app.post('/posts', requireAuth, upload.array('images', 3), async (req, res, next) => {
+app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, next) => {
   try {
     const input = postSchema.parse(req.body);
     const imageUrls = await Promise.all((req.files ?? []).map((file) => uploadImage(file, req.auth.sub)));
@@ -112,6 +113,14 @@ app.post('/posts', requireAuth, upload.array('images', 3), async (req, res, next
     );
     res.status(201).json({ post: result.rows[0] });
   } catch (error) { next(error); }
+});
+
+const staticDirectory = process.env.STATIC_DIR ?? path.resolve('public');
+app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
+app.use(express.static(staticDirectory));
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  res.sendFile(path.join(staticDirectory, 'index.html'));
 });
 
 app.use((error, _req, res, _next) => {

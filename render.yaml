@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: scrapmarket-api
+    name: torik-dammam
     runtime: docker
     plan: free
-    dockerfilePath: ./server/Dockerfile
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     autoDeployTrigger: commit
     envVars:
@@ -16,12 +16,4 @@ services:
       - key: IMAGEKIT_URL_ENDPOINT
         sync: false
       - key: ALLOWED_ORIGINS
-        sync: false
-
-  - type: web
-    name: scrapmarket-web
-    runtime: docker
-    plan: free
-    dockerfilePath: ./Dockerfile
-    healthCheckPath: /
-    autoDeployTrigger: commit
+        value: https://torik-dammam.onrender.com
