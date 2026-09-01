@@ -1,4 +1,4 @@
-FROM ghcr.io/cirruslabs/flutter:stable AS build
+FROM ghcr.io/cirruslabs/flutter:3.47.2 AS build
 
 WORKDIR /app
 COPY client/pubspec.yaml client/pubspec.lock ./
@@ -14,4 +14,3 @@ COPY --from=build /app/build/web /usr/share/nginx/html
 EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=3s \
   CMD wget -qO- http://localhost:10000/ >/dev/null || exit 1
-
