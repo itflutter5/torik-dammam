@@ -2,6 +2,7 @@ FROM debian:bookworm-slim AS build
 
 ARG FLUTTER_VERSION=3.47.2
 ARG FLUTTER_SHA256=447878859d01ca9bfdb99a85f245af07ed8a15fedcd9d189c4749e8e92d1f185
+ARG API_BASE_URL=https://scrapmarket-api.onrender.com
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl git unzip xz-utils \
@@ -22,7 +23,7 @@ COPY client/pubspec.yaml client/pubspec.lock ./
 RUN flutter pub get
 
 COPY client/ ./
-RUN flutter build web --release
+RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
 
 FROM nginx:1.27-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf

@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'api.dart';
 
 void main() => runApp(const ScrapMarketApp());
 
@@ -41,12 +44,20 @@ class PasswordAccessPage extends StatefulWidget {
 }
 
 class _PasswordAccessPageState extends State<PasswordAccessPage> {
+  final name = TextEditingController();
+  final phone = TextEditingController(text: '+9665');
   final password = TextEditingController();
+  final storeNumber = TextEditingController();
+  bool registering = false;
+  bool loading = false;
   bool obscurePassword = true;
 
   @override
   void dispose() {
+    name.dispose();
+    phone.dispose();
     password.dispose();
+    storeNumber.dispose();
     super.dispose();
   }
 
@@ -78,16 +89,40 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                           ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Enter the development password to continue.',
+                    Text(
+                      registering
+                          ? 'Create your marketplace account.'
+                          : 'Log in with your Saudi phone number.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.black54),
                     ),
                     const SizedBox(height: 26),
+                    if (registering) ...[
+                      TextField(
+                        controller: name,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Name',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    TextField(
+                      controller: phone,
+                      keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Saudi phone number',
+                        hintText: '+9665XXXXXXXX',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: password,
                       obscureText: obscurePassword,
-                      onSubmitted: (_) => _enterApp(),
+                      onSubmitted: registering ? null : (_) => _enterApp(),
                       decoration: InputDecoration(
                         labelText: 'Password',
                         hintText: 'Enter any password',
@@ -104,19 +139,42 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                         ),
                       ),
                     ),
+                    if (registering) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: storeNumber,
+                        keyboardType: TextInputType.number,
+                        maxLength: 4,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: const InputDecoration(
+                          labelText: 'Store number',
+                          hintText: '0101',
+                          counterText: '',
+                          prefixIcon: Icon(Icons.store_outlined),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     FilledButton(
-                      onPressed: _enterApp,
-                      child: const Padding(
+                      onPressed: loading ? null : _enterApp,
+                      child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 13),
-                        child: Text('Login'),
+                        child: loading
+                            ? const SizedBox.square(
+                                dimension: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(registering ? 'Create account' : 'Login'),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Phone login will be enabled before release.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black45, fontSize: 12),
+                    TextButton(
+                      onPressed: loading
+                          ? null
+                          : () => setState(() => registering = !registering),
+                      child: Text(registering
+                          ? 'Already registered? Login'
+                          : 'New user? Create account'),
                     ),
                   ],
                 ),
@@ -128,14 +186,41 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     ),
   );
 
-  void _enterApp() {
-    if (password.text.trim().isEmpty) {
+  Future<void> _enterApp() async {
+    if (!RegExp(r'^\+9665\d{8}$').hasMatch(phone.text.trim()) ||
+        password.text.length < (registering ? 8 : 1) ||
+        (registering && (name.text.trim().length < 2 ||
+            !RegExp(r'^\d{4}$').hasMatch(storeNumber.text.trim())))) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a password to continue')),
+        const SnackBar(content: Text(
+          'Check your name, +9665XXXXXXXX phone, password (8+ characters), and 4-digit store number',
+        )),
       );
       return;
     }
-    Navigator.of(context).pop(true);
+    setState(() => loading = true);
+    try {
+      if (registering) {
+        await ApiService.instance.register(
+          name: name.text.trim(), phone: phone.text.trim(),
+          password: password.text, storeNumber: storeNumber.text.trim(),
+        );
+      } else {
+        await ApiService.instance.login(
+          phone: phone.text.trim(), password: password.text,
+        );
+      }
+      if (mounted) Navigator.of(context).pop(true);
+    } on ApiException catch (error) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot connect to the server')),
+      );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
   }
 }
 
@@ -154,6 +239,7 @@ class Listing {
     this.postedDay,
     this.icon,
     this.color,
+    [this.imageUrl]
   );
 
   final String title;
@@ -169,6 +255,7 @@ class Listing {
   final int postedDay;
   final IconData icon;
   final Color color;
+  final String? imageUrl;
 }
 
 const listings = [
@@ -275,6 +362,14 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
   int index = 0;
   bool signedIn = false;
 
+  @override
+  void initState() {
+    super.initState();
+    ApiService.instance.restoreSession().then((restored) {
+      if (mounted) setState(() => signedIn = restored);
+    });
+  }
+
   Future<bool> _openLogin() async {
     final result = await Navigator.of(
       context,
@@ -359,6 +454,9 @@ class _HomePageState extends State<HomePage> {
   int bannerIndex = 0;
   final bannerController = PageController();
   Timer? bannerTimer;
+  List<Listing> remoteListings = [];
+  bool loadingPosts = true;
+  String? postsError;
 
   static const monthNames = [
     'January',
@@ -378,6 +476,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _loadPosts();
     bannerTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted || !bannerController.hasClients) return;
       final next = (bannerIndex + 1) % bannerImages.length;
@@ -389,6 +488,48 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _loadPosts() async {
+    try {
+      final rows = await ApiService.instance.fetchPosts();
+      final mapped = rows.map((row) {
+        final created = DateTime.parse(row['created_at'] as String).toLocal();
+        final urls = (row['image_urls'] as List? ?? const []).cast<String>();
+        final category = row['category'] as String;
+        final icon = switch (category) {
+          'Need Job' => Icons.work_outline,
+          'Need Worker' => Icons.engineering,
+          'Buy Scrap' => Icons.shopping_cart_outlined,
+          'Driver' => Icons.local_shipping_outlined,
+          _ => Icons.recycling,
+        };
+        final priceValue = row['price'];
+        final unitValue = row['unit'] as String?;
+        return Listing(
+          row['title'] as String, category,
+          priceValue == null
+              ? 'Negotiable'
+              : '$priceValue${unitValue == null ? '' : ' / $unitValue'}',
+          row['store_number'] as String, row['description'] as String,
+          row['user_name'] as String, row['phone'] as String,
+          '${created.day}/${created.month}/${created.year}',
+          created.year, created.month, created.day, icon,
+          const Color(0xffd8e8e4), urls.isEmpty ? null : urls.first,
+        );
+      }).toList();
+      if (mounted) setState(() {
+        remoteListings = mapped;
+        loadingPosts = false;
+        postsError = null;
+        if (mapped.isNotEmpty) selectedMonth = mapped.first.postedMonth;
+      });
+    } catch (_) {
+      if (mounted) setState(() {
+        loadingPosts = false;
+        postsError = 'Could not load posts';
+      });
+    }
+  }
+
   @override
   void dispose() {
     bannerTimer?.cancel();
@@ -398,20 +539,22 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final postDates = listings
+    final postDates = remoteListings
         .map(
           (item) => DateTime(item.postedYear, item.postedMonth, item.postedDay),
         )
         .toList();
-    final newestPostDate = postDates.reduce(
-      (current, date) => date.isAfter(current) ? date : current,
-    );
+    final newestPostDate = postDates.isEmpty
+        ? DateTime.now()
+        : postDates.reduce(
+            (current, date) => date.isAfter(current) ? date : current,
+          );
     final rangeStart = newestPostDate.subtract(const Duration(days: 29));
     final windowDates = List.generate(
       30,
       (index) => rangeStart.add(Duration(days: index)),
     );
-    final activeListings = listings.where((item) {
+    final activeListings = remoteListings.where((item) {
       final createdAt = DateTime(
         item.postedYear,
         item.postedMonth,
@@ -652,6 +795,17 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                       const SizedBox(height: 18),
+                      if (loadingPosts) const LinearProgressIndicator(),
+                      if (postsError != null)
+                        Row(
+                          children: [
+                            Expanded(child: Text(postsError!)),
+                            TextButton(
+                              onPressed: _loadPosts,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
                       Text(
                         '${monthNames[monthToShow - 1]} posts',
                         style: Theme.of(context).textTheme.titleLarge
@@ -697,10 +851,21 @@ class ListingCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
+        SizedBox(
           height: 150,
-          color: listing.color,
-          child: Icon(listing.icon, size: 52, color: Colors.black54),
+          child: listing.imageUrl == null
+              ? ColoredBox(
+                  color: listing.color,
+                  child: Icon(listing.icon, size: 52, color: Colors.black54),
+                )
+              : Image.network(
+                  listing.imageUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => ColoredBox(
+                    color: listing.color,
+                    child: Icon(listing.icon, size: 52),
+                  ),
+                ),
         ),
         Expanded(
           child: Padding(
@@ -811,7 +976,77 @@ class CreatePostPage extends StatefulWidget {
 }
 
 class _CreatePostPageState extends State<CreatePostPage> {
+  final title = TextEditingController();
+  final description = TextEditingController();
+  final price = TextEditingController();
+  final unit = TextEditingController();
+  final storeNumber = TextEditingController();
+  final images = <UploadImage>[];
+  final imagePicker = ImagePicker();
   String? type;
+  bool publishing = false;
+
+  @override
+  void dispose() {
+    title.dispose();
+    description.dispose();
+    price.dispose();
+    unit.dispose();
+    storeNumber.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    if (images.length >= 3) return;
+    final image = await imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 82,
+      maxWidth: 1800,
+    );
+    if (image == null) return;
+    final bytes = await image.readAsBytes();
+    if (bytes.length > 8 * 1024 * 1024) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Each image must be smaller than 8 MB')),
+      );
+      return;
+    }
+    setState(() => images.add(UploadImage(image.name, bytes)));
+  }
+
+  Future<void> _publish() async {
+    if (type == null || title.text.trim().length < 3 ||
+        description.text.trim().length < 10 ||
+        !RegExp(r'^\d{4}$').hasMatch(storeNumber.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Select a category and complete all required fields'),
+      ));
+      return;
+    }
+    setState(() => publishing = true);
+    try {
+      await ApiService.instance.createPost(
+        category: type!, title: title.text.trim(),
+        description: description.text.trim(), price: price.text.trim(),
+        unit: unit.text.trim(), storeNumber: storeNumber.text.trim(),
+        images: images,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post published')),
+      );
+      Navigator.pop(context, true);
+    } on ApiException catch (error) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot connect to the server')),
+      );
+    } finally {
+      if (mounted) setState(() => publishing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -878,13 +1113,25 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       child: AspectRatio(
                         aspectRatio: 1.25,
                         child: OutlinedButton(
-                          onPressed: () {},
+                          onPressed: publishing || index > images.length
+                              ? null
+                              : () {
+                                  if (index < images.length) {
+                                    setState(() => images.removeAt(index));
+                                  } else {
+                                    _pickImage();
+                                  }
+                                },
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.add_a_photo_outlined),
+                              Icon(index < images.length
+                                  ? Icons.check_circle_outline
+                                  : Icons.add_a_photo_outlined),
                               const SizedBox(height: 5),
-                              Text('Photo ${index + 1}'),
+                              Text(index < images.length
+                                  ? 'Added (tap to remove)'
+                                  : 'Photo ${index + 1}'),
                             ],
                           ),
                         ),
@@ -894,25 +1141,31 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              const TextField(decoration: InputDecoration(labelText: 'Title')),
-              const SizedBox(height: 12),
-              const TextField(
-                maxLines: 4,
-                decoration: InputDecoration(labelText: 'Description'),
+              TextField(
+                controller: title,
+                decoration: const InputDecoration(labelText: 'Title'),
               ),
               const SizedBox(height: 12),
-              const Row(
+              TextField(
+                controller: description,
+                maxLines: 4,
+                decoration: const InputDecoration(labelText: 'Description'),
+              ),
+              const SizedBox(height: 12),
+              Row(
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: price,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: 'Price'),
+                      decoration: const InputDecoration(labelText: 'Price'),
                     ),
                   ),
                   SizedBox(width: 12),
                   Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
+                      controller: unit,
+                      decoration: const InputDecoration(
                         labelText: 'Unit',
                         hintText: 'kg / day / item',
                       ),
@@ -922,6 +1175,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
               ),
               const SizedBox(height: 12),
               TextField(
+                controller: storeNumber,
                 keyboardType: TextInputType.number,
                 maxLength: 4,
                 inputFormatters: [
@@ -937,25 +1191,15 @@ class _CreatePostPageState extends State<CreatePostPage> {
               ),
               const SizedBox(height: 22),
               FilledButton(
-                onPressed: () {
-                  if (type == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Please select a category before publishing',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Post saved')));
-                  Navigator.pop(context);
-                },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  child: Text('Publish post'),
+                onPressed: publishing ? null : _publish,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: publishing
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Publish post'),
                 ),
               ),
             ],

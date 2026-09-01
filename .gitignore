@@ -2,6 +2,7 @@
 .tool-state/
 client/.dart_tool/
 client/build/
+server/node_modules/
 client/android/local.properties
 .env
 .env.*

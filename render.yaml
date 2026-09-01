@@ -1,9 +1,27 @@
 services:
   - type: web
+    name: scrapmarket-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./server/Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: IMAGEKIT_PRIVATE_KEY
+        sync: false
+      - key: IMAGEKIT_URL_ENDPOINT
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  - type: web
     name: scrapmarket-web
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
     healthCheckPath: /
     autoDeployTrigger: commit
-

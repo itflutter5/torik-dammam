@@ -33,6 +33,34 @@ emulator, then run `C:\flutter\bin\flutter.bat run`.
 Provider credentials must be stored as Render environment variables, never in
 the Flutter app or committed files.
 
+## Neon and ImageKit setup
+
+The `scrapmarket-api` Render service provides registration, password login,
+authenticated post creation, and ImageKit image uploads. Neon stores users,
+posts, and the resulting ImageKit URLs. The API runs its idempotent schema
+migration during startup.
+
+Set these environment variables on the API service in Render:
+
+- `DATABASE_URL`: Neon pooled connection string with `sslmode=require`
+- `IMAGEKIT_PRIVATE_KEY`: ImageKit private API key
+- `IMAGEKIT_URL_ENDPOINT`: for example `https://ik.imagekit.io/account_id`
+- `ALLOWED_ORIGINS`: the deployed web URL, such as
+  `https://scrapmarket-web.onrender.com`
+
+Render generates `JWT_SECRET` from `render.yaml`. Never expose the Neon
+connection string or ImageKit private key to Flutter. For local API development,
+copy `server/.env.example` to `server/.env`, fill it in, and run:
+
+```powershell
+cd server
+npm install
+npm start
+```
+
+The Flutter development build uses `http://localhost:10000`. Override it with
+`--dart-define=API_BASE_URL=https://your-api.example.com` when needed.
+
 ## GitHub and Render deployment
 
 This repository includes GitHub Actions checks and a Render Blueprint. Every

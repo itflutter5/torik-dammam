@@ -6,7 +6,7 @@ client/.dart_tool
 client/build
 client/android/.gradle
 client/android/local.properties
+server/node_modules
 *.log
 .env
 .env.*
-
