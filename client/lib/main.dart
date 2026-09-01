@@ -1299,13 +1299,87 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final name = TextEditingController(text: 'Ahmed Khan');
-  final phone = TextEditingController(text: '+966 50 123 4567');
-  final storeNumber = TextEditingController(text: '0101');
-  String savedStoreNumber = '0101';
+  final name = TextEditingController();
+  final phone = TextEditingController();
+  final storeNumber = TextEditingController();
+  String savedStoreNumber = '';
   DateTime lastStoreNumberChange = DateTime.now().subtract(
     const Duration(days: 31),
   );
+  bool loadingProfile = true;
+  bool savingProfile = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final cached = ApiService.instance.currentUser;
+    if (cached != null) _applyUser(cached, notify: false);
+    _loadProfile();
+  }
+
+  void _applyUser(Map<String, dynamic> user, {bool notify = true}) {
+    name.text = user['name'] as String? ?? '';
+    phone.text = user['phone'] as String? ?? '';
+    savedStoreNumber = user['storeNumber'] as String? ?? '';
+    storeNumber.text = savedStoreNumber;
+    final changedAt = user['storeNumberChangedAt'] as String?;
+    lastStoreNumberChange = changedAt == null
+        ? DateTime.now().subtract(const Duration(days: 31))
+        : DateTime.parse(changedAt).toLocal();
+    loadingProfile = false;
+    if (notify && mounted) setState(() {});
+  }
+
+  Future<void> _loadProfile() async {
+    if (ApiService.instance.token == null) {
+      if (mounted) setState(() => loadingProfile = false);
+      return;
+    }
+    try {
+      _applyUser(await ApiService.instance.fetchProfile());
+    } on ApiException catch (error) {
+      if (mounted) {
+        setState(() => loadingProfile = false);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (!RegExp(r'^\d{4}$').hasMatch(storeNumber.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Store number must contain exactly 4 digits'),
+      ));
+      return;
+    }
+    final changed = storeNumber.text.trim() != savedStoreNumber;
+    if (changed && !canChangeStoreNumber) {
+      storeNumber.text = savedStoreNumber;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+          'Store number can be changed again in $daysUntilStoreChange days',
+        ),
+      ));
+      return;
+    }
+    setState(() => savingProfile = true);
+    try {
+      final user = await ApiService.instance
+          .updateStoreNumber(storeNumber.text.trim());
+      _applyUser(user);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(changed
+            ? 'Profile saved. Store number is locked for 30 days.'
+            : 'Profile is up to date'),
+      ));
+    } on ApiException catch (error) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => savingProfile = false);
+    }
+  }
 
   bool get canChangeStoreNumber => daysUntilStoreChange == 0;
 
@@ -1339,6 +1413,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (loadingProfile) const LinearProgressIndicator(),
                   Text(
                     'Your profile',
                     textAlign: TextAlign.center,
@@ -1443,52 +1518,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 22),
                   FilledButton.icon(
-                    onPressed: () {
-                      if (!RegExp(r'^\d{4}$')
-                          .hasMatch(storeNumber.text.trim())) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Store number must contain exactly 4 digits',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
-                      final changed =
-                          storeNumber.text.trim() != savedStoreNumber;
-                      if (changed && !canChangeStoreNumber) {
-                        storeNumber.text = savedStoreNumber;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Store number can be changed again in '
-                              '$daysUntilStoreChange days',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
-                      if (changed) {
-                        setState(() {
-                          savedStoreNumber = storeNumber.text.trim();
-                          lastStoreNumberChange = DateTime.now();
-                        });
-                      }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            changed
-                                ? 'Profile saved. Store number is locked for 30 days.'
-                                : 'Profile saved',
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: loadingProfile || savingProfile
+                        ? null
+                        : _saveProfile,
                     icon: const Icon(Icons.check),
-                    label: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      child: Text('Save profile'),
+                    label: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: savingProfile
+                          ? const SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Save profile'),
                     ),
                   ),
                 ],

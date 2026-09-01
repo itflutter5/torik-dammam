@@ -26,15 +26,24 @@ class ApiService {
   ApiService._();
   static final instance = ApiService._();
   String? token;
+  Map<String, dynamic>? currentUser;
 
   Future<bool> restoreSession() async {
-    token = (await SharedPreferences.getInstance()).getString('auth_token');
+    final preferences = await SharedPreferences.getInstance();
+    token = preferences.getString('auth_token');
+    final savedUser = preferences.getString('auth_user');
+    if (savedUser != null) {
+      currentUser = jsonDecode(savedUser) as Map<String, dynamic>;
+    }
     return token != null;
   }
 
-  Future<void> _saveToken(String value) async {
+  Future<void> _saveSession(String value, Map<String, dynamic> user) async {
     token = value;
-    await (await SharedPreferences.getInstance()).setString('auth_token', value);
+    currentUser = user;
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString('auth_token', value);
+    await preferences.setString('auth_user', jsonEncode(user));
   }
 
   Future<void> register({
@@ -47,14 +56,56 @@ class ApiService {
       'name': name, 'phone': phone, 'password': password,
       'storeNumber': storeNumber,
     });
-    await _saveToken(data['token'] as String);
+    await _saveSession(
+      data['token'] as String,
+      data['user'] as Map<String, dynamic>,
+    );
   }
 
   Future<void> login({required String phone, required String password}) async {
     final data = await _jsonRequest('/auth/login', {
       'phone': phone, 'password': password,
     });
-    await _saveToken(data['token'] as String);
+    await _saveSession(
+      data['token'] as String,
+      data['user'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<Map<String, dynamic>> fetchProfile() async {
+    final response = await http.get(
+      Uri.parse('$apiBaseUrl/auth/me'),
+      headers: {'authorization': 'Bearer $token'},
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(data['error'] as String? ?? 'Could not load profile');
+    }
+    final user = data['user'] as Map<String, dynamic>;
+    currentUser = user;
+    await (await SharedPreferences.getInstance())
+        .setString('auth_user', jsonEncode(user));
+    return user;
+  }
+
+  Future<Map<String, dynamic>> updateStoreNumber(String storeNumber) async {
+    final response = await http.patch(
+      Uri.parse('$apiBaseUrl/users/me'),
+      headers: {
+        'authorization': 'Bearer $token',
+        'content-type': 'application/json',
+      },
+      body: jsonEncode({'storeNumber': storeNumber}),
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(data['error'] as String? ?? 'Could not save profile');
+    }
+    final user = data['user'] as Map<String, dynamic>;
+    currentUser = user;
+    await (await SharedPreferences.getInstance())
+        .setString('auth_user', jsonEncode(user));
+    return user;
   }
 
   Future<Map<String, dynamic>> _jsonRequest(

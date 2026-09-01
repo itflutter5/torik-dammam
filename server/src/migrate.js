@@ -8,10 +8,13 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(20) NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   store_number CHAR(4) NOT NULL,
+  store_number_changed_at TIMESTAMPTZ,
   profile_image_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS store_number_changed_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,

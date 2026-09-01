@@ -44,6 +44,7 @@ const postSchema = z.object({
 const publicUser = (row) => ({
   id: String(row.id), name: row.name, phone: row.phone,
   storeNumber: row.store_number, profileImageUrl: row.profile_image_url,
+  storeNumberChangedAt: row.store_number_changed_at,
 });
 
 app.get('/health', async (_req, res, next) => {
@@ -86,6 +87,46 @@ app.post('/api/auth/login', async (req, res, next) => {
       return res.status(401).json({ error: 'Incorrect phone number or password' });
     }
     res.json({ token: createToken(user), user: publicUser(user) });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/auth/me', requireAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, name, phone, store_number, store_number_changed_at,
+              profile_image_url
+       FROM users WHERE id = $1`,
+      [req.auth.sub],
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: publicUser(result.rows[0]) });
+  } catch (error) { next(error); }
+});
+
+app.patch('/api/users/me', requireAuth, async (req, res, next) => {
+  try {
+    const input = z.object({
+      storeNumber: z.string().regex(/^\d{4}$/),
+    }).parse(req.body);
+    const result = await pool.query(
+      `UPDATE users
+       SET store_number = $1,
+           store_number_changed_at = CASE
+             WHEN store_number = $1 THEN store_number_changed_at ELSE NOW()
+           END,
+           updated_at = NOW()
+       WHERE id = $2 AND (
+         store_number = $1 OR store_number_changed_at IS NULL OR
+         store_number_changed_at <= NOW() - INTERVAL '30 days'
+       )
+       RETURNING id, name, phone, store_number, store_number_changed_at,
+                 profile_image_url`,
+      [input.storeNumber, req.auth.sub],
+    );
+    if (!result.rows[0]) {
+      return res.status(409).json({ error: 'Store number can only be changed every 30 days' });
+    }
+    res.json({ user: publicUser(result.rows[0]) });
   } catch (error) { next(error); }
 });
 
