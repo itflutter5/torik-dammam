@@ -868,11 +868,6 @@ class ListingCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Chip(
-                      label: Text(listing.type),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    const Spacer(),
                     const Icon(
                       Icons.schedule_outlined,
                       size: 15,
@@ -888,6 +883,11 @@ class ListingCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     const Icon(Icons.bookmark_border, size: 21),
+                    const Spacer(),
+                    Chip(
+                      label: Text(listing.type),
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 5),
