@@ -455,6 +455,7 @@ class _HomePageState extends State<HomePage> {
   final bannerController = PageController();
   Timer? bannerTimer;
   List<Listing> remoteListings = [];
+  List<String> categories = [];
   bool loadingPosts = true;
   String? postsError;
 
@@ -477,6 +478,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadPosts();
+    _loadCategories();
     bannerTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted || !bannerController.hasClients) return;
       final next = (bannerIndex + 1) % bannerImages.length;
@@ -486,6 +488,15 @@ class _HomePageState extends State<HomePage> {
         curve: Curves.easeInOut,
       );
     });
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final values = await ApiService.instance.fetchCategories();
+      if (mounted) setState(() => categories = values);
+    } catch (_) {
+      // The post feed can still render while Render/Neon is waking up.
+    }
   }
 
   Future<void> _loadPosts() async {
@@ -696,14 +707,7 @@ class _HomePageState extends State<HomePage> {
                           alignment: WrapAlignment.end,
                           spacing: 8,
                           runSpacing: 8,
-                          children: [
-                            'All',
-                            'Need Job',
-                            'Need Worker',
-                            'Buy Scrap',
-                            'Sell Scrap',
-                            'Driver',
-                          ].map((label) => ChoiceChip(
+                          children: ['All', ...categories].map((label) => ChoiceChip(
                             label: Text(label),
                             selected: filter == label,
                             onSelected: (_) => setState(() => filter = label),
@@ -993,8 +997,28 @@ class _CreatePostPageState extends State<CreatePostPage> {
   final storeNumber = TextEditingController();
   final images = <UploadImage>[];
   final imagePicker = ImagePicker();
+  List<String> categories = [];
+  bool loadingCategories = true;
   String? type;
   bool publishing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final values = await ApiService.instance.fetchCategories();
+      if (mounted) setState(() {
+        categories = values;
+        loadingCategories = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => loadingCategories = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -1086,17 +1110,24 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 style: TextStyle(color: Colors.black54, fontSize: 12),
               ),
               const SizedBox(height: 8),
+              if (loadingCategories) const LinearProgressIndicator(),
+              if (!loadingCategories && categories.isEmpty)
+                Row(
+                  children: [
+                    const Expanded(child: Text('Categories could not be loaded')),
+                    TextButton(
+                      onPressed: () {
+                        setState(() => loadingCategories = true);
+                        _loadCategories();
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children:
-                    [
-                          'Need Job',
-                          'Need Worker',
-                          'Buy Scrap',
-                          'Sell Scrap',
-                          'Driver',
-                        ]
+                children: categories
                         .map(
                           (category) => ChoiceChip(
                             label: Text(category),

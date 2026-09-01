@@ -110,4 +110,15 @@ class ApiService {
     return (data['posts'] as List)
         .cast<Map<String, dynamic>>();
   }
+
+  Future<List<String>> fetchCategories() async {
+    final response = await http.get(Uri.parse('$apiBaseUrl/categories'));
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(data['error'] as String? ?? 'Could not load categories');
+    }
+    return (data['categories'] as List)
+        .map((item) => (item as Map<String, dynamic>)['name'] as String)
+        .toList();
+  }
 }

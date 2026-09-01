@@ -13,12 +13,26 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS categories (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(30) NOT NULL UNIQUE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO categories (name, sort_order) VALUES
+  ('Need Job', 10),
+  ('Need Worker', 20),
+  ('Buy Scrap', 30),
+  ('Sell Scrap', 40),
+  ('Driver', 50)
+ON CONFLICT (name) DO UPDATE SET sort_order = EXCLUDED.sort_order;
+
 CREATE TABLE IF NOT EXISTS posts (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  category VARCHAR(30) NOT NULL CHECK (
-    category IN ('Need Job', 'Need Worker', 'Buy Scrap', 'Sell Scrap', 'Driver')
-  ),
+  category VARCHAR(30) NOT NULL REFERENCES categories(name),
   title VARCHAR(150) NOT NULL,
   description TEXT NOT NULL,
   price NUMERIC(12, 2),
@@ -32,6 +46,17 @@ CREATE TABLE IF NOT EXISTS posts (
 CREATE INDEX IF NOT EXISTS posts_created_at_idx ON posts(created_at DESC);
 CREATE INDEX IF NOT EXISTS posts_user_id_idx ON posts(user_id);
 CREATE INDEX IF NOT EXISTS posts_expires_at_idx ON posts(expires_at);
+
+ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_category_check;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'posts_category_fkey'
+  ) THEN
+    ALTER TABLE posts ADD CONSTRAINT posts_category_fkey
+      FOREIGN KEY (category) REFERENCES categories(name);
+  END IF;
+END $$;
 `;
 
 try {

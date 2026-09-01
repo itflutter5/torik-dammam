@@ -33,7 +33,7 @@ const registerSchema = z.object({
 });
 const loginSchema = z.object({ phone, password: z.string().min(1).max(100) });
 const postSchema = z.object({
-  category: z.enum(['Need Job', 'Need Worker', 'Buy Scrap', 'Sell Scrap', 'Driver']),
+  category: z.string().trim().min(2).max(30),
   title: z.string().trim().min(3).max(150),
   description: z.string().trim().min(10).max(5000),
   price: z.union([z.literal(''), z.coerce.number().nonnegative().max(9999999999)]).optional(),
@@ -48,6 +48,15 @@ const publicUser = (row) => ({
 
 app.get('/health', async (_req, res, next) => {
   try { await pool.query('SELECT 1'); res.json({ status: 'ok' }); } catch (error) { next(error); }
+});
+
+app.get('/api/categories', async (_req, res, next) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, name FROM categories WHERE active = TRUE ORDER BY sort_order, name',
+    );
+    res.json({ categories: result.rows });
+  } catch (error) { next(error); }
 });
 
 app.post('/api/auth/register', async (req, res, next) => {
@@ -112,7 +121,10 @@ app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, 
         input.price === '' ? null : input.price, input.unit, input.storeNumber, JSON.stringify(imageUrls)],
     );
     res.status(201).json({ post: result.rows[0] });
-  } catch (error) { next(error); }
+  } catch (error) {
+    if (error.code === '23503') return res.status(400).json({ error: 'Invalid or inactive category' });
+    next(error);
+  }
 });
 
 const staticDirectory = process.env.STATIC_DIR ?? path.resolve('public');
