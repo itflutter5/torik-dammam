@@ -129,6 +129,11 @@ app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, 
 
 const staticDirectory = process.env.STATIC_DIR ?? path.resolve('public');
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
+app.get('/refresh', (_req, res) => {
+  res.setHeader('Clear-Site-Data', '"cache", "storage"');
+  res.setHeader('Cache-Control', 'no-store');
+  res.redirect(302, '/?refreshed=1');
+});
 app.use(express.static(staticDirectory, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('index.html') ||
