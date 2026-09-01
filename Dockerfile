@@ -15,6 +15,8 @@ RUN apt-get update \
 
 ENV PATH="/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:${PATH}"
 
+RUN git config --global --add safe.directory /opt/flutter
+
 WORKDIR /app
 COPY client/pubspec.yaml client/pubspec.lock ./
 RUN flutter pub get
