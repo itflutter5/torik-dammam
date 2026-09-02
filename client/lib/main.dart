@@ -531,6 +531,7 @@ class Listing {
     this.color, [
     this.imageUrls = const [],
     this.postNumber = '',
+    this.profileImageUrl,
   ]);
 
   final String title;
@@ -548,6 +549,7 @@ class Listing {
   final Color color;
   final List<String> imageUrls;
   final String postNumber;
+  final String? profileImageUrl;
 }
 
 const listings = [
@@ -658,11 +660,14 @@ Listing listingFromApiRow(Map<String, dynamic> row) {
   };
   final priceValue = row['price'];
   final unitValue = row['unit'] as String?;
+  final employmentPost = category == 'Need Worker' || category == 'Need Job';
   return Listing(
     row['title'] as String,
     category,
     priceValue == null
-        ? 'Negotiable'
+        ? (employmentPost ? 'Salary: Negotiable' : 'Negotiable')
+        : employmentPost
+        ? 'Salary: $priceValue'
         : '$priceValue${unitValue == null || unitValue.isEmpty ? '' : ' / $unitValue'}',
     row['store_number'] as String,
     row['description'] as String,
@@ -676,6 +681,7 @@ Listing listingFromApiRow(Map<String, dynamic> row) {
     const Color(0xffd8e8e4),
     urls,
     row['post_number'] as String? ?? '#${row['id']}',
+    row['user_profile_image_url'] as String?,
   );
 }
 
@@ -1385,9 +1391,14 @@ class _ListingCardState extends State<ListingCard> {
                   const Divider(height: 18),
                   Row(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 16,
-                        child: Icon(Icons.person_outline, size: 18),
+                        backgroundImage: listing.profileImageUrl == null
+                            ? null
+                            : NetworkImage(listing.profileImageUrl!),
+                        child: listing.profileImageUrl == null
+                            ? const Icon(Icons.person_outline, size: 18)
+                            : null,
                       ),
                       const SizedBox(width: 9),
                       Expanded(
@@ -1548,7 +1559,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
               const Divider(height: 32),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+                leading: CircleAvatar(
+                  backgroundImage: listing.profileImageUrl == null
+                      ? null
+                      : NetworkImage(listing.profileImageUrl!),
+                  child: listing.profileImageUrl == null
+                      ? const Icon(Icons.person_outline)
+                      : null,
+                ),
                 title: Text(
                   listing.userName,
                   style: const TextStyle(fontWeight: FontWeight.w700),
@@ -1583,6 +1601,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
   bool loadingCategories = true;
   String? type;
   bool publishing = false;
+
+  bool get usesSalary => type == 'Need Worker' || type == 'Need Job';
 
   @override
   void initState() {
@@ -1666,7 +1686,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
         title: title.text.trim(),
         description: description.text.trim(),
         price: price.text.trim(),
-        unit: unit.text.trim(),
+        unit: usesSalary ? '' : unit.text.trim(),
         storeNumber: storeNumber.text.trim(),
         images: images,
       );
@@ -1746,8 +1766,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       (category) => ChoiceChip(
                         label: Text(category),
                         selected: type == category,
-                        onSelected: (selected) =>
-                            setState(() => type = selected ? category : null),
+                        onSelected: (selected) => setState(() {
+                          type = selected ? category : null;
+                          if (usesSalary) unit.clear();
+                        }),
                       ),
                     )
                     .toList(),
@@ -1829,27 +1851,39 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 decoration: const InputDecoration(labelText: 'Description'),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: price,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Price'),
-                    ),
+              if (usesSalary)
+                TextField(
+                  controller: price,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Salary (optional)',
+                    prefixIcon: Icon(Icons.payments_outlined),
                   ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: unit,
-                      decoration: const InputDecoration(
-                        labelText: 'Unit',
-                        hintText: 'kg / day / item',
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: price,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Price (optional)',
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: unit,
+                        decoration: const InputDecoration(
+                          labelText: 'Unit (optional)',
+                          hintText: 'kg / item',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 12),
               TextField(
                 controller: storeNumber,

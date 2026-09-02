@@ -242,7 +242,8 @@ app.patch('/api/users/me/image', requireAuth, upload.single('image'), async (req
 app.get('/api/posts', async (_req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT p.*, u.name AS user_name, u.phone
+      `SELECT p.*, u.name AS user_name, u.phone,
+              u.profile_image_url AS user_profile_image_url
        FROM posts p JOIN users u ON u.id = p.user_id
        WHERE p.expires_at > NOW() ORDER BY p.created_at DESC LIMIT 100`,
     );
@@ -253,7 +254,8 @@ app.get('/api/posts', async (_req, res, next) => {
 app.get('/api/posts/mine', requireAuth, async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT p.*, u.name AS user_name, u.phone
+      `SELECT p.*, u.name AS user_name, u.phone,
+              u.profile_image_url AS user_profile_image_url
        FROM posts p JOIN users u ON u.id = p.user_id
        WHERE p.user_id = $1 ORDER BY p.created_at DESC`,
       [req.auth.sub],
@@ -265,6 +267,7 @@ app.get('/api/posts/mine', requireAuth, async (req, res, next) => {
 app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, next) => {
   try {
     const input = postSchema.parse(req.body);
+    const employmentPost = input.category === 'Need Worker' || input.category === 'Need Job';
     const postNumber = `#${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
     const imageUrls = await Promise.all((req.files ?? []).map((file) => uploadImage(file, req.auth.sub)));
     const result = await pool.query(
@@ -272,7 +275,7 @@ app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, 
        (user_id, category, title, description, price, unit, store_number, image_urls, post_number)
        VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8::jsonb, $9) RETURNING *`,
       [req.auth.sub, input.category, input.title, input.description,
-        input.price === '' ? null : input.price, input.unit, input.storeNumber,
+        input.price === '' ? null : input.price, employmentPost ? '' : input.unit, input.storeNumber,
         JSON.stringify(imageUrls), postNumber],
     );
     res.status(201).json({ post: result.rows[0] });
