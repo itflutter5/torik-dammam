@@ -56,7 +56,6 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   bool loading = false;
   bool obscurePassword = true;
   bool googleReady = false;
-  String verificationMethod = 'phone';
   StreamSubscription<String>? googleSubscription;
 
   bool get registering => widget.registrationMode;
@@ -179,25 +178,6 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(
-                            value: 'phone',
-                            icon: Icon(Icons.sms_outlined),
-                            label: Text('Verify phone'),
-                          ),
-                          ButtonSegment(
-                            value: 'email',
-                            icon: Icon(Icons.mark_email_read_outlined),
-                            label: Text('Verify email'),
-                          ),
-                        ],
-                        selected: {verificationMethod},
-                        onSelectionChanged: (value) => setState(
-                          () => verificationMethod = value.first,
-                        ),
-                      ),
                     ],
                     const SizedBox(height: 12),
                     TextField(
@@ -294,10 +274,15 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
             !RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())))) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(
-          'Check your name, +9665XXXXXXXX phone, password (8+ characters), and store number (up to 4 digits)',
+          'Check your name, email, +9665XXXXXXXX phone, password (8+ characters), and store number (up to 4 digits)',
         )),
       );
       return;
+    }
+    String? verificationMethod;
+    if (registering) {
+      verificationMethod = await _chooseVerificationMethod();
+      if (verificationMethod == null || !mounted) return;
     }
     setState(() => loading = true);
     try {
@@ -306,7 +291,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
           name: name.text.trim(), phone: phone.text.trim(),
           email: email.text.trim().toLowerCase(), password: password.text,
           storeNumber: storeNumber.text.trim(),
-          verificationMethod: verificationMethod,
+          verificationMethod: verificationMethod!,
         );
         if (!mounted) return;
         final code = await _askForVerificationCode(
@@ -334,6 +319,30 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
       if (mounted) setState(() => loading = false);
     }
   }
+
+  Future<String?> _chooseVerificationMethod() => showDialog<String>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Verify your account'),
+      content: const Text('Where should we send your 6-digit verification code?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('Cancel'),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.pop(dialogContext, 'phone'),
+          icon: const Icon(Icons.sms_outlined),
+          label: const Text('Phone'),
+        ),
+        FilledButton.icon(
+          onPressed: () => Navigator.pop(dialogContext, 'email'),
+          icon: const Icon(Icons.email_outlined),
+          label: const Text('Email'),
+        ),
+      ],
+    ),
+  );
 
   Future<String?> _askForVerificationCode(String destination) async {
     final controller = TextEditingController();
