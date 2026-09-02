@@ -265,13 +265,15 @@ app.get('/api/posts/mine', requireAuth, async (req, res, next) => {
 app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, next) => {
   try {
     const input = postSchema.parse(req.body);
+    const postNumber = `#${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
     const imageUrls = await Promise.all((req.files ?? []).map((file) => uploadImage(file, req.auth.sub)));
     const result = await pool.query(
       `INSERT INTO posts
-       (user_id, category, title, description, price, unit, store_number, image_urls)
-       VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8::jsonb) RETURNING *`,
+       (user_id, category, title, description, price, unit, store_number, image_urls, post_number)
+       VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8::jsonb, $9) RETURNING *`,
       [req.auth.sub, input.category, input.title, input.description,
-        input.price === '' ? null : input.price, input.unit, input.storeNumber, JSON.stringify(imageUrls)],
+        input.price === '' ? null : input.price, input.unit, input.storeNumber,
+        JSON.stringify(imageUrls), postNumber],
     );
     res.status(201).json({ post: result.rows[0] });
   } catch (error) {

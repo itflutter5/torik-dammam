@@ -530,6 +530,7 @@ class Listing {
     this.icon,
     this.color, [
     this.imageUrls = const [],
+    this.postNumber = '',
   ]);
 
   final String title;
@@ -546,6 +547,7 @@ class Listing {
   final IconData icon;
   final Color color;
   final List<String> imageUrls;
+  final String postNumber;
 }
 
 const listings = [
@@ -673,6 +675,7 @@ Listing listingFromApiRow(Map<String, dynamic> row) {
     icon,
     const Color(0xffd8e8e4),
     urls,
+    row['post_number'] as String? ?? '#${row['id']}',
   );
 }
 
@@ -1164,7 +1167,7 @@ class _HomePageState extends State<HomePage> {
               builder: (context, _) => SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 1,
-                  mainAxisExtent: 390,
+                  mainAxisExtent: 410,
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 14,
                 ),
@@ -1370,6 +1373,15 @@ class _ListingCardState extends State<ListingCard> {
                     'Store number: ${listing.storeNumber}',
                     style: const TextStyle(color: Colors.black54, fontSize: 12),
                   ),
+                  if (listing.postNumber.isNotEmpty)
+                    Text(
+                      'Post number: ${listing.postNumber}',
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   const Divider(height: 18),
                   Row(
                     children: [
@@ -1515,6 +1527,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 'Store number: ${listing.storeNumber}',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
+              if (listing.postNumber.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Post number: ${listing.postNumber}',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
               const Divider(height: 32),
               Text(
                 'Description',
@@ -1974,7 +1996,7 @@ class _MyPostsPageState extends State<MyPostsPage> {
                   itemCount: posts.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 14),
                   itemBuilder: (context, index) => SizedBox(
-                    height: 390,
+                    height: 410,
                     child: ListingCard(listing: posts[index]),
                   ),
                 ),
