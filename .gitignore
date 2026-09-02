@@ -3,6 +3,9 @@
 client/.dart_tool/
 client/build/
 server/node_modules/
+.chrome-live-check*/
+.live-*
+live-site.png
 client/android/local.properties
 .env
 .env.*

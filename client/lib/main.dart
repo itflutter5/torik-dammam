@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'api.dart';
+import 'google_auth_service.dart';
+import 'google_button.dart';
 
 void main() => runApp(const ScrapMarketApp());
 
@@ -52,11 +54,53 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   final storeNumber = TextEditingController();
   bool loading = false;
   bool obscurePassword = true;
+  bool googleReady = false;
+  StreamSubscription<String>? googleSubscription;
 
   bool get registering => widget.registrationMode;
 
   @override
+  void initState() {
+    super.initState();
+    if (!registering) _initializeGoogle();
+  }
+
+  Future<void> _initializeGoogle() async {
+    try {
+      final ready = await GoogleAuthService.instance.initialize();
+      googleSubscription = GoogleAuthService.instance.idTokens.listen(
+        _loginWithGoogle,
+        onError: (_) => _showGoogleError(),
+      );
+      if (mounted) setState(() => googleReady = ready);
+    } catch (_) {
+      if (mounted) setState(() => googleReady = false);
+    }
+  }
+
+  Future<void> _loginWithGoogle(String idToken) async {
+    if (loading) return;
+    setState(() => loading = true);
+    try {
+      await ApiService.instance.loginWithGoogle(idToken);
+      if (mounted) Navigator.of(context).pop(true);
+    } on ApiException catch (error) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  void _showGoogleError() {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Google sign-in was not completed')),
+    );
+  }
+
+  @override
   void dispose() {
+    googleSubscription?.cancel();
     name.dispose();
     phone.dispose();
     password.dispose();
@@ -170,6 +214,22 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                             : Text(registering ? 'Create account' : 'Login'),
                       ),
                     ),
+                    if (!registering && googleReady) ...[
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          children: [
+                            Expanded(child: Divider()),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: Text('or'),
+                            ),
+                            Expanded(child: Divider()),
+                          ],
+                        ),
+                      ),
+                      buildGoogleSignInButton(),
+                    ],
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: loading

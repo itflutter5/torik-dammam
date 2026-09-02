@@ -72,6 +72,21 @@ class ApiService {
     );
   }
 
+  Future<String> fetchGoogleClientId() async {
+    final response = await http.get(Uri.parse('$apiBaseUrl/config'));
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode != 200) return '';
+    return data['googleClientId'] as String? ?? '';
+  }
+
+  Future<void> loginWithGoogle(String idToken) async {
+    final data = await _jsonRequest('/auth/google', {'idToken': idToken});
+    await _saveSession(
+      data['token'] as String,
+      data['user'] as Map<String, dynamic>,
+    );
+  }
+
   Future<Map<String, dynamic>> fetchProfile() async {
     final response = await http.get(
       Uri.parse('$apiBaseUrl/auth/me'),

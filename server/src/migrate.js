@@ -5,9 +5,11 @@ const sql = `
 CREATE TABLE IF NOT EXISTS users (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  phone VARCHAR(20) NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  store_number CHAR(4) NOT NULL,
+  phone VARCHAR(20) UNIQUE,
+  email VARCHAR(254) UNIQUE,
+  google_sub VARCHAR(255) UNIQUE,
+  password_hash TEXT,
+  store_number CHAR(4) NOT NULL DEFAULT '0000',
   store_number_changed_at TIMESTAMPTZ,
   profile_image_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -15,6 +17,11 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS store_number_changed_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(254) UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_sub VARCHAR(255) UNIQUE;
+ALTER TABLE users ALTER COLUMN phone DROP NOT NULL;
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+ALTER TABLE users ALTER COLUMN store_number SET DEFAULT '0000';
 
 CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,

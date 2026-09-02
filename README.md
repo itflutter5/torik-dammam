@@ -47,6 +47,7 @@ Set these environment variables on the API service in Render:
 - `IMAGEKIT_PRIVATE_KEY`: ImageKit private API key
 - `IMAGEKIT_URL_ENDPOINT`: for example `https://ik.imagekit.io/account_id`
 - `ALLOWED_ORIGINS`: `https://torik-dammam.onrender.com`
+- `GOOGLE_CLIENT_ID`: Google OAuth 2.0 Web application client ID
 
 Render generates `JWT_SECRET` from `render.yaml`. Never expose the Neon
 connection string or ImageKit private key to Flutter. For local API development,
@@ -60,6 +61,21 @@ npm start
 
 The Flutter development build uses `http://localhost:10000/api`. Override it with
 `--dart-define=API_BASE_URL=https://your-api.example.com` when needed.
+
+### Google sign-in setup
+
+Create an OAuth 2.0 client in Google Cloud with application type **Web
+application**. Add these Authorized JavaScript origins:
+
+- `https://torik-dammam.onrender.com`
+- `http://localhost`
+- `http://localhost:8080`
+- `http://127.0.0.1:8080`
+
+Save the resulting client ID as `GOOGLE_CLIENT_ID` on the Render
+`torik-dammam` service. The API verifies every Google ID token before creating
+or loading its Neon user. No Google client secret is required for this sign-in
+flow.
 
 ## GitHub and Render deployment
 

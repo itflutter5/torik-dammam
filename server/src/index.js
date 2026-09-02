@@ -4,12 +4,14 @@ import cors from 'cors';
 import express from 'express';
 import multer from 'multer';
 import path from 'node:path';
+import { OAuth2Client } from 'google-auth-library';
 import { z } from 'zod';
 import { createToken, requireAuth } from './auth.js';
 import { pool } from './db.js';
 import { uploadImage } from './imagekit.js';
 
 const app = express();
+const googleClient = new OAuth2Client();
 const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '')
   .split(',').map((value) => value.trim()).filter(Boolean);
 app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : true }));
@@ -42,13 +44,17 @@ const postSchema = z.object({
 });
 
 const publicUser = (row) => ({
-  id: String(row.id), name: row.name, phone: row.phone,
+  id: String(row.id), name: row.name, phone: row.phone, email: row.email,
   storeNumber: row.store_number, profileImageUrl: row.profile_image_url,
   storeNumberChangedAt: row.store_number_changed_at,
 });
 
 app.get('/health', async (_req, res, next) => {
   try { await pool.query('SELECT 1'); res.json({ status: 'ok' }); } catch (error) { next(error); }
+});
+
+app.get('/api/config', (_req, res) => {
+  res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID ?? '' });
 });
 
 app.get('/api/categories', async (_req, res, next) => {
@@ -88,6 +94,43 @@ app.post('/api/auth/login', async (req, res, next) => {
     }
     res.json({ token: createToken(user), user: publicUser(user) });
   } catch (error) { next(error); }
+});
+
+app.post('/api/auth/google', async (req, res, next) => {
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) return res.status(503).json({ error: 'Google login is not configured' });
+    const { idToken } = z.object({ idToken: z.string().min(100) }).parse(req.body);
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: clientId,
+    });
+    const payload = ticket.getPayload();
+    if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+      return res.status(401).json({ error: 'Google account could not be verified' });
+    }
+    const result = await pool.query(
+      `INSERT INTO users
+       (name, email, google_sub, profile_image_url, store_number)
+       VALUES ($1, $2, $3, $4, '0000')
+       ON CONFLICT (google_sub) DO UPDATE SET
+         name = EXCLUDED.name,
+         email = EXCLUDED.email,
+         profile_image_url = EXCLUDED.profile_image_url,
+         updated_at = NOW()
+       RETURNING id, name, phone, email, store_number,
+                 store_number_changed_at, profile_image_url`,
+      [payload.name ?? payload.email.split('@')[0], payload.email,
+        payload.sub, payload.picture ?? null],
+    );
+    const user = result.rows[0];
+    res.json({ token: createToken(user), user: publicUser(user) });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'This email is linked to another account' });
+    }
+    next(error);
+  }
 });
 
 app.get('/api/auth/me', requireAuth, async (req, res, next) => {
