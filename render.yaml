@@ -21,6 +21,8 @@ services:
         sync: false
       - key: BREVO_SENDER_EMAIL
         sync: false
+      - key: BREVO_SENDER_NAME
+        value: Torik-Dammam
       - key: BREVO_SMS_SENDER
         value: TorikDammam
       - key: ALLOWED_ORIGINS

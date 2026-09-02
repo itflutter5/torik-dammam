@@ -85,7 +85,13 @@ app.post('/api/auth/register/start', async (req, res, next) => {
         input.storeNumber, input.verificationMethod, hashCode(code)],
     );
     const destination = input.verificationMethod === 'email' ? input.email : input.phone;
-    await sendVerification({ method: input.verificationMethod, destination, name: input.name, code });
+    try {
+      await sendVerification({ method: input.verificationMethod, destination, name: input.name, code });
+    } catch (deliveryError) {
+      await pool.query('DELETE FROM pending_registrations WHERE id = $1', [verificationId])
+        .catch((cleanupError) => console.error('Pending registration cleanup failed', cleanupError));
+      throw deliveryError;
+    }
     res.status(202).json({ verificationId, destination: input.verificationMethod === 'email' ? input.email : input.phone.replace(/.(?=.{4})/g, '•') });
   } catch (error) {
     next(error);
@@ -356,10 +362,13 @@ app.use((req, res, next) => {
 });
 
 app.use((error, _req, res, _next) => {
-  console.error(error);
+  console.error(error.details ?? error);
   if (error instanceof z.ZodError) return res.status(400).json({ error: error.issues[0]?.message ?? 'Invalid data' });
   if (error instanceof multer.MulterError || error.message === 'Only valid images are allowed') {
     return res.status(400).json({ error: error.message });
+  }
+  if (error.publicMessage && error.statusCode) {
+    return res.status(error.statusCode).json({ error: error.publicMessage });
   }
   res.status(500).json({ error: 'Server error' });
 });
