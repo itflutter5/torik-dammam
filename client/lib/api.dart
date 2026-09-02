@@ -336,6 +336,41 @@ class ApiService {
     return data['stats'] as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> fetchPaymentSettings() async {
+    final response = await http.get(
+      Uri.parse('$apiBaseUrl/admin/payment-settings'),
+      headers: {'authorization': 'Bearer $token'},
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(data['error'] as String? ?? 'Could not load payment settings');
+    }
+    return data['settings'] as Map<String, dynamic>;
+  }
+
+  Future<void> updatePaymentSettings({
+    required String sarNumber,
+    required String bdtNumber,
+    required String bdtAmount,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$apiBaseUrl/admin/payment-settings'),
+      headers: {
+        'authorization': 'Bearer $token',
+        'content-type': 'application/json',
+      },
+      body: jsonEncode({
+        'sarNumber': sarNumber,
+        'bdtNumber': bdtNumber,
+        'bdtAmount': bdtAmount,
+      }),
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(data['error'] as String? ?? 'Could not update payment settings');
+    }
+  }
+
   Future<List<Map<String, dynamic>>> fetchAdminUsers([String search = '']) async {
     final uri = Uri.parse('$apiBaseUrl/admin/users').replace(
       queryParameters: search.isEmpty ? null : {'search': search},

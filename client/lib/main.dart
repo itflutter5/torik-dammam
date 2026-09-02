@@ -3688,6 +3688,13 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
           icon: const Icon(Icons.manage_accounts_outlined),
         ),
         IconButton(
+          tooltip: tr('Payment settings'),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AdminPaymentSettingsPage()),
+          ),
+          icon: const Icon(Icons.account_balance_wallet_outlined),
+        ),
+        IconButton(
           tooltip: tr('Sign out'),
           onPressed: _logout,
           icon: const Icon(Icons.logout),
@@ -3742,6 +3749,10 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                                       ?.copyWith(fontWeight: FontWeight.w800)),
                               const SizedBox(height: 4),
                               Text('${post['user_name']} - ${post['phone']}'),
+                              Text(
+                                '${tr('Post number')}: ${post['post_number'] ?? '-'}',
+                                style: const TextStyle(fontWeight: FontWeight.w800),
+                              ),
                               Text('${tr('Status')}: ${tr(status)}'),
                               Text('${tr('Category')}: ${tr(post['category'] as String? ?? '')}'),
                               if (post['payment_amount'] != null)
@@ -3833,6 +3844,137 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                   ),),
       ],
     ),
+  );
+}
+
+class AdminPaymentSettingsPage extends StatefulWidget {
+  const AdminPaymentSettingsPage({super.key});
+
+  @override
+  State<AdminPaymentSettingsPage> createState() => _AdminPaymentSettingsPageState();
+}
+
+class _AdminPaymentSettingsPageState extends State<AdminPaymentSettingsPage> {
+  final sarNumber = TextEditingController();
+  final bdtNumber = TextEditingController();
+  final bdtAmount = TextEditingController();
+  bool loading = true;
+  bool saving = false;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final settings = await ApiService.instance.fetchPaymentSettings();
+      sarNumber.text = settings['sarNumber'] as String? ?? '';
+      bdtNumber.text = settings['bdtNumber'] as String? ?? '';
+      bdtAmount.text = '${settings['bdtAmount'] ?? 165}';
+      if (mounted) setState(() { loading = false; error = null; });
+    } on ApiException catch (exception) {
+      if (mounted) setState(() { loading = false; error = exception.message; });
+    }
+  }
+
+  Future<void> _save() async {
+    if (sarNumber.text.trim().length < 3 ||
+        bdtNumber.text.trim().length < 3 ||
+        double.tryParse(bdtAmount.text.trim()) == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('Complete all payment settings'))),
+      );
+      return;
+    }
+    setState(() => saving = true);
+    try {
+      await ApiService.instance.updatePaymentSettings(
+        sarNumber: sarNumber.text.trim(),
+        bdtNumber: bdtNumber.text.trim(),
+        bdtAmount: bdtAmount.text.trim(),
+      );
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('Payment settings saved'))),
+      );
+    } on ApiException catch (exception) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(exception.message)));
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    sarNumber.dispose();
+    bdtNumber.dispose();
+    bdtAmount.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(tr('Payment settings'))),
+    body: loading
+        ? const Center(child: RotatingLoader(size: 38))
+        : error != null
+            ? Center(child: Text(error!))
+            : Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextField(
+                              controller: sarNumber,
+                              decoration: InputDecoration(
+                                labelText: tr('Saudi payment number'),
+                                prefixIcon: const Icon(Icons.payments_outlined),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            TextField(
+                              controller: bdtNumber,
+                              decoration: InputDecoration(
+                                labelText: tr('Bangladesh payment number'),
+                                prefixIcon: const Icon(Icons.phone_android_outlined),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            TextField(
+                              controller: bdtAmount,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: InputDecoration(
+                                labelText: tr('BDT amount equivalent to 5 SAR'),
+                                prefixIcon: const Icon(Icons.currency_exchange),
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                            FilledButton.icon(
+                              onPressed: saving ? null : _save,
+                              icon: saving
+                                  ? const RotatingLoader(size: 20)
+                                  : const Icon(Icons.save_outlined),
+                              label: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                child: Text(tr('Save payment settings')),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
   );
 }
 

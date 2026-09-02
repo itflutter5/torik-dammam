@@ -74,6 +74,12 @@ CREATE TABLE IF NOT EXISTS visitor_days (
 );
 CREATE INDEX IF NOT EXISTS visitor_days_visited_on_idx ON visitor_days(visited_on DESC);
 
+CREATE TABLE IF NOT EXISTS app_settings (
+  key VARCHAR(50) PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,
   name VARCHAR(30) NOT NULL UNIQUE,
@@ -162,6 +168,18 @@ try {
   const adminPhone = process.env.ADMIN_PHONE?.trim();
   if (adminPhone) {
     await pool.query('UPDATE users SET is_admin = (phone = $1)', [adminPhone]);
+  }
+  const defaultSettings = [
+    ['payment_number_sar', process.env.PAYMENT_INSTRUCTIONS_SAR ?? ''],
+    ['payment_number_bdt', process.env.PAYMENT_INSTRUCTIONS_BDT ?? ''],
+    ['payment_bdt_amount', process.env.PAYMENT_BDT_AMOUNT ?? '165'],
+  ];
+  for (const [key, value] of defaultSettings) {
+    await pool.query(
+      `INSERT INTO app_settings (key, value) VALUES ($1, $2)
+       ON CONFLICT (key) DO NOTHING`,
+      [key, value],
+    );
   }
   console.log('Database schema is ready.');
 } finally {

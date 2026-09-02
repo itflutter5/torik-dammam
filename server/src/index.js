@@ -59,6 +59,19 @@ const publicUser = (row) => ({
   suspendedUntil: row.suspended_until,
 });
 
+async function getPaymentSettings() {
+  const result = await pool.query(
+    `SELECT key, value FROM app_settings
+     WHERE key IN ('payment_number_sar', 'payment_number_bdt', 'payment_bdt_amount')`,
+  );
+  const values = Object.fromEntries(result.rows.map((row) => [row.key, row.value]));
+  return {
+    sarNumber: values.payment_number_sar ?? '',
+    bdtNumber: values.payment_number_bdt ?? '',
+    bdtAmount: Number(values.payment_bdt_amount ?? 165),
+  };
+}
+
 app.get('/health', async (_req, res, next) => {
   try { await pool.query('SELECT 1'); res.json({ status: 'ok' }); } catch (error) { next(error); }
 });
@@ -465,6 +478,7 @@ app.delete('/api/posts/:postId/save', requireAuth, async (req, res, next) => {
 
 app.get('/api/posts/quota', requireAuth, async (req, res, next) => {
   try {
+    const payment = await getPaymentSettings();
     const result = await pool.query(
       `SELECT COUNT(*)::int AS used FROM posts
        WHERE user_id = $1 AND status <> 'rejected'`, [req.auth.sub],
@@ -473,9 +487,9 @@ app.get('/api/posts/quota', requireAuth, async (req, res, next) => {
     res.json({
       freeRemaining: Math.max(0, 5 - used),
       sarAmount: 5,
-      bdtAmount: Number(process.env.PAYMENT_BDT_AMOUNT ?? 165),
-      instructionsSar: process.env.PAYMENT_INSTRUCTIONS_SAR ?? '',
-      instructionsBdt: process.env.PAYMENT_INSTRUCTIONS_BDT ?? '',
+      bdtAmount: payment.bdtAmount,
+      instructionsSar: payment.sarNumber,
+      instructionsBdt: payment.bdtNumber,
     });
   } catch (error) { next(error); }
 });
@@ -505,8 +519,9 @@ app.post('/api/posts', requireAuth, upload.fields([
       ? await uploadImage(proofFile, req.auth.sub, 'payment-proofs')
       : null;
     const status = requiresPayment ? 'pending' : 'approved';
+    const paymentSettings = requiresPayment ? await getPaymentSettings() : null;
     const paymentAmount = requiresPayment
-      ? (paymentCurrency === 'SAR' ? 5 : Number(process.env.PAYMENT_BDT_AMOUNT ?? 165))
+      ? (paymentCurrency === 'SAR' ? 5 : paymentSettings.bdtAmount)
       : null;
     const result = await pool.query(
       `WITH next_post AS (
@@ -563,6 +578,43 @@ app.get('/api/admin/stats', requireAuth, requireAdmin, async (_req, res, next) =
          (SELECT COUNT(*)::int FROM posts WHERE status = 'pending') AS pending_posts`,
     );
     res.json({ stats: result.rows[0] });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/admin/payment-settings', requireAuth, requireAdmin, async (_req, res, next) => {
+  try {
+    res.json({ settings: await getPaymentSettings() });
+  } catch (error) { next(error); }
+});
+
+app.put('/api/admin/payment-settings', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const input = z.object({
+      sarNumber: z.string().trim().min(3).max(200),
+      bdtNumber: z.string().trim().min(3).max(200),
+      bdtAmount: z.coerce.number().positive().max(100000),
+    }).parse(req.body);
+    const values = [
+      ['payment_number_sar', input.sarNumber],
+      ['payment_number_bdt', input.bdtNumber],
+      ['payment_bdt_amount', String(input.bdtAmount)],
+    ];
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      for (const [key, value] of values) {
+        await client.query(
+          `INSERT INTO app_settings (key, value, updated_at) VALUES ($1, $2, NOW())
+           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
+          [key, value],
+        );
+      }
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally { client.release(); }
+    res.json({ settings: await getPaymentSettings() });
   } catch (error) { next(error); }
 });
 
