@@ -22,10 +22,6 @@ app.use(express.json({ limit: '1mb' }));
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { files: 3, fileSize: 8 * 1024 * 1024 },
-  fileFilter: (_req, file, callback) => callback(
-    file.mimetype.startsWith('image/') ? null : new Error('Only images are allowed'),
-    file.mimetype.startsWith('image/'),
-  ),
 });
 
 const phone = z.string().trim().regex(/^\+9665\d{8}$/, 'Use +9665XXXXXXXX');
@@ -307,7 +303,7 @@ app.use((req, res, next) => {
 app.use((error, _req, res, _next) => {
   console.error(error);
   if (error instanceof z.ZodError) return res.status(400).json({ error: error.issues[0]?.message ?? 'Invalid data' });
-  if (error instanceof multer.MulterError || error.message === 'Only images are allowed') {
+  if (error instanceof multer.MulterError || error.message === 'Only valid images are allowed') {
     return res.status(400).json({ error: error.message });
   }
   res.status(500).json({ error: 'Server error' });

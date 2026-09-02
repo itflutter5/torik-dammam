@@ -8,11 +8,16 @@ export async function uploadImage(file, userId, folder = 'posts') {
   const endpoint = process.env.IMAGEKIT_URL_ENDPOINT?.replace(/\/$/, '');
   if (!privateKey || !endpoint) throw new Error('ImageKit is not configured');
 
-  const compressed = await sharp(file.buffer, { failOn: 'error' })
-    .rotate()
-    .resize({ width: 1800, height: 1800, fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: 80, effort: 4 })
-    .toBuffer();
+  let compressed;
+  try {
+    compressed = await sharp(file.buffer, { failOn: 'error' })
+      .rotate()
+      .resize({ width: 1800, height: 1800, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 80, effort: 4 })
+      .toBuffer();
+  } catch {
+    throw new Error('Only valid images are allowed');
+  }
 
   const form = new FormData();
   form.append('file', new Blob([compressed], { type: 'image/webp' }));
