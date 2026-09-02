@@ -37,3 +37,14 @@ jobs:
       - name: Build web release
         working-directory: client
         run: flutter build web --release
+
+      - name: Build Android APK
+        working-directory: client
+        run: flutter build apk --release --dart-define=API_BASE_URL=https://www.torik-dammam.com/api
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: torik-dammam-android
+          path: client/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
