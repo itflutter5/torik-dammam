@@ -633,7 +633,7 @@ class ScrapMarketApp extends StatelessWidget {
         ),
       ),
       home: Uri.base.path.replaceAll(RegExp(r'/+$'), '') == '/admin-login'
-          ? const AdminLoginPage()
+          ? const AdminEntryPage()
           : const MarketplaceShell(),
     ),
   );
@@ -3565,6 +3565,54 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     ),
   );
+}
+
+class AdminEntryPage extends StatefulWidget {
+  const AdminEntryPage({super.key});
+
+  @override
+  State<AdminEntryPage> createState() => _AdminEntryPageState();
+}
+
+class _AdminEntryPageState extends State<AdminEntryPage> {
+  bool checking = true;
+  bool adminSession = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreAdminSession();
+  }
+
+  Future<void> _restoreAdminSession() async {
+    var validAdmin = false;
+    final restored = await ApiService.instance.restoreSession();
+    if (restored) {
+      try {
+        final user = await ApiService.instance.fetchProfile();
+        validAdmin = user['isAdmin'] == true;
+      } on ApiException {
+        await ApiService.instance.signOut();
+      } catch (_) {
+        // A temporary network failure must not erase a valid saved login.
+        validAdmin = ApiService.instance.currentUser?['isAdmin'] == true;
+      }
+    }
+    if (mounted) {
+      setState(() {
+        adminSession = validAdmin;
+        checking = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (checking) {
+      return const Scaffold(body: Center(child: RotatingLoader(size: 44)));
+    }
+    return adminSession ? const AdminReviewPage() : const AdminLoginPage();
+  }
 }
 
 class AdminLoginPage extends StatefulWidget {
