@@ -253,7 +253,10 @@ app.get('/api/posts', async (_req, res, next) => {
 app.get('/api/posts/mine', requireAuth, async (req, res, next) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC', [req.auth.sub],
+      `SELECT p.*, u.name AS user_name, u.phone
+       FROM posts p JOIN users u ON u.id = p.user_id
+       WHERE p.user_id = $1 ORDER BY p.created_at DESC`,
+      [req.auth.sub],
     );
     res.json({ posts: result.rows });
   } catch (error) { next(error); }

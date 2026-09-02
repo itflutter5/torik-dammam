@@ -529,7 +529,7 @@ class Listing {
     this.postedDay,
     this.icon,
     this.color, [
-    this.imageUrl,
+    this.imageUrls = const [],
   ]);
 
   final String title;
@@ -545,7 +545,7 @@ class Listing {
   final int postedDay;
   final IconData icon;
   final Color color;
-  final String? imageUrl;
+  final List<String> imageUrls;
 }
 
 const listings = [
@@ -641,6 +641,41 @@ const listings = [
   ),
 ];
 
+Listing listingFromApiRow(Map<String, dynamic> row) {
+  final created = DateTime.parse(row['created_at'] as String).toLocal();
+  final urls = (row['image_urls'] as List? ?? const [])
+      .map((value) => value.toString())
+      .toList();
+  final category = row['category'] as String;
+  final icon = switch (category) {
+    'Need Job' => Icons.work_outline,
+    'Need Worker' => Icons.engineering,
+    'Buy Scrap' => Icons.shopping_cart_outlined,
+    'Driver' => Icons.local_shipping_outlined,
+    _ => Icons.recycling,
+  };
+  final priceValue = row['price'];
+  final unitValue = row['unit'] as String?;
+  return Listing(
+    row['title'] as String,
+    category,
+    priceValue == null
+        ? 'Negotiable'
+        : '$priceValue${unitValue == null || unitValue.isEmpty ? '' : ' / $unitValue'}',
+    row['store_number'] as String,
+    row['description'] as String,
+    row['user_name'] as String? ?? 'User',
+    row['phone'] as String? ?? '',
+    '${created.day}/${created.month}/${created.year}',
+    created.year,
+    created.month,
+    created.day,
+    icon,
+    const Color(0xffd8e8e4),
+    urls,
+  );
+}
+
 class MarketplaceShell extends StatefulWidget {
   const MarketplaceShell({super.key});
 
@@ -650,6 +685,7 @@ class MarketplaceShell extends StatefulWidget {
 
 class _MarketplaceShellState extends State<MarketplaceShell> {
   int index = 0;
+  int postsVersion = 0;
   bool signedIn = false;
 
   @override
@@ -671,13 +707,19 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
   Future<void> _openPost() async {
     if (!signedIn && !await _openLogin()) return;
     if (!mounted) return;
-    await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => const CreatePostPage()));
+    final published = await Navigator.of(context)
+        .push<bool>(MaterialPageRoute(builder: (_) => const CreatePostPage()));
+    if (published == true && mounted) {
+      setState(() {
+        postsVersion++;
+        index = 2;
+      });
+    }
   }
 
   Future<void> _selectDestination(int value) async {
-    const profileIndex = 3;
-    if (value == profileIndex && !signedIn) {
+    const protectedIndexes = {2, 3};
+    if (protectedIndexes.contains(value) && !signedIn) {
       final loggedIn = await _openLogin();
       if (!loggedIn || !mounted) return;
     }
@@ -697,9 +739,13 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      HomePage(signedIn: signedIn, onLogin: _openLogin),
+      HomePage(
+        key: ValueKey('home-$postsVersion'),
+        signedIn: signedIn,
+        onLogin: _openLogin,
+      ),
       const SavedPage(),
-      const MyPostsPage(),
+      MyPostsPage(key: ValueKey('my-posts-$postsVersion')),
       ProfilePage(onSignOut: _signOut),
     ];
     return Scaffold(
@@ -811,38 +857,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadPosts() async {
     try {
       final rows = await ApiService.instance.fetchPosts();
-      final mapped = rows.map((row) {
-        final created = DateTime.parse(row['created_at'] as String).toLocal();
-        final urls = (row['image_urls'] as List? ?? const []).cast<String>();
-        final category = row['category'] as String;
-        final icon = switch (category) {
-          'Need Job' => Icons.work_outline,
-          'Need Worker' => Icons.engineering,
-          'Buy Scrap' => Icons.shopping_cart_outlined,
-          'Driver' => Icons.local_shipping_outlined,
-          _ => Icons.recycling,
-        };
-        final priceValue = row['price'];
-        final unitValue = row['unit'] as String?;
-        return Listing(
-          row['title'] as String,
-          category,
-          priceValue == null
-              ? 'Negotiable'
-              : '$priceValue${unitValue == null ? '' : ' / $unitValue'}',
-          row['store_number'] as String,
-          row['description'] as String,
-          row['user_name'] as String,
-          row['phone'] as String,
-          '${created.day}/${created.month}/${created.year}',
-          created.year,
-          created.month,
-          created.day,
-          icon,
-          const Color(0xffd8e8e4),
-          urls.isEmpty ? null : urls.first,
-        );
-      }).toList();
+      final mapped = rows.map(listingFromApiRow).toList();
       if (mounted)
         setState(() {
           remoteListings = mapped;
@@ -1166,9 +1181,23 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class ListingCard extends StatelessWidget {
+class ListingCard extends StatefulWidget {
   const ListingCard({super.key, required this.listing});
   final Listing listing;
+
+  @override
+  State<ListingCard> createState() => _ListingCardState();
+}
+
+class _ListingCardState extends State<ListingCard> {
+  int imageIndex = 0;
+  Listing get listing => widget.listing;
+
+  @override
+  void didUpdateWidget(covariant ListingCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.listing.imageUrls != widget.listing.imageUrls) imageIndex = 0;
+  }
 
   @override
   Widget build(BuildContext context) => Card(
@@ -1179,18 +1208,83 @@ class ListingCard extends StatelessWidget {
       children: [
         SizedBox(
           height: 150,
-          child: listing.imageUrl == null
+          child: listing.imageUrls.isEmpty
               ? ColoredBox(
                   color: listing.color,
                   child: Icon(listing.icon, size: 52, color: Colors.black54),
                 )
-              : Image.network(
-                  listing.imageUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => ColoredBox(
-                    color: listing.color,
-                    child: Icon(listing.icon, size: 52),
-                  ),
+              : Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    PageView.builder(
+                      itemCount: listing.imageUrls.length,
+                      onPageChanged: (value) =>
+                          setState(() => imageIndex = value),
+                      itemBuilder: (context, index) => Image.network(
+                        listing.imageUrls[index],
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => ColoredBox(
+                          color: listing.color,
+                          child: Icon(listing.icon, size: 52),
+                        ),
+                      ),
+                    ),
+                    if (listing.imageUrls.length > 1)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 9,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            listing.imageUrls.length,
+                            (index) => AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              width: index == imageIndex ? 18 : 7,
+                              height: 7,
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              decoration: BoxDecoration(
+                                color: index == imageIndex
+                                    ? Colors.white
+                                    : Colors.white70,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black38,
+                                    blurRadius: 3,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (listing.imageUrls.length > 1)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 4,
+                            ),
+                            child: Text(
+                              '${imageIndex + 1}/${listing.imageUrls.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
         ),
         Expanded(
@@ -1641,13 +1735,117 @@ class SavedPage extends StatelessWidget {
   );
 }
 
-class MyPostsPage extends StatelessWidget {
+class MyPostsPage extends StatefulWidget {
   const MyPostsPage({super.key});
+
   @override
-  Widget build(BuildContext context) => const EmptyPage(
-    icon: Icons.article_outlined,
-    title: 'My posts',
-    message: 'Manage your work and scrap listings here.',
+  State<MyPostsPage> createState() => _MyPostsPageState();
+}
+
+class _MyPostsPageState extends State<MyPostsPage> {
+  bool loading = true;
+  String? error;
+  List<Listing> posts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPosts();
+  }
+
+  Future<void> _loadPosts() async {
+    if (mounted) setState(() => error = null);
+    try {
+      final rows = await ApiService.instance.fetchMyPosts();
+      if (mounted) {
+        setState(() {
+          posts = rows.map(listingFromApiRow).toList();
+          loading = false;
+        });
+      }
+    } on ApiException catch (exception) {
+      if (mounted) {
+        setState(() {
+          error = exception.message;
+          loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          error = 'Cannot connect to the server';
+          loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'My posts',
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Your published advertisements appear here.',
+            style: TextStyle(color: Colors.black54),
+          ),
+          const SizedBox(height: 18),
+          if (loading)
+            const Expanded(child: Center(child: RotatingLoader(size: 38)))
+          else if (error != null)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(error!, textAlign: TextAlign.center),
+                    const SizedBox(height: 10),
+                    FilledButton.icon(
+                      onPressed: () {
+                        setState(() => loading = true);
+                        _loadPosts();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (posts.isEmpty)
+            const Expanded(
+              child: EmptyPage(
+                icon: Icons.article_outlined,
+                title: 'No posts yet',
+                message: 'Your published advertisements will appear here.',
+              ),
+            )
+          else
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _loadPosts,
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: posts.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 14),
+                  itemBuilder: (context, index) => SizedBox(
+                    height: 390,
+                    child: ListingCard(listing: posts[index]),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
   );
 }
 
