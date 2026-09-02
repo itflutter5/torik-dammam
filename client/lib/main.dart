@@ -1200,18 +1200,247 @@ class _ListingCardState extends State<ListingCard> {
   }
 
   @override
-  Widget build(BuildContext context) => Card(
-    elevation: 0,
-    clipBehavior: Clip.antiAlias,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: () => Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => PostDetailPage(listing: listing))),
+    child: Card(
+      elevation: 0,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 150,
+            child: listing.imageUrls.isEmpty
+                ? ColoredBox(
+                    color: listing.color,
+                    child: Icon(listing.icon, size: 52, color: Colors.black54),
+                  )
+                : Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      PageView.builder(
+                        itemCount: listing.imageUrls.length,
+                        onPageChanged: (value) =>
+                            setState(() => imageIndex = value),
+                        itemBuilder: (context, index) => Image.network(
+                          listing.imageUrls[index],
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => ColoredBox(
+                            color: listing.color,
+                            child: Icon(listing.icon, size: 52),
+                          ),
+                        ),
+                      ),
+                      if (listing.imageUrls.length > 1)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 9,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              listing.imageUrls.length,
+                              (index) => AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                width: index == imageIndex ? 18 : 7,
+                                height: 7,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: index == imageIndex
+                                      ? Colors.white
+                                      : Colors.white70,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black38,
+                                      blurRadius: 3,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (listing.imageUrls.length > 1)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 9,
+                                vertical: 4,
+                              ),
+                              child: Text(
+                                '${imageIndex + 1}/${listing.imageUrls.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 40,
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Row(
+                            key: const Key('post-time-left'),
+                            children: [
+                              const Icon(
+                                Icons.schedule_outlined,
+                                size: 15,
+                                color: Colors.black45,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                listing.postedAt,
+                                style: const TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              const Icon(Icons.bookmark_border, size: 21),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Chip(
+                            key: const Key('post-category-right'),
+                            label: Text(listing.type),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    listing.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    listing.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.black54, height: 1.35),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    listing.price,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  Text(
+                    'Store number: ${listing.storeNumber}',
+                    style: const TextStyle(color: Colors.black54, fontSize: 12),
+                  ),
+                  const Divider(height: 18),
+                  Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 16,
+                        child: Icon(Icons.person_outline, size: 18),
+                      ),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              listing.userName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              listing.phoneNumber,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Call ${listing.userName}',
+                        onPressed: () {},
+                        icon: const Icon(Icons.call_outlined),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class PostDetailPage extends StatefulWidget {
+  const PostDetailPage({super.key, required this.listing});
+
+  final Listing listing;
+
+  @override
+  State<PostDetailPage> createState() => _PostDetailPageState();
+}
+
+class _PostDetailPageState extends State<PostDetailPage> {
+  int imageIndex = 0;
+
+  Listing get listing => widget.listing;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Post details')),
+    body: ListView(
+      padding: const EdgeInsets.only(bottom: 32),
       children: [
         SizedBox(
-          height: 150,
+          height: 320,
           child: listing.imageUrls.isEmpty
               ? ColoredBox(
                   color: listing.color,
-                  child: Icon(listing.icon, size: 52, color: Colors.black54),
+                  child: Icon(listing.icon, size: 90, color: Colors.black54),
                 )
               : Stack(
                   fit: StackFit.expand,
@@ -1220,184 +1449,92 @@ class _ListingCardState extends State<ListingCard> {
                       itemCount: listing.imageUrls.length,
                       onPageChanged: (value) =>
                           setState(() => imageIndex = value),
-                      itemBuilder: (context, index) => Image.network(
-                        listing.imageUrls[index],
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => ColoredBox(
-                          color: listing.color,
-                          child: Icon(listing.icon, size: 52),
+                      itemBuilder: (context, index) => InteractiveViewer(
+                        minScale: 1,
+                        maxScale: 4,
+                        child: Image.network(
+                          listing.imageUrls[index],
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => ColoredBox(
+                            color: listing.color,
+                            child: Icon(listing.icon, size: 90),
+                          ),
                         ),
                       ),
                     ),
                     if (listing.imageUrls.length > 1)
                       Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 9,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            listing.imageUrls.length,
-                            (index) => AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              width: index == imageIndex ? 18 : 7,
-                              height: 7,
-                              margin: const EdgeInsets.symmetric(horizontal: 3),
-                              decoration: BoxDecoration(
-                                color: index == imageIndex
-                                    ? Colors.white
-                                    : Colors.white70,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black38,
-                                    blurRadius: 3,
-                                  ),
-                                ],
-                              ),
-                            ),
+                        right: 14,
+                        bottom: 14,
+                        child: Chip(
+                          avatar: const Icon(
+                            Icons.photo_library_outlined,
+                            size: 17,
                           ),
-                        ),
-                      ),
-                    if (listing.imageUrls.length > 1)
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 4,
-                            ),
-                            child: Text(
-                              '${imageIndex + 1}/${listing.imageUrls.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                          label: Text(
+                            '${imageIndex + 1}/${listing.imageUrls.length}',
                           ),
                         ),
                       ),
                   ],
                 ),
         ),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 40,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        child: Row(
-                          key: const Key('post-time-left'),
-                          children: [
-                            const Icon(
-                              Icons.schedule_outlined,
-                              size: 15,
-                              color: Colors.black45,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              listing.postedAt,
-                              style: const TextStyle(
-                                color: Colors.black54,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            const Icon(Icons.bookmark_border, size: 21),
-                          ],
-                        ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Chip(
-                          key: const Key('post-category-right'),
-                          label: Text(listing.type),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ),
-                    ],
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Chip(label: Text(listing.type)),
+                  const Spacer(),
+                  const Icon(Icons.schedule_outlined, size: 17),
+                  const SizedBox(width: 5),
+                  Text(
+                    listing.postedAt,
+                    style: const TextStyle(color: Colors.black54),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                listing.title,
+                style: Theme.of(context).textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                listing.price,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800,
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  listing.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Store number: ${listing.storeNumber}',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const Divider(height: 32),
+              Text(
+                'Description',
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              Text(listing.description, style: const TextStyle(height: 1.5)),
+              const Divider(height: 32),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+                title: Text(
+                  listing.userName,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  listing.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.black54, height: 1.35),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  listing.price,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                Text(
-                  listing.storeNumber,
-                  style: const TextStyle(color: Colors.black54, fontSize: 12),
-                ),
-                const Divider(height: 18),
-                Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 16,
-                      child: Icon(Icons.person_outline, size: 18),
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            listing.userName,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          Text(
-                            listing.phoneNumber,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Call ${listing.userName}',
-                      onPressed: () {},
-                      icon: const Icon(Icons.call_outlined),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                subtitle: Text(listing.phoneNumber),
+                trailing: const Icon(Icons.call_outlined),
+              ),
+            ],
           ),
         ),
       ],
