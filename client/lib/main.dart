@@ -1334,6 +1334,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       child: AspectRatio(
                         aspectRatio: 1.25,
                         child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
+                          clipBehavior: Clip.antiAlias,
                           onPressed: publishing || index > images.length
                               ? null
                               : () {
@@ -1343,18 +1345,30 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                     _pickImage();
                                   }
                                 },
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(index < images.length
-                                  ? Icons.check_circle_outline
-                                  : Icons.add_a_photo_outlined),
-                              const SizedBox(height: 5),
-                              Text(index < images.length
-                                  ? 'Added (tap to remove)'
-                                  : 'Photo ${index + 1}'),
-                            ],
-                          ),
+                          child: index < images.length
+                              ? Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Image.memory(images[index].bytes, fit: BoxFit.cover),
+                                    const Positioned(
+                                      right: 6,
+                                      top: 6,
+                                      child: CircleAvatar(
+                                        radius: 13,
+                                        backgroundColor: Colors.black54,
+                                        child: Icon(Icons.close, size: 17, color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.add_a_photo_outlined),
+                                    const SizedBox(height: 5),
+                                    Text('Photo ${index + 1}'),
+                                  ],
+                                ),
                         ),
                       ),
                     ),
@@ -1470,6 +1484,9 @@ class _ProfilePageState extends State<ProfilePage> {
   );
   bool loadingProfile = true;
   bool savingProfile = false;
+  bool uploadingProfileImage = false;
+  String? profileImageUrl;
+  final profileImagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -1483,6 +1500,7 @@ class _ProfilePageState extends State<ProfilePage> {
     name.text = user['name'] as String? ?? '';
     phone.text = user['phone'] as String? ?? '';
     savedStoreNumber = user['storeNumber'] as String? ?? '';
+    profileImageUrl = user['profileImageUrl'] as String?;
     storeNumber.text = savedStoreNumber;
     final changedAt = user['storeNumberChangedAt'] as String?;
     lastStoreNumberChange = changedAt == null
@@ -1543,6 +1561,36 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _pickProfileImage() async {
+    final image = await profileImagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 82,
+      maxWidth: 1800,
+    );
+    if (image == null) return;
+    final bytes = await image.readAsBytes();
+    if (bytes.length > 8 * 1024 * 1024) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Image must be smaller than 8 MB')),
+      );
+      return;
+    }
+    setState(() => uploadingProfileImage = true);
+    try {
+      _applyUser(await ApiService.instance.uploadProfileImage(
+        UploadImage(image.name, bytes),
+      ));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile picture updated')),
+      );
+    } on ApiException catch (error) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => uploadingProfileImage = false);
+    }
+  }
+
   bool get canChangeStoreNumber => daysUntilStoreChange == 0;
 
   int get daysUntilStoreChange {
@@ -1593,25 +1641,30 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        const CircleAvatar(
+                        CircleAvatar(
                           radius: 52,
-                          backgroundColor: Color(0xffe1f0e9),
-                          child: Icon(Icons.person_outline, size: 52),
+                          backgroundColor: const Color(0xffe1f0e9),
+                          backgroundImage: profileImageUrl == null
+                              ? null
+                              : NetworkImage(profileImageUrl!),
+                          child: profileImageUrl == null
+                              ? const Icon(Icons.person_outline, size: 52)
+                              : null,
                         ),
                         Positioned(
                           right: -4,
                           bottom: -4,
                           child: IconButton.filled(
                             tooltip: 'Add profile picture',
-                            onPressed: () => ScaffoldMessenger.of(context)
-                                .showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Choose-picture upload will use ImageKit.',
-                                    ),
-                                  ),
-                                ),
-                            icon: const Icon(Icons.add_a_photo_outlined),
+                            onPressed: uploadingProfileImage
+                                ? null
+                                : _pickProfileImage,
+                            icon: uploadingProfileImage
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.add_a_photo_outlined),
                           ),
                         ),
                       ],
@@ -1619,15 +1672,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 16),
                   TextButton.icon(
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Choose-picture upload will use ImageKit.',
-                        ),
-                      ),
-                    ),
+                    onPressed: uploadingProfileImage ? null : _pickProfileImage,
                     icon: const Icon(Icons.photo_library_outlined),
-                    label: const Text('Add profile picture'),
+                    label: Text(profileImageUrl == null
+                        ? 'Add profile picture'
+                        : 'Change profile picture'),
                   ),
                   const SizedBox(height: 14),
                   TextField(

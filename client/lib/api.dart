@@ -142,6 +142,25 @@ class ApiService {
     return user;
   }
 
+  Future<Map<String, dynamic>> uploadProfileImage(UploadImage image) async {
+    final request = http.MultipartRequest(
+      'PATCH', Uri.parse('$apiBaseUrl/users/me/image'),
+    )..headers['authorization'] = 'Bearer $token';
+    request.files.add(http.MultipartFile.fromBytes(
+      'image', image.bytes, filename: image.name,
+    ));
+    final response = await http.Response.fromStream(await request.send());
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(data['error'] as String? ?? 'Could not upload image');
+    }
+    final user = data['user'] as Map<String, dynamic>;
+    currentUser = user;
+    await (await SharedPreferences.getInstance())
+        .setString('auth_user', jsonEncode(user));
+    return user;
+  }
+
   Future<Map<String, dynamic>> _jsonRequest(
     String path,
     Map<String, dynamic> body,

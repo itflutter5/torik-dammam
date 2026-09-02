@@ -227,6 +227,21 @@ app.patch('/api/users/me', requireAuth, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+app.patch('/api/users/me/image', requireAuth, upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an image' });
+    const imageUrl = await uploadImage(req.file, req.auth.sub, 'profiles');
+    const result = await pool.query(
+      `UPDATE users SET profile_image_url = $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, name, phone, email, store_number,
+                 store_number_changed_at, profile_image_url`,
+      [imageUrl, req.auth.sub],
+    );
+    res.json({ user: publicUser(result.rows[0]) });
+  } catch (error) { next(error); }
+});
+
 app.get('/api/posts', async (_req, res, next) => {
   try {
     const result = await pool.query(
