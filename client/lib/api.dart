@@ -89,6 +89,17 @@ class ApiService {
     );
   }
 
+  Future<void> loginAdmin({required String phone, required String password}) async {
+    final data = await _jsonRequest('/auth/admin-login', {
+      'phone': phone,
+      'password': password,
+    });
+    await _saveSession(
+      data['token'] as String,
+      data['user'] as Map<String, dynamic>,
+    );
+  }
+
   Future<Map<String, dynamic>> startPasswordReset(String identifier) =>
       _jsonRequest('/auth/password-reset/start', {'identifier': identifier});
 

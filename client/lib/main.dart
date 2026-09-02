@@ -622,7 +622,9 @@ class ScrapMarketApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const MarketplaceShell(),
+      home: Uri.base.path.replaceAll(RegExp(r'/+$'), '') == '/admin-login'
+          ? const AdminLoginPage()
+          : const MarketplaceShell(),
     ),
   );
 }
@@ -3399,25 +3401,135 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  if (ApiService.instance.currentUser?['isAdmin'] == true) ...[
-                    FilledButton.tonalIcon(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const AdminReviewPage()),
-                      ),
-                      icon: const Icon(Icons.admin_panel_settings_outlined),
-                      label: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Text(tr('Admin panel')),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
                   OutlinedButton.icon(
                     onPressed: savingProfile ? null : widget.onSignOut,
                     icon: const Icon(Icons.logout),
                     label: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       child: Text(tr('Sign out')),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class AdminLoginPage extends StatefulWidget {
+  const AdminLoginPage({super.key});
+
+  @override
+  State<AdminLoginPage> createState() => _AdminLoginPageState();
+}
+
+class _AdminLoginPageState extends State<AdminLoginPage> {
+  final phone = TextEditingController(text: '+9665');
+  final password = TextEditingController();
+  bool loading = false;
+  bool obscurePassword = true;
+
+  @override
+  void dispose() {
+    phone.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (!RegExp(r'^\+9665\d{8}$').hasMatch(phone.text.trim()) ||
+        password.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('Enter a valid admin phone number and password'))),
+      );
+      return;
+    }
+    setState(() => loading = true);
+    try {
+      await ApiService.instance.loginAdmin(
+        phone: phone.text.trim(),
+        password: password.text,
+      );
+      if (mounted) Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const AdminReviewPage()),
+      );
+    } on ApiException catch (error) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('Cannot connect to the server'))),
+      );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 430),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(Icons.admin_panel_settings, size: 64),
+                  const SizedBox(height: 16),
+                  Text(
+                    tr('Admin login'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    tr('Authorized administrators only'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: phone,
+                    keyboardType: TextInputType.phone,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: tr('Admin phone number'),
+                      prefixIcon: const Icon(Icons.phone_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: password,
+                    obscureText: obscurePassword,
+                    onSubmitted: (_) => _login(),
+                    decoration: InputDecoration(
+                      labelText: tr('Password'),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                        icon: Icon(obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: loading ? null : _login,
+                    icon: loading
+                        ? const RotatingLoader(size: 20)
+                        : const Icon(Icons.login),
+                    label: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Text(tr('Login to admin panel')),
                     ),
                   ),
                 ],
@@ -3443,6 +3555,14 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
   List<Map<String, dynamic>> posts = [];
   final reviewing = <String>{};
   String? statusFilter;
+
+  Future<void> _logout() async {
+    await ApiService.instance.signOut();
+    if (mounted) Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const AdminLoginPage()),
+      (_) => false,
+    );
+  }
 
   @override
   void initState() {
@@ -3483,7 +3603,16 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(tr('Admin panel'))),
+    appBar: AppBar(
+      title: Text(tr('Admin panel')),
+      actions: [
+        IconButton(
+          tooltip: tr('Sign out'),
+          onPressed: _logout,
+          icon: const Icon(Icons.logout),
+        ),
+      ],
+    ),
     body: Column(
       children: [
         SingleChildScrollView(

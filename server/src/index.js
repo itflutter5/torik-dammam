@@ -260,6 +260,21 @@ app.post('/api/auth/login', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+app.post('/api/auth/admin-login', async (req, res, next) => {
+  try {
+    const input = loginSchema.parse(req.body);
+    const result = await pool.query(
+      'SELECT * FROM users WHERE phone = $1 AND is_admin = TRUE',
+      [input.phone],
+    );
+    const user = result.rows[0];
+    if (!user || !await bcrypt.compare(input.password, user.password_hash)) {
+      return res.status(401).json({ error: 'Incorrect admin phone number or password' });
+    }
+    res.json({ token: createToken(user), user: publicUser(user) });
+  } catch (error) { next(error); }
+});
+
 app.post('/api/auth/google', async (req, res, next) => {
   try {
     const clientId = process.env.GOOGLE_CLIENT_ID;
