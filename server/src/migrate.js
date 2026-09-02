@@ -91,6 +91,15 @@ WHERE post_number IS NULL OR post_number !~ '^#[0-9]{12}$';
 ALTER TABLE posts ALTER COLUMN post_number SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS posts_post_number_unique_idx ON posts(post_number);
 ALTER TABLE pending_registrations ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
+
+CREATE TABLE IF NOT EXISTS saved_posts (
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, post_id)
+);
+CREATE INDEX IF NOT EXISTS saved_posts_user_created_idx
+  ON saved_posts(user_id, created_at DESC);
 DO $$
 BEGIN
   IF NOT EXISTS (

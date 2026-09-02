@@ -251,6 +251,35 @@ class ApiService {
     return (data['posts'] as List).cast<Map<String, dynamic>>();
   }
 
+  Future<List<Map<String, dynamic>>> fetchSavedPosts() async {
+    if (token == null) throw const ApiException('Please log in again');
+    final response = await http.get(
+      Uri.parse('$apiBaseUrl/posts/saved'),
+      headers: {'authorization': 'Bearer $token'},
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(
+        data['error'] as String? ?? 'Could not load saved posts',
+      );
+    }
+    return (data['posts'] as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> setPostSaved(String postId, bool saved) async {
+    if (token == null) throw const ApiException('Please log in again');
+    final uri = Uri.parse('$apiBaseUrl/posts/$postId/save');
+    final response = saved
+        ? await http.post(uri, headers: {'authorization': 'Bearer $token'})
+        : await http.delete(uri, headers: {'authorization': 'Bearer $token'});
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(
+        data['error'] as String? ?? 'Could not update saved post',
+      );
+    }
+  }
+
   Future<List<String>> fetchCategories() async {
     final response = await http.get(Uri.parse('$apiBaseUrl/categories'));
     final data = jsonDecode(response.body) as Map<String, dynamic>;

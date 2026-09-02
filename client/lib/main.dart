@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'api.dart';
 import 'google_auth_service.dart';
@@ -532,6 +533,8 @@ class Listing {
     this.imageUrls = const [],
     this.postNumber = '',
     this.profileImageUrl,
+    this.postId = '',
+    this.isSaved = false,
   ]);
 
   final String title;
@@ -550,6 +553,8 @@ class Listing {
   final List<String> imageUrls;
   final String postNumber;
   final String? profileImageUrl;
+  final String postId;
+  final bool isSaved;
 }
 
 const listings = [
@@ -682,6 +687,8 @@ Listing listingFromApiRow(Map<String, dynamic> row) {
     urls,
     row['post_number'] as String? ?? '#${row['id']}',
     row['user_profile_image_url'] as String?,
+    row['id'].toString(),
+    row['is_saved'] as bool? ?? false,
   );
 }
 
@@ -727,7 +734,7 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
   }
 
   Future<void> _selectDestination(int value) async {
-    const protectedIndexes = {2, 3};
+    const protectedIndexes = {1, 2, 3};
     if (protectedIndexes.contains(value) && !signedIn) {
       final loggedIn = await _openLogin();
       if (!loggedIn || !mounted) return;
@@ -753,7 +760,7 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
         signedIn: signedIn,
         onLogin: _openLogin,
       ),
-      const SavedPage(),
+      SavedPage(key: ValueKey('saved-$postsVersion'), onLogin: _openLogin),
       MyPostsPage(key: ValueKey('my-posts-$postsVersion')),
       ProfilePage(onSignOut: _signOut),
     ];
@@ -791,7 +798,7 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.signedIn, required this.onLogin});
 
   final bool signedIn;
-  final VoidCallback onLogin;
+  final Future<bool> Function() onLogin;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -854,6 +861,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  @override
+  void didUpdateWidget(covariant HomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.signedIn && widget.signedIn) _loadPosts();
+  }
+
   Future<void> _loadCategories() async {
     try {
       final values = await ApiService.instance.fetchCategories();
@@ -866,7 +879,23 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadPosts() async {
     try {
       final rows = await ApiService.instance.fetchPosts();
-      final mapped = rows.map(listingFromApiRow).toList();
+      var savedIds = <String>{};
+      if (ApiService.instance.token != null) {
+        try {
+          final savedRows = await ApiService.instance.fetchSavedPosts();
+          savedIds = savedRows.map((row) => row['id'].toString()).toSet();
+        } catch (_) {
+          // The public feed remains available if saved posts cannot be loaded.
+        }
+      }
+      final mapped = rows
+          .map(
+            (row) => listingFromApiRow({
+              ...row,
+              'is_saved': savedIds.contains(row['id'].toString()),
+            }),
+          )
+          .toList();
       if (mounted)
         setState(() {
           remoteListings = mapped;
@@ -1178,7 +1207,8 @@ class _HomePageState extends State<HomePage> {
                   mainAxisSpacing: 14,
                 ),
                 delegate: SliverChildBuilderDelegate(
-                  (context, i) => ListingCard(listing: visible[i]),
+                  (context, i) =>
+                      ListingCard(listing: visible[i], onLogin: widget.onLogin),
                   childCount: visible.length,
                 ),
               ),
@@ -1191,8 +1221,15 @@ class _HomePageState extends State<HomePage> {
 }
 
 class ListingCard extends StatefulWidget {
-  const ListingCard({super.key, required this.listing});
+  const ListingCard({
+    super.key,
+    required this.listing,
+    this.onLogin,
+    this.onSavedChanged,
+  });
   final Listing listing;
+  final Future<bool> Function()? onLogin;
+  final ValueChanged<bool>? onSavedChanged;
 
   @override
   State<ListingCard> createState() => _ListingCardState();
@@ -1200,20 +1237,65 @@ class ListingCard extends StatefulWidget {
 
 class _ListingCardState extends State<ListingCard> {
   int imageIndex = 0;
+  late bool saved = widget.listing.isSaved;
+  bool saving = false;
   Listing get listing => widget.listing;
 
   @override
   void didUpdateWidget(covariant ListingCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.listing.imageUrls != widget.listing.imageUrls) imageIndex = 0;
+    if (oldWidget.listing.postId != widget.listing.postId) {
+      saved = widget.listing.isSaved;
+    }
+  }
+
+  Future<bool> _toggleSaved(bool value) async {
+    if (listing.postId.isEmpty || saving) return false;
+    if (ApiService.instance.token == null) {
+      final loggedIn = await widget.onLogin?.call() ?? false;
+      if (!loggedIn || !mounted) return false;
+    }
+    setState(() => saving = true);
+    try {
+      await ApiService.instance.setPostSaved(listing.postId, value);
+      if (mounted) setState(() => saved = value);
+      widget.onSavedChanged?.call(value);
+      return true;
+    } on ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  Future<void> _callPhone() async {
+    final number = listing.phoneNumber.replaceAll(RegExp(r'[^+\d]'), '');
+    if (number.isEmpty || !await launchUrl(Uri(scheme: 'tel', path: number))) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Phone dialer is not available')),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) => GestureDetector(
     behavior: HitTestBehavior.opaque,
-    onTap: () => Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => PostDetailPage(listing: listing))),
+    onTap: () => Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PostDetailPage(
+          listing: listing,
+          initialSaved: saved,
+          onToggleSaved: _toggleSaved,
+        ),
+      ),
+    ),
     child: Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
@@ -1359,7 +1441,23 @@ class _ListingCardState extends State<ListingCard> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              const Icon(Icons.bookmark_border, size: 21),
+                              IconButton(
+                                tooltip: saved
+                                    ? 'Remove from saved'
+                                    : 'Save post',
+                                visualDensity: VisualDensity.compact,
+                                onPressed: saving
+                                    ? null
+                                    : () => _toggleSaved(!saved),
+                                icon: saving
+                                    ? const RotatingLoader(size: 19)
+                                    : Icon(
+                                        saved
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_border,
+                                        size: 21,
+                                      ),
+                              ),
                             ],
                           ),
                         ),
@@ -1448,7 +1546,7 @@ class _ListingCardState extends State<ListingCard> {
                       ),
                       IconButton(
                         tooltip: 'Call ${listing.userName}',
-                        onPressed: () {},
+                        onPressed: _callPhone,
                         icon: const Icon(Icons.call_outlined),
                       ),
                     ],
@@ -1464,9 +1562,16 @@ class _ListingCardState extends State<ListingCard> {
 }
 
 class PostDetailPage extends StatefulWidget {
-  const PostDetailPage({super.key, required this.listing});
+  const PostDetailPage({
+    super.key,
+    required this.listing,
+    required this.initialSaved,
+    required this.onToggleSaved,
+  });
 
   final Listing listing;
+  final bool initialSaved;
+  final Future<bool> Function(bool) onToggleSaved;
 
   @override
   State<PostDetailPage> createState() => _PostDetailPageState();
@@ -1474,8 +1579,29 @@ class PostDetailPage extends StatefulWidget {
 
 class _PostDetailPageState extends State<PostDetailPage> {
   int imageIndex = 0;
+  late bool saved = widget.initialSaved;
+  bool saving = false;
 
   Listing get listing => widget.listing;
+
+  Future<void> _toggleSaved() async {
+    if (saving) return;
+    setState(() => saving = true);
+    final changed = await widget.onToggleSaved(!saved);
+    if (changed && mounted) setState(() => saved = !saved);
+    if (mounted) setState(() => saving = false);
+  }
+
+  Future<void> _callPhone() async {
+    final number = listing.phoneNumber.replaceAll(RegExp(r'[^+\d]'), '');
+    if (number.isEmpty || !await launchUrl(Uri(scheme: 'tel', path: number))) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Phone dialer is not available')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -1542,6 +1668,13 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     listing.postedAt,
                     style: const TextStyle(color: Colors.black54),
                   ),
+                  IconButton(
+                    tooltip: saved ? 'Remove from saved' : 'Save post',
+                    onPressed: saving ? null : _toggleSaved,
+                    icon: saving
+                        ? const RotatingLoader(size: 20)
+                        : Icon(saved ? Icons.bookmark : Icons.bookmark_border),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -1597,7 +1730,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 subtitle: Text(listing.phoneNumber),
-                trailing: const Icon(Icons.call_outlined),
+                trailing: IconButton(
+                  tooltip: 'Call ${listing.userName}',
+                  onPressed: _callPhone,
+                  icon: const Icon(Icons.call_outlined),
+                ),
               ),
             ],
           ),
@@ -1943,13 +2080,115 @@ class _CreatePostPageState extends State<CreatePostPage> {
   );
 }
 
-class SavedPage extends StatelessWidget {
-  const SavedPage({super.key});
+class SavedPage extends StatefulWidget {
+  const SavedPage({super.key, required this.onLogin});
+
+  final Future<bool> Function() onLogin;
+
   @override
-  Widget build(BuildContext context) => const EmptyPage(
-    icon: Icons.bookmark_outline,
-    title: 'Saved posts',
-    message: 'Posts you save will appear here.',
+  State<SavedPage> createState() => _SavedPageState();
+}
+
+class _SavedPageState extends State<SavedPage> {
+  bool loading = true;
+  String? error;
+  List<Listing> posts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final rows = await ApiService.instance.fetchSavedPosts();
+      if (mounted) {
+        setState(() {
+          posts = rows.map(listingFromApiRow).toList();
+          loading = false;
+          error = null;
+        });
+      }
+    } on ApiException catch (exception) {
+      if (mounted) {
+        setState(() {
+          error = exception.message;
+          loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Saved posts',
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 18),
+          if (loading)
+            const Expanded(child: Center(child: RotatingLoader(size: 38)))
+          else if (error != null)
+            Expanded(
+              child: Center(
+                child: FilledButton.icon(
+                  onPressed: () {
+                    setState(() => loading = true);
+                    _load();
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: Text(error!),
+                ),
+              ),
+            )
+          else if (posts.isEmpty)
+            const Expanded(
+              child: EmptyPage(
+                icon: Icons.bookmark_outline,
+                title: 'No saved posts',
+                message: 'Tap a bookmark icon to save a post here.',
+              ),
+            )
+          else
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _load,
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: posts.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 14),
+                  itemBuilder: (context, index) {
+                    final post = posts[index];
+                    return SizedBox(
+                      height: 410,
+                      child: ListingCard(
+                        listing: post,
+                        onLogin: widget.onLogin,
+                        onSavedChanged: (saved) {
+                          if (!saved && mounted) {
+                            setState(
+                              () => posts.removeWhere(
+                                (item) => item.postId == post.postId,
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
   );
 }
 

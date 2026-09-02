@@ -264,6 +264,53 @@ app.get('/api/posts/mine', requireAuth, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+app.get('/api/posts/saved', requireAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT p.*, u.name AS user_name, u.phone,
+              u.profile_image_url AS user_profile_image_url,
+              TRUE AS is_saved
+       FROM saved_posts s
+       JOIN posts p ON p.id = s.post_id
+       JOIN users u ON u.id = p.user_id
+       WHERE s.user_id = $1
+       ORDER BY s.created_at DESC`,
+      [req.auth.sub],
+    );
+    res.json({ posts: result.rows });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/posts/:postId/save', requireAuth, async (req, res, next) => {
+  try {
+    const postId = z.coerce.number().int().positive().parse(req.params.postId);
+    const result = await pool.query(
+      `INSERT INTO saved_posts (user_id, post_id) VALUES ($1, $2)
+       ON CONFLICT (user_id, post_id) DO NOTHING RETURNING post_id`,
+      [req.auth.sub, postId],
+    );
+    if (!result.rows[0]) {
+      const exists = await pool.query('SELECT 1 FROM posts WHERE id = $1', [postId]);
+      if (!exists.rows[0]) return res.status(404).json({ error: 'Post not found' });
+    }
+    res.json({ saved: true });
+  } catch (error) {
+    if (error.code === '23503') return res.status(404).json({ error: 'Post not found' });
+    next(error);
+  }
+});
+
+app.delete('/api/posts/:postId/save', requireAuth, async (req, res, next) => {
+  try {
+    const postId = z.coerce.number().int().positive().parse(req.params.postId);
+    await pool.query(
+      'DELETE FROM saved_posts WHERE user_id = $1 AND post_id = $2',
+      [req.auth.sub, postId],
+    );
+    res.json({ saved: false });
+  } catch (error) { next(error); }
+});
+
 app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, next) => {
   try {
     const input = postSchema.parse(req.body);
