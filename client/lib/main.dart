@@ -30,6 +30,8 @@ const translations = <String, Map<String, String>>{
     'Login': 'লগইন',
     'Login / Sign up': 'লগইন / নিবন্ধন',
     'Create account': 'অ্যাকাউন্ট তৈরি করুন',
+    'All fields marked * are required': '* চিহ্নিত সব ঘর পূরণ করা আবশ্যক',
+    'All registration fields are required': 'নিবন্ধনের সব ঘর পূরণ করা আবশ্যক',
     'Create a post': 'পোস্ট তৈরি করুন',
     'Post details': 'পোস্টের বিস্তারিত',
     'Saved posts': 'সংরক্ষিত পোস্ট',
@@ -62,6 +64,8 @@ const translations = <String, Map<String, String>>{
     'Login': 'لاگ اِن',
     'Login / Sign up': 'لاگ اِن / رجسٹر',
     'Create account': 'اکاؤنٹ بنائیں',
+    'All fields marked * are required': '* کے نشان والے تمام خانے لازمی ہیں',
+    'All registration fields are required': 'رجسٹریشن کے تمام خانے پُر کرنا ضروری ہیں',
     'Create a post': 'پوسٹ بنائیں',
     'Post details': 'پوسٹ کی تفصیل',
     'Saved posts': 'محفوظ پوسٹس',
@@ -94,6 +98,8 @@ const translations = <String, Map<String, String>>{
     'Login': 'लॉग इन',
     'Login / Sign up': 'लॉग इन / पंजीकरण',
     'Create account': 'खाता बनाएँ',
+    'All fields marked * are required': '* चिह्न वाले सभी फ़ील्ड आवश्यक हैं',
+    'All registration fields are required': 'पंजीकरण के सभी फ़ील्ड भरना आवश्यक है',
     'Create a post': 'पोस्ट बनाएँ',
     'Post details': 'पोस्ट विवरण',
     'Saved posts': 'सहेजी गई पोस्ट',
@@ -711,11 +717,21 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                     ),
                     const SizedBox(height: 26),
                     if (registering) ...[
+                      Text(
+                        tr('All fields marked * are required'),
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (registering) ...[
                       TextField(
                         controller: name,
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
-                          labelText: tr('Name'),
+                          labelText: '${tr('Name')} *',
                           prefixIcon: const Icon(Icons.person_outline),
                         ),
                       ),
@@ -726,7 +742,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
-                        labelText: tr('Saudi phone number'),
+                        labelText: registering
+                            ? '${tr('Saudi phone number')} *'
+                            : tr('Saudi phone number'),
                         hintText: '+9665XXXXXXXX',
                         prefixIcon: const Icon(Icons.phone_outlined),
                       ),
@@ -738,7 +756,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
-                          labelText: tr('Email address'),
+                          labelText: '${tr('Email address')} *',
                           prefixIcon: const Icon(Icons.email_outlined),
                         ),
                       ),
@@ -749,7 +767,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       obscureText: obscurePassword,
                       onSubmitted: registering ? null : (_) => _enterApp(),
                       decoration: InputDecoration(
-                        labelText: tr('Password'),
+                        labelText: registering
+                            ? '${tr('Password')} *'
+                            : tr('Password'),
                         hintText: tr('Enter any password'),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
@@ -774,7 +794,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                           FilteringTextInputFormatter.digitsOnly,
                         ],
                         decoration: InputDecoration(
-                          labelText: tr('Store number'),
+                          labelText: '${tr('Store number')} *',
                           hintText: '0101',
                           counterText: '',
                           prefixIcon: const Icon(Icons.store_outlined),
@@ -837,6 +857,17 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   );
 
   Future<void> _enterApp() async {
+    if (registering &&
+        (name.text.trim().isEmpty ||
+            phone.text.trim().isEmpty ||
+            email.text.trim().isEmpty ||
+            password.text.isEmpty ||
+            storeNumber.text.trim().isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('All registration fields are required'))),
+      );
+      return;
+    }
     if (!RegExp(r'^\+9665\d{8}$').hasMatch(phone.text.trim()) ||
         password.text.length < (registering ? 8 : 1) ||
         (registering &&

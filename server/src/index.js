@@ -26,12 +26,12 @@ const upload = multer({
 
 const phone = z.string().trim().regex(/^\+9665\d{8}$/, 'Use +9665XXXXXXXX');
 const registerSchema = z.object({
-  name: z.string().trim().min(2).max(100),
+  name: z.string({ error: 'Name is required' }).trim().min(2, 'Name is required').max(100),
   phone,
-  email: z.string().trim().toLowerCase().email().max(254),
-  password: z.string().min(8).max(100),
-  storeNumber: z.string().regex(/^\d{1,4}$/),
-  verificationMethod: z.enum(['phone', 'email']),
+  email: z.string({ error: 'Email is required' }).trim().toLowerCase().email('Enter a valid email').max(254),
+  password: z.string({ error: 'Password is required' }).min(8, 'Password must be at least 8 characters').max(100),
+  storeNumber: z.string({ error: 'Store number is required' }).regex(/^\d{1,4}$/, 'Store number must contain 1 to 4 digits'),
+  verificationMethod: z.enum(['phone', 'email'], { error: 'Choose phone or email verification' }),
 });
 const loginSchema = z.object({ phone, password: z.string().min(1).max(100) });
 const postSchema = z.object({
