@@ -632,6 +632,15 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
         .push(MaterialPageRoute(builder: (_) => const CreatePostPage()));
   }
 
+  Future<void> _selectDestination(int value) async {
+    const profileIndex = 3;
+    if (value == profileIndex && !signedIn) {
+      final loggedIn = await _openLogin();
+      if (!loggedIn || !mounted) return;
+    }
+    if (mounted) setState(() => index = value);
+  }
+
   Future<void> _signOut() async {
     await ApiService.instance.signOut();
     await GoogleAuthService.instance.signOut();
@@ -659,7 +668,7 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
-        onDestinationSelected: (value) => setState(() => index = value),
+        onDestinationSelected: _selectDestination,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
           NavigationDestination(
