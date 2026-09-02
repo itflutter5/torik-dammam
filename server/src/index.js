@@ -268,7 +268,7 @@ app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, 
   try {
     const input = postSchema.parse(req.body);
     const employmentPost = input.category === 'Need Worker' || input.category === 'Need Job';
-    const postNumber = `#${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+    const postNumber = `#${crypto.randomInt(100000000000, 1000000000000)}`;
     const imageUrls = await Promise.all((req.files ?? []).map((file) => uploadImage(file, req.auth.sub)));
     const result = await pool.query(
       `INSERT INTO posts

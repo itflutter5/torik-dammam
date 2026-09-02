@@ -1222,86 +1222,111 @@ class _ListingCardState extends State<ListingCard> {
         children: [
           SizedBox(
             height: 150,
-            child: listing.imageUrls.isEmpty
-                ? ColoredBox(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (listing.imageUrls.isEmpty)
+                  ColoredBox(
                     color: listing.color,
                     child: Icon(listing.icon, size: 52, color: Colors.black54),
                   )
-                : Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      PageView.builder(
-                        itemCount: listing.imageUrls.length,
-                        onPageChanged: (value) =>
-                            setState(() => imageIndex = value),
-                        itemBuilder: (context, index) => Image.network(
-                          listing.imageUrls[index],
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => ColoredBox(
-                            color: listing.color,
-                            child: Icon(listing.icon, size: 52),
+                else
+                  PageView.builder(
+                    itemCount: listing.imageUrls.length,
+                    onPageChanged: (value) =>
+                        setState(() => imageIndex = value),
+                    itemBuilder: (context, index) => Image.network(
+                      listing.imageUrls[index],
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => ColoredBox(
+                        color: listing.color,
+                        child: Icon(listing.icon, size: 52),
+                      ),
+                    ),
+                  ),
+                if (listing.imageUrls.length > 1)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 9,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        listing.imageUrls.length,
+                        (index) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: index == imageIndex ? 18 : 7,
+                          height: 7,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            color: index == imageIndex
+                                ? Colors.white
+                                : Colors.white70,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black38, blurRadius: 3),
+                            ],
                           ),
                         ),
                       ),
-                      if (listing.imageUrls.length > 1)
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 9,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(
-                              listing.imageUrls.length,
-                              (index) => AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                width: index == imageIndex ? 18 : 7,
-                                height: 7,
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: index == imageIndex
-                                      ? Colors.white
-                                      : Colors.white70,
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.black38,
-                                      blurRadius: 3,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (listing.imageUrls.length > 1)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 9,
-                                vertical: 4,
-                              ),
-                              child: Text(
-                                '${imageIndex + 1}/${listing.imageUrls.length}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
+                if (listing.imageUrls.length > 1)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          '${imageIndex + 1}/${listing.imageUrls.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (listing.postNumber.isNotEmpty)
+                  Positioned(
+                    left: 8,
+                    top: 8,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black26, blurRadius: 5),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        child: Text(
+                          listing.postNumber,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           Expanded(
             child: Padding(

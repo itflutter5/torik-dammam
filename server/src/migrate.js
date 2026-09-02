@@ -86,8 +86,8 @@ ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_category_check;
 ALTER TABLE posts ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS post_number VARCHAR(13);
 UPDATE posts
-SET post_number = '#' || UPPER(SUBSTRING(MD5(id::text || ':' || created_at::text), 1, 12))
-WHERE post_number IS NULL;
+SET post_number = '#' || LPAD(id::text, 12, '0')
+WHERE post_number IS NULL OR post_number !~ '^#[0-9]{12}$';
 ALTER TABLE posts ALTER COLUMN post_number SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS posts_post_number_unique_idx ON posts(post_number);
 ALTER TABLE pending_registrations ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
