@@ -467,15 +467,37 @@ class LanguageSelector extends StatelessWidget {
     tooltip: tr('Language'),
     initialValue: appLanguage.value,
     onSelected: setLanguage,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.translate, size: 21),
-          const SizedBox(width: 6),
-          Text(languageNames[appLanguage.value]!),
-        ],
+    position: PopupMenuPosition.under,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0x33176B52)),
+        boxShadow: const [BoxShadow(color: Color(0x14176B52), blurRadius: 8)],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.language_rounded,
+              size: 20,
+              color: Color(0xff176b52),
+            ),
+            const SizedBox(width: 7),
+            Text(
+              languageNames[appLanguage.value]!,
+              style: const TextStyle(
+                color: Color(0xff153d31),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+          ],
+        ),
       ),
     ),
     itemBuilder: (_) => languageNames.entries
@@ -1638,53 +1660,166 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: const Color(0xffe1f0e9),
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Image.asset(
-                                'assets/branding/torik-dammam-logo.png',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Torik Dammam Marketplace',
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(fontWeight: FontWeight.w800),
-                                ),
-                                Text(
-                                  tr(
-                                    'Find everything to buy and sell in one place.',
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final compact = constraints.maxWidth < 680;
+                          final brand = Row(
+                            children: [
+                              Container(
+                                width: 54,
+                                height: 54,
+                                padding: const EdgeInsets.all(7),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(17),
+                                  border: Border.all(
+                                    color: const Color(0x33176B52),
                                   ),
-                                  style: TextStyle(color: Colors.black54),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x1F176B52),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Image.asset(
+                                  'assets/branding/torik-dammam-logo.png',
+                                ),
+                              ),
+                              const SizedBox(width: 13),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Torik Dammam Marketplace',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            color: const Color(0xff153d31),
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: -0.4,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      tr(
+                                        'Find everything to buy and sell in one place.',
+                                      ),
+                                      maxLines: compact ? 2 : 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Color(0xff63746d),
+                                        fontSize: 13,
+                                        height: 1.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                          final account = widget.signedIn
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 13,
+                                    vertical: 9,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xffdaf4e8),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: const Color(0x40176B52),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.verified_rounded,
+                                        color: Color(0xff176b52),
+                                        size: 19,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        tr('Signed in'),
+                                        style: const TextStyle(
+                                          color: Color(0xff176b52),
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : FilledButton.icon(
+                                  onPressed: widget.onLogin,
+                                  icon: const Icon(
+                                    Icons.login_rounded,
+                                    size: 19,
+                                  ),
+                                  label: Text(
+                                    compact
+                                        ? tr('Login')
+                                        : tr('Login / Sign up'),
+                                  ),
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 15,
+                                      vertical: 11,
+                                    ),
+                                  ),
+                                );
+                          return Container(
+                            padding: EdgeInsets.all(compact ? 14 : 17),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Colors.white, Color(0xffeef8f3)],
+                              ),
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(
+                                color: const Color(0x26176B52),
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x12176B52),
+                                  blurRadius: 16,
+                                  offset: Offset(0, 5),
                                 ),
                               ],
                             ),
-                          ),
-                          const LanguageSelector(),
-                          TextButton.icon(
-                            onPressed: widget.signedIn ? null : widget.onLogin,
-                            icon: Icon(
-                              widget.signedIn
-                                  ? Icons.check_circle_outline
-                                  : Icons.login,
-                            ),
-                            label: Text(
-                              widget.signedIn
-                                  ? tr('Signed in')
-                                  : MediaQuery.sizeOf(context).width < 600
-                                  ? tr('Login')
-                                  : tr('Login / Sign up'),
-                            ),
-                          ),
-                        ],
+                            child: compact
+                                ? Column(
+                                    children: [
+                                      brand,
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        child: Divider(height: 1),
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const LanguageSelector(),
+                                          account,
+                                        ],
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      Expanded(child: brand),
+                                      const SizedBox(width: 18),
+                                      const LanguageSelector(),
+                                      const SizedBox(width: 10),
+                                      account,
+                                    ],
+                                  ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 18),
                       Card(
