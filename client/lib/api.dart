@@ -46,15 +46,26 @@ class ApiService {
     await preferences.setString('auth_user', jsonEncode(user));
   }
 
-  Future<void> register({
+  Future<Map<String, dynamic>> startRegistration({
     required String name,
     required String phone,
+    required String email,
     required String password,
     required String storeNumber,
+    required String verificationMethod,
   }) async {
-    final data = await _jsonRequest('/auth/register', {
-      'name': name, 'phone': phone, 'password': password,
-      'storeNumber': storeNumber,
+    return _jsonRequest('/auth/register/start', {
+      'name': name, 'phone': phone, 'email': email, 'password': password,
+      'storeNumber': storeNumber, 'verificationMethod': verificationMethod,
+    });
+  }
+
+  Future<void> verifyRegistration({
+    required String verificationId,
+    required String code,
+  }) async {
+    final data = await _jsonRequest('/auth/register/verify', {
+      'verificationId': verificationId, 'code': code,
     });
     await _saveSession(
       data['token'] as String,
@@ -85,6 +96,14 @@ class ApiService {
       data['token'] as String,
       data['user'] as Map<String, dynamic>,
     );
+  }
+
+  Future<void> signOut() async {
+    token = null;
+    currentUser = null;
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove('auth_token');
+    await preferences.remove('auth_user');
   }
 
   Future<Map<String, dynamic>> fetchProfile() async {

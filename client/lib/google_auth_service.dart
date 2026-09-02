@@ -30,4 +30,8 @@ class GoogleAuthService {
     _initialized = true;
     return true;
   }
+
+  Future<void> signOut() async {
+    if (_initialized) await GoogleSignIn.instance.signOut();
+  }
 }

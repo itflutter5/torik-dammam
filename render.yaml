@@ -17,5 +17,11 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SMS_SENDER
+        value: TorikDammam
       - key: ALLOWED_ORIGINS
         value: https://torik-dammam.onrender.com

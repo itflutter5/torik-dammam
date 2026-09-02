@@ -50,11 +50,13 @@ class PasswordAccessPage extends StatefulWidget {
 class _PasswordAccessPageState extends State<PasswordAccessPage> {
   final name = TextEditingController();
   final phone = TextEditingController(text: '+9665');
+  final email = TextEditingController();
   final password = TextEditingController();
   final storeNumber = TextEditingController();
   bool loading = false;
   bool obscurePassword = true;
   bool googleReady = false;
+  String verificationMethod = 'phone';
   StreamSubscription<String>? googleSubscription;
 
   bool get registering => widget.registrationMode;
@@ -103,6 +105,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     googleSubscription?.cancel();
     name.dispose();
     phone.dispose();
+    email.dispose();
     password.dispose();
     storeNumber.dispose();
     super.dispose();
@@ -165,6 +168,37 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                         prefixIcon: Icon(Icons.phone_outlined),
                       ),
                     ),
+                    if (registering) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: email,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Email address',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SegmentedButton<String>(
+                        segments: const [
+                          ButtonSegment(
+                            value: 'phone',
+                            icon: Icon(Icons.sms_outlined),
+                            label: Text('Verify phone'),
+                          ),
+                          ButtonSegment(
+                            value: 'email',
+                            icon: Icon(Icons.mark_email_read_outlined),
+                            label: Text('Verify email'),
+                          ),
+                        ],
+                        selected: {verificationMethod},
+                        onSelectionChanged: (value) => setState(
+                          () => verificationMethod = value.first,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     TextField(
                       controller: password,
@@ -255,6 +289,8 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     if (!RegExp(r'^\+9665\d{8}$').hasMatch(phone.text.trim()) ||
         password.text.length < (registering ? 8 : 1) ||
         (registering && (name.text.trim().length < 2 ||
+            !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                .hasMatch(email.text.trim()) ||
             !RegExp(r'^\d{4}$').hasMatch(storeNumber.text.trim())))) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(
@@ -266,9 +302,20 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     setState(() => loading = true);
     try {
       if (registering) {
-        await ApiService.instance.register(
+        final pending = await ApiService.instance.startRegistration(
           name: name.text.trim(), phone: phone.text.trim(),
-          password: password.text, storeNumber: storeNumber.text.trim(),
+          email: email.text.trim().toLowerCase(), password: password.text,
+          storeNumber: storeNumber.text.trim(),
+          verificationMethod: verificationMethod,
+        );
+        if (!mounted) return;
+        final code = await _askForVerificationCode(
+          pending['destination'] as String? ?? '',
+        );
+        if (code == null) return;
+        await ApiService.instance.verifyRegistration(
+          verificationId: pending['verificationId'] as String,
+          code: code,
         );
       } else {
         await ApiService.instance.login(
@@ -286,6 +333,50 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     } finally {
       if (mounted) setState(() => loading = false);
     }
+  }
+
+  Future<String?> _askForVerificationCode(String destination) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Enter verification code'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('We sent a 6-digit code to $destination.'),
+            const SizedBox(height: 14),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                labelText: 'Verification code', counterText: '',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (RegExp(r'^\d{6}$').hasMatch(controller.text)) {
+                Navigator.pop(dialogContext, controller.text);
+              }
+            },
+            child: const Text('Verify'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return result;
   }
 
   Future<void> _openRegistration() async {
@@ -465,13 +556,22 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
         .push(MaterialPageRoute(builder: (_) => const CreatePostPage()));
   }
 
+  Future<void> _signOut() async {
+    await ApiService.instance.signOut();
+    await GoogleAuthService.instance.signOut();
+    if (mounted) setState(() {
+      signedIn = false;
+      index = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = [
       HomePage(signedIn: signedIn, onLogin: _openLogin),
       const SavedPage(),
       const MyPostsPage(),
-      const ProfilePage(),
+      ProfilePage(onSignOut: _signOut),
     ];
     return Scaffold(
       body: pages[index],
@@ -1352,7 +1452,9 @@ class MyPostsPage extends StatelessWidget {
 }
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({super.key, required this.onSignOut});
+
+  final Future<void> Function() onSignOut;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -1590,6 +1692,15 @@ class _ProfilePageState extends State<ProfilePage> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text('Save profile'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: savingProfile ? null : widget.onSignOut,
+                    icon: const Icon(Icons.logout),
+                    label: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      child: Text('Sign out'),
                     ),
                   ),
                 ],

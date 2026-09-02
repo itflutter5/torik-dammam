@@ -48,6 +48,9 @@ Set these environment variables on the API service in Render:
 - `IMAGEKIT_URL_ENDPOINT`: for example `https://ik.imagekit.io/account_id`
 - `ALLOWED_ORIGINS`: `https://torik-dammam.onrender.com`
 - `GOOGLE_CLIENT_ID`: Google OAuth 2.0 Web application client ID
+- `BREVO_API_KEY`: Brevo API key used for verification delivery
+- `BREVO_SENDER_EMAIL`: a sender address verified in Brevo
+- `BREVO_SMS_SENDER`: SMS sender name (defaults to `TorikDammam`)
 
 Render generates `JWT_SECRET` from `render.yaml`. Never expose the Neon
 connection string or ImageKit private key to Flutter. For local API development,
@@ -76,6 +79,13 @@ Save the resulting client ID as `GOOGLE_CLIENT_ID` on the Render
 `torik-dammam` service. The API verifies every Google ID token before creating
 or loading its Neon user. No Google client secret is required for this sign-in
 flow.
+
+### Registration verification
+
+Registration collects both a Saudi mobile number and an email address. The
+user chooses whether to receive the six-digit verification code by
+transactional SMS or email. Codes expire after 10 minutes and are limited to
+five attempts. The Neon user is created only after successful verification.
 
 ## GitHub and Render deployment
 

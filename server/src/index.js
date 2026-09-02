@@ -9,6 +9,8 @@ import { z } from 'zod';
 import { createToken, requireAuth } from './auth.js';
 import { pool } from './db.js';
 import { uploadImage } from './imagekit.js';
+import crypto from 'node:crypto';
+import { createCode, hashCode, sendVerification } from './verification.js';
 
 const app = express();
 const googleClient = new OAuth2Client();
@@ -30,8 +32,10 @@ const phone = z.string().regex(/^\+9665\d{8}$/, 'Use +9665XXXXXXXX');
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
   phone,
+  email: z.string().email().max(254),
   password: z.string().min(8).max(100),
   storeNumber: z.string().regex(/^\d{4}$/),
+  verificationMethod: z.enum(['phone', 'email']),
 });
 const loginSchema = z.object({ phone, password: z.string().min(1).max(100) });
 const postSchema = z.object({
@@ -66,22 +70,72 @@ app.get('/api/categories', async (_req, res, next) => {
   } catch (error) { next(error); }
 });
 
-app.post('/api/auth/register', async (req, res, next) => {
+app.post('/api/auth/register/start', async (req, res, next) => {
   try {
     const input = registerSchema.parse(req.body);
-    const passwordHash = await bcrypt.hash(input.password, 12);
-    const result = await pool.query(
-      `INSERT INTO users (name, phone, password_hash, store_number)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, name, phone, store_number, profile_image_url`,
-      [input.name, input.phone, passwordHash, input.storeNumber],
+    const duplicate = await pool.query(
+      'SELECT 1 FROM users WHERE phone = $1 OR email = $2', [input.phone, input.email],
     );
+    if (duplicate.rows[0]) return res.status(409).json({ error: 'Phone or email is already registered' });
+    const passwordHash = await bcrypt.hash(input.password, 12);
+    const code = createCode();
+    const verificationId = crypto.randomUUID();
+    await pool.query(
+      `INSERT INTO pending_registrations
+       (id, name, phone, email, password_hash, store_number,
+        verification_method, code_hash, expires_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW() + INTERVAL '10 minutes')`,
+      [verificationId, input.name, input.phone, input.email, passwordHash,
+        input.storeNumber, input.verificationMethod, hashCode(code)],
+    );
+    const destination = input.verificationMethod === 'email' ? input.email : input.phone;
+    await sendVerification({ method: input.verificationMethod, destination, name: input.name, code });
+    res.status(202).json({ verificationId, destination: input.verificationMethod === 'email' ? input.email : input.phone.replace(/.(?=.{4})/g, '•') });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/auth/register/verify', async (req, res, next) => {
+  const client = await pool.connect();
+  try {
+    const input = z.object({
+      verificationId: z.string().uuid(), code: z.string().regex(/^\d{6}$/),
+    }).parse(req.body);
+    await client.query('BEGIN');
+    const pendingResult = await client.query(
+      `SELECT * FROM pending_registrations
+       WHERE id = $1 AND expires_at > NOW() AND attempts < 5 FOR UPDATE`,
+      [input.verificationId],
+    );
+    const pending = pendingResult.rows[0];
+    if (!pending || hashCode(input.code) !== pending.code_hash) {
+      if (pending) await client.query(
+        'UPDATE pending_registrations SET attempts = attempts + 1 WHERE id = $1',
+        [input.verificationId],
+      );
+      await client.query('COMMIT');
+      return res.status(400).json({ error: 'Invalid or expired verification code' });
+    }
+    const result = await client.query(
+      `INSERT INTO users
+       (name, phone, email, password_hash, store_number, phone_verified, email_verified)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
+       RETURNING id, name, phone, email, store_number,
+                 store_number_changed_at, profile_image_url`,
+      [pending.name, pending.phone, pending.email, pending.password_hash,
+        pending.store_number, pending.verification_method === 'phone',
+        pending.verification_method === 'email'],
+    );
+    await client.query('DELETE FROM pending_registrations WHERE id = $1', [input.verificationId]);
+    await client.query('COMMIT');
     const user = result.rows[0];
     res.status(201).json({ token: createToken(user), user: publicUser(user) });
   } catch (error) {
-    if (error.code === '23505') return res.status(409).json({ error: 'Phone number is already registered' });
+    await client.query('ROLLBACK');
+    if (error.code === '23505') return res.status(409).json({ error: 'Phone or email is already registered' });
     next(error);
-  }
+  } finally { client.release(); }
 });
 
 app.post('/api/auth/login', async (req, res, next) => {
