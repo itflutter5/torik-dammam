@@ -38,13 +38,40 @@ jobs:
         working-directory: client
         run: flutter build web --release
 
-      - name: Build Android APK
+      - name: Configure Android release signing
         working-directory: client
-        run: flutter build apk --release --dart-define=API_BASE_URL=https://www.torik-dammam.com/api
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            printf '%s' "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            echo "storePassword=$STORE_PASSWORD" > android/key.properties
+            echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+            echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+            echo "storeFile=upload-keystore.jks" >> android/key.properties
+          else
+            echo "Play signing secrets are not configured; Android outputs will use the debug signing key."
+          fi
+
+      - name: Build Android APK and app bundle
+        working-directory: client
+        run: |
+          flutter build apk --release --dart-define=API_BASE_URL=https://www.torik-dammam.com/api
+          flutter build appbundle --release --dart-define=API_BASE_URL=https://www.torik-dammam.com/api
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
           name: torik-dammam-android
           path: client/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+      - name: Upload Google Play app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: torik-dammam-play-store
+          path: client/build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
