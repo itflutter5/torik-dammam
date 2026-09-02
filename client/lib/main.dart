@@ -3586,14 +3586,16 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
     setState(() => reviewing.add(id));
     try {
       await ApiService.instance.reviewPost(id, approved);
-      if (mounted) setState(() {
-        final newStatus = approved ? 'approved' : 'rejected';
-        if (statusFilter != null && statusFilter != newStatus) {
-          posts.removeWhere((item) => item['id'].toString() == id);
-        } else {
+      final newStatus = approved ? 'approved' : 'rejected';
+      if (mounted) {
+        setState(() {
           post['status'] = newStatus;
-        }
-      });
+          if (statusFilter != null && statusFilter != newStatus) {
+            statusFilter = newStatus;
+          }
+        });
+        if (statusFilter == newStatus) await _load();
+      }
     } on ApiException catch (exception) {
       if (mounted) ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(exception.message)));
@@ -3740,25 +3742,51 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                                 ),
                               ],
                               const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(child: OutlinedButton.icon(
-                                    onPressed: reviewing.contains(id) || status == 'rejected'
-                                        ? null : () => _review(post, false),
-                                    icon: const Icon(Icons.close),
-                                    label: Text(tr('Reject')),
-                                  )),
-                                  const SizedBox(width: 10),
-                                  Expanded(child: FilledButton.icon(
-                                    onPressed: reviewing.contains(id) || status == 'approved'
-                                        ? null : () => _review(post, true),
-                                    icon: reviewing.contains(id)
-                                        ? const RotatingLoader(size: 20)
-                                        : const Icon(Icons.check),
-                                    label: Text(tr('Approve')),
-                                  )),
-                                ],
-                              ),
+                              if (status == 'approved')
+                                FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: Theme.of(context).colorScheme.error,
+                                  ),
+                                  onPressed: reviewing.contains(id)
+                                      ? null : () => _review(post, false),
+                                  icon: reviewing.contains(id)
+                                      ? const RotatingLoader(size: 20)
+                                      : const Icon(Icons.block_outlined),
+                                  label: Text(tr('Reject post')),
+                                )
+                              else if (status == 'rejected')
+                                FilledButton.icon(
+                                  onPressed: reviewing.contains(id)
+                                      ? null : () => _review(post, true),
+                                  icon: reviewing.contains(id)
+                                      ? const RotatingLoader(size: 20)
+                                      : const Icon(Icons.restore),
+                                  label: Text(tr('Restore and approve')),
+                                )
+                              else
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        onPressed: reviewing.contains(id)
+                                            ? null : () => _review(post, false),
+                                        icon: const Icon(Icons.close),
+                                        label: Text(tr('Reject')),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: FilledButton.icon(
+                                        onPressed: reviewing.contains(id)
+                                            ? null : () => _review(post, true),
+                                        icon: reviewing.contains(id)
+                                            ? const RotatingLoader(size: 20)
+                                            : const Icon(Icons.check),
+                                        label: Text(tr('Approve')),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                             ],
                           ),
                         ),
