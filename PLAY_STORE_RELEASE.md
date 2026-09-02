@@ -10,6 +10,10 @@ The permanent Android application ID is `com.torikdammam.marketplace`.
 Use `client/store-assets/play-store-icon.png` for the Google Play listing
 app icon. It is an opaque 512 by 512 PNG prepared for Play Console.
 
+Use `client/store-assets/play-store-feature-graphic.png` for the Google Play
+feature graphic. It is an opaque 1024 by 500 PNG with the Torik Dammam brand,
+marketplace categories, and slogan.
+
 ## Configure Play upload signing
 
 Create and securely back up one upload keystore. Never commit it to Git. Add
