@@ -1,5 +1,5 @@
 name: scrap_market
-description: "A local work and scrap marketplace for Android and web."
+description: "Torik Dammam marketplace for jobs, workers, scrap, drivers, servicemen, and household items."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
