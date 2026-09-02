@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,19 +18,56 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Torik Dammam is the local marketplace for jobs, workers, services, scrap trading, drivers, household items, and community advertisements in Dammam.">
+  <meta name="keywords" content="Torik Dammam, Dammam marketplace, jobs in Dammam, workers Dammam, scrap market Dammam, household items Dammam, Saudi Arabia classifieds">
+  <meta name="author" content="Torik Dammam">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#176b52">
+  <link rel="canonical" href="https://www.torik-dammam.com/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Torik Dammam">
+  <meta property="og:title" content="Torik Dammam | Local Marketplace, Jobs and Services">
+  <meta property="og:description" content="Find jobs, workers, services, scrap, drivers, and household items in Dammam.">
+  <meta property="og:url" content="https://www.torik-dammam.com/">
+  <meta property="og:image" content="https://www.torik-dammam.com/logo.png">
+  <meta property="og:locale" content="en_SA">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Torik Dammam | Local Marketplace">
+  <meta name="twitter:description" content="Jobs, services, scrap trading, and local advertisements in Dammam.">
+  <meta name="twitter:image" content="https://www.torik-dammam.com/logo.png">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="scrap_market">
+  <meta name="apple-mobile-web-app-title" content="Torik Dammam">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>scrap_market</title>
+  <title>Torik Dammam | Local Marketplace, Jobs and Services</title>
   <link rel="manifest" href="manifest.json">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Torik Dammam",
+    "alternateName": "Torik-Dammam Marketplace",
+    "url": "https://www.torik-dammam.com/",
+    "description": "A local marketplace for jobs, workers, services, scrap trading, drivers, household items, and community advertisements in Dammam, Saudi Arabia.",
+    "inLanguage": ["en", "bn", "ur", "hi"],
+    "publisher": {
+      "@type": "Organization",
+      "name": "Torik Dammam",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.torik-dammam.com/logo.png"
+      }
+    }
+  }
+  </script>
   <style>
     html, body {
       margin: 0;
@@ -84,6 +121,12 @@
       animation: startup-spin 900ms linear infinite;
     }
 
+    .startup-logo {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+    }
+
     .startup-title {
       margin-top: 16px;
       color: #153d31;
@@ -109,11 +152,18 @@
 <body>
   <div id="app-loader" role="status" aria-live="polite">
     <div class="startup-card">
-      <div class="startup-icon" aria-hidden="true">♻</div>
+      <div class="startup-icon" aria-hidden="true"><img class="startup-logo" src="logo.png" alt=""></div>
       <div class="startup-title">Torik Dammam</div>
-      <div id="startup-status">Loading marketplace…</div>
+      <div id="startup-status">Loading marketplace...</div>
     </div>
   </div>
+  <noscript>
+    <main style="max-width:760px;margin:48px auto;padding:24px;font-family:Arial,sans-serif">
+      <h1>Torik Dammam Local Marketplace</h1>
+      <p>Find jobs, workers, services, drivers, scrap buyers and sellers, and household items in Dammam, Saudi Arabia.</p>
+      <p>Enable JavaScript to browse current advertisements and contact local users.</p>
+    </main>
+  </noscript>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

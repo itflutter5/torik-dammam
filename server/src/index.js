@@ -693,6 +693,12 @@ app.patch('/api/admin/posts/:postId/review', requireAuth, requireAdmin, async (r
 
 const staticDirectory = process.env.STATIC_DIR ?? path.resolve('public');
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
+app.use((req, res, next) => {
+  if (req.path === '/admin-login' || req.path.startsWith('/api/')) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  }
+  next();
+});
 app.get('/refresh', (_req, res) => {
   res.setHeader('Clear-Site-Data', '"cache", "storage"');
   res.setHeader('Cache-Control', 'no-store');

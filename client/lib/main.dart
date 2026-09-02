@@ -719,10 +719,13 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 34,
-                      backgroundColor: Color(0xffe1f0e9),
-                      child: Icon(Icons.recycling, size: 38),
+                      backgroundColor: const Color(0xffe1f0e9),
+                      child: Padding(
+                        padding: const EdgeInsets.all(7),
+                        child: Image.asset('assets/branding/torik-dammam-logo.png'),
+                      ),
                     ),
                     const SizedBox(height: 22),
                     Text(
@@ -1599,7 +1602,15 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Row(
                         children: [
-                          const CircleAvatar(child: Icon(Icons.recycling)),
+                          CircleAvatar(
+                            backgroundColor: const Color(0xffe1f0e9),
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Image.asset(
+                                'assets/branding/torik-dammam-logo.png',
+                              ),
+                            ),
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
