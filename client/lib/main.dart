@@ -531,10 +531,12 @@ class _RotatingLoaderState extends State<RotatingLoader>
         ),
         child: RotationTransition(
           turns: CurvedAnimation(parent: controller, curve: Curves.linear),
-          child: Icon(
-            Icons.recycling_rounded,
-            color: color,
-            size: widget.size * 0.7,
+          child: Padding(
+            padding: EdgeInsets.all(widget.size * 0.14),
+            child: Image.asset(
+              'assets/branding/torik-dammam-logo.png',
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ),
@@ -1282,7 +1284,7 @@ Listing listingFromApiRow(Map<String, dynamic> row) {
     'Driver' => Icons.local_shipping_outlined,
     'Serviceman' => Icons.home_repair_service_outlined,
     'House Items' => Icons.chair_outlined,
-    _ => Icons.recycling,
+    _ => Icons.category_outlined,
   };
   final priceValue = row['price'];
   final unitValue = row['unit'] as String?;
