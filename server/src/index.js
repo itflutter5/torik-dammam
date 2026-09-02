@@ -28,11 +28,11 @@ const upload = multer({
   ),
 });
 
-const phone = z.string().regex(/^\+9665\d{8}$/, 'Use +9665XXXXXXXX');
+const phone = z.string().trim().regex(/^\+9665\d{8}$/, 'Use +9665XXXXXXXX');
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
   phone,
-  email: z.string().email().max(254),
+  email: z.string().trim().toLowerCase().email().max(254),
   password: z.string().min(8).max(100),
   storeNumber: z.string().regex(/^\d{1,4}$/),
   verificationMethod: z.enum(['phone', 'email']),
@@ -74,7 +74,7 @@ app.post('/api/auth/register/start', async (req, res, next) => {
   try {
     const input = registerSchema.parse(req.body);
     const duplicate = await pool.query(
-      'SELECT 1 FROM users WHERE phone = $1 OR email = $2', [input.phone, input.email],
+      'SELECT 1 FROM users WHERE phone = $1 OR LOWER(email) = $2', [input.phone, input.email],
     );
     if (duplicate.rows[0]) return res.status(409).json({ error: 'Phone or email is already registered' });
     const passwordHash = await bcrypt.hash(input.password, 12);
@@ -163,6 +163,7 @@ app.post('/api/auth/google', async (req, res, next) => {
     if (!payload?.sub || !payload.email || payload.email_verified !== true) {
       return res.status(401).json({ error: 'Google account could not be verified' });
     }
+    const googleEmail = payload.email.trim().toLowerCase();
     const result = await pool.query(
       `INSERT INTO users
        (name, email, google_sub, profile_image_url, store_number)
@@ -174,7 +175,7 @@ app.post('/api/auth/google', async (req, res, next) => {
          updated_at = NOW()
        RETURNING id, name, phone, email, store_number,
                  store_number_changed_at, profile_image_url`,
-      [payload.name ?? payload.email.split('@')[0], payload.email,
+      [payload.name ?? googleEmail.split('@')[0], googleEmail,
         payload.sub, payload.picture ?? null],
     );
     const user = result.rows[0];

@@ -25,6 +25,11 @@ ALTER TABLE users ALTER COLUMN store_number SET DEFAULT '0000';
 ALTER TABLE users ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE users SET email = LOWER(TRIM(email)) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_unique_idx
+  ON users (LOWER(email)) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS users_phone_unique_idx
+  ON users (phone) WHERE phone IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS pending_registrations (
   id UUID PRIMARY KEY,
@@ -39,6 +44,8 @@ CREATE TABLE IF NOT EXISTS pending_registrations (
   expires_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+UPDATE pending_registrations SET email = LOWER(TRIM(email)) WHERE email IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,
