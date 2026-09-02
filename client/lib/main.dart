@@ -449,6 +449,7 @@ Future<void> main() async {
   );
   if (languageNames.containsKey(saved)) appLanguage.value = saved!;
   runApp(const ScrapMarketApp());
+  unawaited(ApiService.instance.trackVisit());
 }
 
 class LanguageSelector extends StatelessWidget {
@@ -3633,6 +3634,20 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
       title: Text(tr('Admin panel')),
       actions: [
         IconButton(
+          tooltip: tr('Dashboard statistics'),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AdminStatsPage()),
+          ),
+          icon: const Icon(Icons.analytics_outlined),
+        ),
+        IconButton(
+          tooltip: tr('Manage users'),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AdminUsersPage()),
+          ),
+          icon: const Icon(Icons.manage_accounts_outlined),
+        ),
+        IconButton(
           tooltip: tr('Sign out'),
           onPressed: _logout,
           icon: const Icon(Icons.logout),
@@ -3750,6 +3765,275 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                       );
                     },
                   ),),
+      ],
+    ),
+  );
+}
+
+class AdminStatsPage extends StatefulWidget {
+  const AdminStatsPage({super.key});
+
+  @override
+  State<AdminStatsPage> createState() => _AdminStatsPageState();
+}
+
+class _AdminStatsPageState extends State<AdminStatsPage> {
+  Map<String, dynamic>? stats;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final value = await ApiService.instance.fetchAdminStats();
+      if (mounted) setState(() { stats = value; error = null; });
+    } on ApiException catch (exception) {
+      if (mounted) setState(() => error = exception.message);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <(String, String, IconData)>[
+      ('Total users', '${stats?['total_users'] ?? 0}', Icons.people_outline),
+      ('Unique visitors', '${stats?['unique_visitors'] ?? 0}', Icons.public),
+      ('Total visits', '${stats?['total_visits'] ?? 0}', Icons.visibility_outlined),
+      ('Visitors today', '${stats?['visitors_today'] ?? 0}', Icons.today_outlined),
+      ('Restricted users', '${stats?['restricted_users'] ?? 0}', Icons.block_outlined),
+      ('Total posts', '${stats?['total_posts'] ?? 0}', Icons.article_outlined),
+      ('Pending posts', '${stats?['pending_posts'] ?? 0}', Icons.pending_actions_outlined),
+    ];
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(tr('Dashboard statistics')),
+        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh))],
+      ),
+      body: stats == null && error == null
+          ? const Center(child: RotatingLoader(size: 38))
+          : error != null
+              ? Center(child: Text(error!))
+              : GridView.builder(
+                  padding: const EdgeInsets.all(18),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 260,
+                    mainAxisExtent: 150,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                  ),
+                  itemCount: items.length,
+                  itemBuilder: (_, index) {
+                    final item = items[index];
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(item.$3, size: 34),
+                            const SizedBox(height: 8),
+                            Text(item.$2, style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(fontWeight: FontWeight.w900)),
+                            Text(tr(item.$1), textAlign: TextAlign.center),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+    );
+  }
+}
+
+class AdminUsersPage extends StatefulWidget {
+  const AdminUsersPage({super.key});
+
+  @override
+  State<AdminUsersPage> createState() => _AdminUsersPageState();
+}
+
+class _AdminUsersPageState extends State<AdminUsersPage> {
+  final search = TextEditingController();
+  bool loading = true;
+  String? error;
+  List<Map<String, dynamic>> users = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => loading = true);
+    try {
+      final values = await ApiService.instance.fetchAdminUsers(search.text.trim());
+      if (mounted) setState(() { users = values; loading = false; error = null; });
+    } on ApiException catch (exception) {
+      if (mounted) setState(() { error = exception.message; loading = false; });
+    }
+  }
+
+  Future<void> _edit(Map<String, dynamic> user) async {
+    final name = TextEditingController(text: user['name'] as String? ?? '');
+    final phone = TextEditingController(text: user['phone'] as String? ?? '');
+    final email = TextEditingController(text: user['email'] as String? ?? '');
+    final store = TextEditingController(text: user['store_number'] as String? ?? '');
+    final newPassword = TextEditingController();
+    DateTime? restrictedUntil = user['suspended_until'] == null
+        ? null : DateTime.tryParse(user['suspended_until'] as String);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(tr('Edit user')),
+          content: SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(controller: name, decoration: InputDecoration(labelText: tr('Name'))),
+                  const SizedBox(height: 10),
+                  TextField(controller: phone, decoration: InputDecoration(labelText: tr('Phone'))),
+                  const SizedBox(height: 10),
+                  TextField(controller: email, decoration: InputDecoration(labelText: tr('Email'))),
+                  const SizedBox(height: 10),
+                  TextField(controller: store, decoration: InputDecoration(labelText: tr('Store number'))),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: newPassword,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: tr('Set new password (optional)'),
+                      helperText: tr('Existing passwords cannot be viewed'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(tr('Account restriction'),
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(restrictedUntil == null
+                      ? tr('Not restricted')
+                      : '${tr('Restricted until')} ${restrictedUntil!.toLocal()}'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      TextButton(
+                        onPressed: () => setDialogState(() => restrictedUntil = null),
+                        child: Text(tr('Remove restriction')),
+                      ),
+                      for (final option in const [(1, '1 hour'), (3, '3 hours'),
+                        (24, '1 day'), (72, '3 days'), (168, '7 days'), (720, '30 days')])
+                        OutlinedButton(
+                          onPressed: () => setDialogState(() => restrictedUntil =
+                              DateTime.now().toUtc().add(Duration(hours: option.$1))),
+                          child: Text(tr(option.$2)),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(tr('Cancel'))),
+            FilledButton(onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(tr('Save'))),
+          ],
+        ),
+      ),
+    );
+    if (saved == true) {
+      try {
+        await ApiService.instance.updateUserAsAdmin(user['id'].toString(), {
+          'name': name.text.trim(),
+          'phone': phone.text.trim(),
+          'email': email.text.trim().toLowerCase(),
+          'storeNumber': store.text.trim(),
+          if (newPassword.text.isNotEmpty) 'newPassword': newPassword.text,
+          'suspendedUntil': restrictedUntil?.toUtc().toIso8601String(),
+        });
+        await _load();
+      } on ApiException catch (exception) {
+        if (mounted) ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(exception.message)));
+      }
+    }
+    name.dispose(); phone.dispose(); email.dispose(); store.dispose(); newPassword.dispose();
+  }
+
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(tr('Manage users'))),
+    body: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: TextField(
+            controller: search,
+            onSubmitted: (_) => _load(),
+            decoration: InputDecoration(
+              labelText: tr('Search users'),
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: IconButton(onPressed: _load, icon: const Icon(Icons.search)),
+            ),
+          ),
+        ),
+        Expanded(
+          child: loading
+              ? const Center(child: RotatingLoader(size: 38))
+              : error != null
+                  ? Center(child: Text(error!))
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                      itemCount: users.length,
+                      itemBuilder: (context, index) {
+                        final user = users[index];
+                        final restricted = user['suspended_until'] != null &&
+                            (DateTime.tryParse(user['suspended_until'] as String)
+                                    ?.isAfter(DateTime.now()) ?? false);
+                        return Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: user['profile_image_url'] == null
+                                  ? null : NetworkImage(user['profile_image_url'] as String),
+                              child: user['profile_image_url'] == null
+                                  ? const Icon(Icons.person_outline) : null,
+                            ),
+                            title: Text(user['name'] as String? ?? ''),
+                            subtitle: Text(
+                              '${user['phone'] ?? '-'}\n${user['email'] ?? '-'}\n'
+                              '${tr('Store number')}: ${user['store_number']}  |  '
+                              '${tr('Posts')}: ${user['post_count']}\n'
+                              '${restricted ? tr('Restricted') : tr('Active')}',
+                            ),
+                            isThreeLine: true,
+                            trailing: IconButton(
+                              tooltip: tr('Edit user'),
+                              onPressed: () => _edit(user),
+                              icon: const Icon(Icons.edit_outlined),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+        ),
       ],
     ),
   );

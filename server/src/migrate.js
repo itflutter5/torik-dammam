@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   store_number_changed_at TIMESTAMPTZ,
   profile_image_url TEXT,
   is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+  suspended_until TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -28,6 +29,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAU
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_until TIMESTAMPTZ;
 UPDATE users SET email = LOWER(TRIM(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_unique_idx
   ON users (LOWER(email)) WHERE email IS NOT NULL;
@@ -61,6 +63,16 @@ CREATE TABLE IF NOT EXISTS pending_password_resets (
 );
 CREATE INDEX IF NOT EXISTS pending_password_resets_user_idx
   ON pending_password_resets(user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS visitor_days (
+  visitor_hash CHAR(64) NOT NULL,
+  visited_on DATE NOT NULL DEFAULT CURRENT_DATE,
+  visit_count INTEGER NOT NULL DEFAULT 1,
+  first_visited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_visited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (visitor_hash, visited_on)
+);
+CREATE INDEX IF NOT EXISTS visitor_days_visited_on_idx ON visitor_days(visited_on DESC);
 
 CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,

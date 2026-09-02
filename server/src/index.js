@@ -56,6 +56,7 @@ const publicUser = (row) => ({
   storeNumber: row.store_number, profileImageUrl: row.profile_image_url,
   storeNumberChangedAt: row.store_number_changed_at,
   isAdmin: row.is_admin === true,
+  suspendedUntil: row.suspended_until,
 });
 
 app.get('/health', async (_req, res, next) => {
@@ -77,6 +78,22 @@ app.get('/api/categories', async (_req, res, next) => {
       'SELECT id, name FROM categories WHERE active = TRUE ORDER BY sort_order, name',
     );
     res.json({ categories: result.rows });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/analytics/visit', async (req, res, next) => {
+  try {
+    const { visitorId } = z.object({ visitorId: z.string().min(20).max(128) }).parse(req.body);
+    const visitorHash = crypto.createHash('sha256').update(visitorId).digest('hex');
+    await pool.query(
+      `INSERT INTO visitor_days (visitor_hash, visited_on)
+       VALUES ($1, CURRENT_DATE)
+       ON CONFLICT (visitor_hash, visited_on) DO UPDATE SET
+         visit_count = visitor_days.visit_count + 1,
+         last_visited_at = NOW()`,
+      [visitorHash],
+    );
+    res.json({ tracked: true });
   } catch (error) { next(error); }
 });
 
@@ -255,6 +272,11 @@ app.post('/api/auth/login', async (req, res, next) => {
     const user = result.rows[0];
     if (!user || !await bcrypt.compare(input.password, user.password_hash)) {
       return res.status(401).json({ error: 'Incorrect phone number or password' });
+    }
+    if (!user.is_admin && user.suspended_until && new Date(user.suspended_until) > new Date()) {
+      return res.status(403).json({
+        error: `Account restricted until ${new Date(user.suspended_until).toISOString()}`,
+      });
     }
     res.json({ token: createToken(user), user: publicUser(user) });
   } catch (error) { next(error); }
@@ -524,6 +546,83 @@ app.get('/api/admin/posts', requireAuth, requireAdmin, async (req, res, next) =>
     );
     res.json({ posts: result.rows });
   } catch (error) { next(error); }
+});
+
+app.get('/api/admin/stats', requireAuth, requireAdmin, async (_req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+         (SELECT COUNT(*)::int FROM users) AS total_users,
+         (SELECT COUNT(*)::int FROM users
+          WHERE suspended_until > NOW()) AS restricted_users,
+         (SELECT COUNT(DISTINCT visitor_hash)::int FROM visitor_days) AS unique_visitors,
+         (SELECT COALESCE(SUM(visit_count), 0)::int FROM visitor_days) AS total_visits,
+         (SELECT COUNT(*)::int FROM visitor_days
+          WHERE visited_on = CURRENT_DATE) AS visitors_today,
+         (SELECT COUNT(*)::int FROM posts) AS total_posts,
+         (SELECT COUNT(*)::int FROM posts WHERE status = 'pending') AS pending_posts`,
+    );
+    res.json({ stats: result.rows[0] });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const search = z.string().trim().max(100).optional().parse(req.query.search) ?? '';
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.phone, u.email, u.store_number, u.profile_image_url,
+              u.phone_verified, u.email_verified, u.is_admin, u.suspended_until,
+              u.created_at, u.updated_at, COUNT(p.id)::int AS post_count
+       FROM users u LEFT JOIN posts p ON p.user_id = u.id
+       WHERE $1 = '' OR u.name ILIKE '%' || $1 || '%'
+          OR COALESCE(u.phone, '') ILIKE '%' || $1 || '%'
+          OR COALESCE(u.email, '') ILIKE '%' || $1 || '%'
+       GROUP BY u.id ORDER BY u.created_at DESC LIMIT 500`,
+      [search],
+    );
+    res.json({ users: result.rows });
+  } catch (error) { next(error); }
+});
+
+app.patch('/api/admin/users/:userId', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const userId = z.coerce.number().int().positive().parse(req.params.userId);
+    const input = z.object({
+      name: z.string().trim().min(2).max(100),
+      phone: z.union([phone, z.literal('')]),
+      email: z.union([z.string().trim().toLowerCase().email().max(254), z.literal('')]),
+      storeNumber: z.string().regex(/^\d{1,4}$/),
+      newPassword: z.string().min(8).max(100).optional(),
+      suspendedUntil: z.string().datetime().nullable(),
+    }).parse(req.body);
+    if (String(userId) === String(req.auth.sub) && input.suspendedUntil) {
+      return res.status(400).json({ error: 'Admin cannot restrict their own account' });
+    }
+    const passwordHash = input.newPassword
+      ? await bcrypt.hash(input.newPassword, 12)
+      : null;
+    const result = await pool.query(
+      `UPDATE users SET
+         name = $1, phone = NULLIF($2, ''), email = NULLIF($3, ''),
+         store_number = $4,
+         password_hash = COALESCE($5, password_hash),
+         password_changed_at = CASE WHEN $5::text IS NULL THEN password_changed_at ELSE NOW() END,
+         suspended_until = $6, updated_at = NOW()
+       WHERE id = $7
+       RETURNING id, name, phone, email, store_number, profile_image_url,
+                 phone_verified, email_verified, is_admin, suspended_until,
+                 created_at, updated_at`,
+      [input.name, input.phone, input.email, input.storeNumber,
+        passwordHash, input.suspendedUntil, userId],
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: result.rows[0] });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Phone or email is already registered' });
+    }
+    next(error);
+  }
 });
 
 app.patch('/api/admin/posts/:postId/review', requireAuth, requireAdmin, async (req, res, next) => {
