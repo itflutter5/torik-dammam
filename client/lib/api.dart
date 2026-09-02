@@ -268,9 +268,10 @@ class ApiService {
     return data;
   }
 
-  Future<List<Map<String, dynamic>>> fetchPendingPosts() async {
+  Future<List<Map<String, dynamic>>> fetchAdminPosts([String? status]) async {
+    final query = status == null ? '' : '?status=$status';
     final response = await http.get(
-      Uri.parse('$apiBaseUrl/admin/posts/pending'),
+      Uri.parse('$apiBaseUrl/admin/posts$query'),
       headers: {'authorization': 'Bearer $token'},
     );
     final data = jsonDecode(response.body) as Map<String, dynamic>;

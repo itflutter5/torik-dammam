@@ -490,12 +490,15 @@ app.post('/api/posts', requireAuth, upload.fields([
   }
 });
 
-app.get('/api/admin/posts/pending', requireAuth, requireAdmin, async (_req, res, next) => {
+app.get('/api/admin/posts', requireAuth, requireAdmin, async (req, res, next) => {
   try {
+    const status = z.enum(['pending', 'approved', 'rejected']).optional().parse(req.query.status);
     const result = await pool.query(
       `SELECT p.*, u.name AS user_name, u.phone
        FROM posts p JOIN users u ON u.id = p.user_id
-       WHERE p.status = 'pending' ORDER BY p.created_at`,
+       WHERE ($1::text IS NULL OR p.status = $1)
+       ORDER BY p.created_at DESC LIMIT 500`,
+      [status ?? null],
     );
     res.json({ posts: result.rows });
   } catch (error) { next(error); }
@@ -507,10 +510,10 @@ app.patch('/api/admin/posts/:postId/review', requireAuth, requireAdmin, async (r
     const { approved } = z.object({ approved: z.boolean() }).parse(req.body);
     const result = await pool.query(
       `UPDATE posts SET status = $1, reviewed_at = NOW(), reviewed_by = $2
-       WHERE id = $3 AND status = 'pending' RETURNING id, status`,
+       WHERE id = $3 RETURNING id, status`,
       [approved ? 'approved' : 'rejected', req.auth.sub, postId],
     );
-    if (!result.rows[0]) return res.status(404).json({ error: 'Pending post not found' });
+    if (!result.rows[0]) return res.status(404).json({ error: 'Post not found' });
     res.json({ post: result.rows[0] });
   } catch (error) { next(error); }
 });

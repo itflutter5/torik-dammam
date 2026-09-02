@@ -3407,7 +3407,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       icon: const Icon(Icons.admin_panel_settings_outlined),
                       label: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Text(tr('Review paid posts')),
+                        child: Text(tr('Admin panel')),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -3442,6 +3442,7 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
   String? error;
   List<Map<String, dynamic>> posts = [];
   final reviewing = <String>{};
+  String? statusFilter;
 
   @override
   void initState() {
@@ -3451,7 +3452,7 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
 
   Future<void> _load() async {
     try {
-      final values = await ApiService.instance.fetchPendingPosts();
+      final values = await ApiService.instance.fetchAdminPosts(statusFilter);
       if (mounted) setState(() { posts = values; loading = false; error = null; });
     } on ApiException catch (exception) {
       if (mounted) setState(() { error = exception.message; loading = false; });
@@ -3464,7 +3465,14 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
     setState(() => reviewing.add(id));
     try {
       await ApiService.instance.reviewPost(id, approved);
-      if (mounted) setState(() => posts.removeWhere((item) => item['id'].toString() == id));
+      if (mounted) setState(() {
+        final newStatus = approved ? 'approved' : 'rejected';
+        if (statusFilter != null && statusFilter != newStatus) {
+          posts.removeWhere((item) => item['id'].toString() == id);
+        } else {
+          post['status'] = newStatus;
+        }
+      });
     } on ApiException catch (exception) {
       if (mounted) ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(exception.message)));
@@ -3475,13 +3483,35 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(tr('Review paid posts'))),
-    body: loading
+    appBar: AppBar(title: Text(tr('Admin panel'))),
+    body: Column(
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+          child: Row(
+            children: [
+              for (final value in <String?>[null, 'pending', 'approved', 'rejected'])
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(tr(value == null ? 'All posts' : value)),
+                    selected: statusFilter == value,
+                    onSelected: (_) {
+                      setState(() { statusFilter = value; loading = true; });
+                      _load();
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Expanded(child: loading
         ? const Center(child: RotatingLoader(size: 38))
         : error != null
             ? Center(child: Text(error!))
             : posts.isEmpty
-                ? Center(child: Text(tr('No paid posts waiting for review')))
+                ? Center(child: Text(tr('No posts found')))
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: posts.length,
@@ -3489,6 +3519,7 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                       final post = posts[index];
                       final id = post['id'].toString();
                       final proofUrl = post['payment_proof_url'] as String?;
+                      final status = post['status'] as String? ?? 'approved';
                       return Card(
                         margin: const EdgeInsets.only(bottom: 14),
                         child: Padding(
@@ -3501,7 +3532,12 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                                       ?.copyWith(fontWeight: FontWeight.w800)),
                               const SizedBox(height: 4),
                               Text('${post['user_name']} - ${post['phone']}'),
-                              Text('${post['payment_amount']} ${post['payment_currency']}'),
+                              Text('${tr('Status')}: ${tr(status)}'),
+                              Text('${tr('Category')}: ${tr(post['category'] as String? ?? '')}'),
+                              if (post['payment_amount'] != null)
+                                Text('${post['payment_amount']} ${post['payment_currency']}'),
+                              const SizedBox(height: 6),
+                              Text(post['description'] as String? ?? ''),
                               if (proofUrl != null) ...[
                                 const SizedBox(height: 12),
                                 Image.network(proofUrl, height: 260, fit: BoxFit.contain),
@@ -3510,13 +3546,15 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                               Row(
                                 children: [
                                   Expanded(child: OutlinedButton.icon(
-                                    onPressed: reviewing.contains(id) ? null : () => _review(post, false),
+                                    onPressed: reviewing.contains(id) || status == 'rejected'
+                                        ? null : () => _review(post, false),
                                     icon: const Icon(Icons.close),
                                     label: Text(tr('Reject')),
                                   )),
                                   const SizedBox(width: 10),
                                   Expanded(child: FilledButton.icon(
-                                    onPressed: reviewing.contains(id) ? null : () => _review(post, true),
+                                    onPressed: reviewing.contains(id) || status == 'approved'
+                                        ? null : () => _review(post, true),
                                     icon: reviewing.contains(id)
                                         ? const RotatingLoader(size: 20)
                                         : const Icon(Icons.check),
@@ -3529,7 +3567,9 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                         ),
                       );
                     },
-                  ),
+                  ),),
+      ],
+    ),
   );
 }
 
