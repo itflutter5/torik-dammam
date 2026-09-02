@@ -25,6 +25,7 @@ ALTER TABLE users ALTER COLUMN store_number SET DEFAULT '0000';
 ALTER TABLE users ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
 UPDATE users SET email = LOWER(TRIM(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_unique_idx
   ON users (LOWER(email)) WHERE email IS NOT NULL;
@@ -46,6 +47,18 @@ CREATE TABLE IF NOT EXISTS pending_registrations (
 );
 
 UPDATE pending_registrations SET email = LOWER(TRIM(email)) WHERE email IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS pending_password_resets (
+  id UUID PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  verification_method VARCHAR(10) NOT NULL CHECK (verification_method IN ('phone', 'email')),
+  code_hash CHAR(64) NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS pending_password_resets_user_idx
+  ON pending_password_resets(user_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,

@@ -138,6 +138,13 @@ const extendedTranslations = <String, Map<String, String>>{
     'or': 'অথবা',
     'New user? Register': 'নতুন ব্যবহারকারী? নিবন্ধন করুন',
     'Already registered? Back to login': 'আগেই নিবন্ধিত? লগইনে ফিরুন',
+    'Forgot password?': 'পাসওয়ার্ড ভুলে গেছেন?',
+    'Reset password': 'পাসওয়ার্ড পুনরায় সেট করুন',
+    'Verified phone or email': 'যাচাইকৃত ফোন বা ইমেইল',
+    'New password': 'নতুন পাসওয়ার্ড',
+    'Send code': 'কোড পাঠান',
+    'Password must be at least 8 characters': 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে',
+    'Password changed. You can now log in.': 'পাসওয়ার্ড পরিবর্তন হয়েছে। এখন লগইন করুন।',
     'Create your marketplace account.':
         'আপনার মার্কেটপ্লেস অ্যাকাউন্ট তৈরি করুন।',
     'Log in with your Saudi phone number.':
@@ -234,6 +241,13 @@ const extendedTranslations = <String, Map<String, String>>{
     'New user? Register': 'نئے صارف؟ رجسٹر کریں',
     'Already registered? Back to login':
         'پہلے سے رجسٹرڈ؟ لاگ اِن پر واپس جائیں',
+    'Forgot password?': 'پاس ورڈ بھول گئے؟',
+    'Reset password': 'پاس ورڈ ری سیٹ کریں',
+    'Verified phone or email': 'تصدیق شدہ فون یا ای میل',
+    'New password': 'نیا پاس ورڈ',
+    'Send code': 'کوڈ بھیجیں',
+    'Password must be at least 8 characters': 'پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے',
+    'Password changed. You can now log in.': 'پاس ورڈ تبدیل ہوگیا۔ اب لاگ اِن کریں۔',
     'Create your marketplace account.': 'اپنا مارکیٹ پلیس اکاؤنٹ بنائیں۔',
     'Log in with your Saudi phone number.':
         'اپنے سعودی فون نمبر سے لاگ اِن کریں۔',
@@ -327,6 +341,13 @@ const extendedTranslations = <String, Map<String, String>>{
     'or': 'या',
     'New user? Register': 'नए उपयोगकर्ता? पंजीकरण करें',
     'Already registered? Back to login': 'पहले से पंजीकृत? लॉग इन पर लौटें',
+    'Forgot password?': 'पासवर्ड भूल गए?',
+    'Reset password': 'पासवर्ड रीसेट करें',
+    'Verified phone or email': 'सत्यापित फ़ोन या ईमेल',
+    'New password': 'नया पासवर्ड',
+    'Send code': 'कोड भेजें',
+    'Password must be at least 8 characters': 'पासवर्ड कम से कम 8 अक्षरों का होना चाहिए',
+    'Password changed. You can now log in.': 'पासवर्ड बदल गया। अब लॉग इन करें।',
     'Create your marketplace account.': 'अपना मार्केटप्लेस खाता बनाएँ।',
     'Log in with your Saudi phone number.':
         'अपने सऊदी फ़ोन नंबर से लॉग इन करें।',
@@ -815,6 +836,11 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                               ),
                       ),
                     ),
+                    if (!registering)
+                      TextButton(
+                        onPressed: loading ? null : _forgotPassword,
+                        child: Text(tr('Forgot password?')),
+                      ),
                     if (!registering && googleReady) ...[
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -953,6 +979,93 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
       ],
     ),
   );
+
+  Future<void> _forgotPassword() async {
+    final identifier = TextEditingController(text: phone.text);
+    final newPassword = TextEditingController();
+    final values = await showDialog<List<String>>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(tr('Reset password')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: identifier,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                labelText: tr('Verified phone or email'),
+                hintText: '+9665XXXXXXXX / name@example.com',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: newPassword,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: tr('New password'),
+                hintText: tr('Password must be at least 8 characters'),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(tr('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () {
+              final account = identifier.text.trim();
+              if (account.length >= 3 && newPassword.text.length >= 8) {
+                Navigator.pop(dialogContext, [account, newPassword.text]);
+              }
+            },
+            child: Text(tr('Send code')),
+          ),
+        ],
+      ),
+    );
+    identifier.dispose();
+    if (values == null || !mounted) {
+      newPassword.dispose();
+      return;
+    }
+    setState(() => loading = true);
+    try {
+      final pending = await ApiService.instance.startPasswordReset(values[0]);
+      if (!mounted) return;
+      final code = await _askForVerificationCode(
+        pending['destination'] as String? ?? '',
+      );
+      if (code == null) return;
+      await ApiService.instance.verifyPasswordReset(
+        verificationId: pending['verificationId'] as String,
+        code: code,
+        newPassword: values[1],
+      );
+      if (mounted) {
+        password.text = '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('Password changed. You can now log in.'))),
+        );
+      }
+    } on ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(tr(error.message))));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('Cannot connect to the server'))),
+        );
+      }
+    } finally {
+      newPassword.dispose();
+      if (mounted) setState(() => loading = false);
+    }
+  }
 
   Future<String?> _askForVerificationCode(String destination) async {
     final controller = TextEditingController();

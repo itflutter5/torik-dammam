@@ -89,6 +89,21 @@ class ApiService {
     );
   }
 
+  Future<Map<String, dynamic>> startPasswordReset(String identifier) =>
+      _jsonRequest('/auth/password-reset/start', {'identifier': identifier});
+
+  Future<void> verifyPasswordReset({
+    required String verificationId,
+    required String code,
+    required String newPassword,
+  }) async {
+    await _jsonRequest('/auth/password-reset/verify', {
+      'verificationId': verificationId,
+      'code': code,
+      'newPassword': newPassword,
+    });
+  }
+
   Future<String> fetchGoogleClientId() async {
     final response = await http.get(Uri.parse('$apiBaseUrl/config'));
     final data = jsonDecode(response.body) as Map<String, dynamic>;

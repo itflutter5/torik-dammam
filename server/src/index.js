@@ -140,6 +140,100 @@ app.post('/api/auth/register/verify', async (req, res, next) => {
   } finally { client.release(); }
 });
 
+app.post('/api/auth/password-reset/start', async (req, res, next) => {
+  try {
+    const { identifier } = z.object({
+      identifier: z.string().trim().min(3).max(254),
+    }).parse(req.body);
+    const normalized = identifier.toLowerCase();
+    const byEmail = normalized.includes('@');
+    const result = await pool.query(
+      `SELECT id, name, phone, email, phone_verified, email_verified,
+              password_changed_at
+       FROM users
+       WHERE ${byEmail ? 'LOWER(email) = $1' : 'phone = $1'}
+         AND password_hash IS NOT NULL`,
+      [byEmail ? normalized : identifier],
+    );
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ error: 'Account not found' });
+    const method = byEmail ? 'email' : 'phone';
+    if ((byEmail && !user.email_verified) || (!byEmail && !user.phone_verified)) {
+      return res.status(400).json({ error: `This ${method} has not been verified` });
+    }
+    if (user.password_changed_at &&
+        new Date(user.password_changed_at).getTime() > Date.now() - 3 * 60 * 60 * 1000) {
+      return res.status(429).json({ error: 'Password can only be changed once every 3 hours' });
+    }
+
+    const code = createCode();
+    const verificationId = crypto.randomUUID();
+    await pool.query('DELETE FROM pending_password_resets WHERE user_id = $1', [user.id]);
+    await pool.query(
+      `INSERT INTO pending_password_resets
+       (id, user_id, verification_method, code_hash, expires_at)
+       VALUES ($1, $2, $3, $4, NOW() + INTERVAL '10 minutes')`,
+      [verificationId, user.id, method, hashCode(code)],
+    );
+    const destination = byEmail ? user.email : user.phone;
+    try {
+      await sendVerification({ method, destination, name: user.name, code });
+    } catch (deliveryError) {
+      await pool.query('DELETE FROM pending_password_resets WHERE id = $1', [verificationId])
+        .catch((cleanupError) => console.error('Password reset cleanup failed', cleanupError));
+      throw deliveryError;
+    }
+    res.status(202).json({
+      verificationId,
+      destination: byEmail ? user.email : user.phone.replace(/.(?=.{4})/g, '•'),
+    });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/auth/password-reset/verify', async (req, res, next) => {
+  const client = await pool.connect();
+  try {
+    const input = z.object({
+      verificationId: z.string().uuid(),
+      code: z.string().regex(/^\d{6}$/),
+      newPassword: z.string().min(8, 'Password must be at least 8 characters').max(100),
+    }).parse(req.body);
+    await client.query('BEGIN');
+    const pendingResult = await client.query(
+      `SELECT r.*, u.password_changed_at
+       FROM pending_password_resets r JOIN users u ON u.id = r.user_id
+       WHERE r.id = $1 AND r.expires_at > NOW() AND r.attempts < 5 FOR UPDATE OF r, u`,
+      [input.verificationId],
+    );
+    const pending = pendingResult.rows[0];
+    if (!pending || hashCode(input.code) !== pending.code_hash) {
+      if (pending) await client.query(
+        'UPDATE pending_password_resets SET attempts = attempts + 1 WHERE id = $1',
+        [input.verificationId],
+      );
+      await client.query('COMMIT');
+      return res.status(400).json({ error: 'Invalid or expired verification code' });
+    }
+    if (pending.password_changed_at &&
+        new Date(pending.password_changed_at).getTime() > Date.now() - 3 * 60 * 60 * 1000) {
+      await client.query('ROLLBACK');
+      return res.status(429).json({ error: 'Password can only be changed once every 3 hours' });
+    }
+    const passwordHash = await bcrypt.hash(input.newPassword, 12);
+    await client.query(
+      `UPDATE users SET password_hash = $1, password_changed_at = NOW(), updated_at = NOW()
+       WHERE id = $2`,
+      [passwordHash, pending.user_id],
+    );
+    await client.query('DELETE FROM pending_password_resets WHERE user_id = $1', [pending.user_id]);
+    await client.query('COMMIT');
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    next(error);
+  } finally { client.release(); }
+});
+
 app.post('/api/auth/login', async (req, res, next) => {
   try {
     const input = loginSchema.parse(req.body);
