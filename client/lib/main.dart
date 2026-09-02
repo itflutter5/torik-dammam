@@ -63,6 +63,49 @@ class _RotatingLoaderState extends State<RotatingLoader>
   }
 }
 
+Future<ImageSource?> chooseImageSource(BuildContext context) =>
+    showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Add a photo',
+                textAlign: TextAlign.center,
+                style: Theme.of(sheetContext).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () =>
+                    Navigator.pop(sheetContext, ImageSource.camera),
+                icon: const Icon(Icons.camera_alt_outlined),
+                label: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 13),
+                  child: Text('Take photo with camera'),
+                ),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    Navigator.pop(sheetContext, ImageSource.gallery),
+                icon: const Icon(Icons.photo_library_outlined),
+                label: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 13),
+                  child: Text('Upload from gallery'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
 class ScrapMarketApp extends StatelessWidget {
   const ScrapMarketApp({super.key});
 
@@ -1319,13 +1362,28 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   Future<void> _pickImage() async {
     if (images.length >= 3) return;
-    final image = await imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 82,
-      maxWidth: 1800,
-    );
+    final source = await chooseImageSource(context);
+    if (source == null || !mounted) return;
+    XFile? image;
+    try {
+      image = await imagePicker.pickImage(
+        source: source,
+        imageQuality: 82,
+        maxWidth: 1800,
+      );
+    } on PlatformException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Camera or photo access is not available'),
+          ),
+        );
+      }
+      return;
+    }
     if (image == null) return;
-    final bytes = await image.readAsBytes();
+    final selectedImage = image;
+    final bytes = await selectedImage.readAsBytes();
     if (bytes.length > 8 * 1024 * 1024) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1333,7 +1391,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
         );
       return;
     }
-    setState(() => images.add(UploadImage(image.name, bytes)));
+    setState(() => images.add(UploadImage(selectedImage.name, bytes)));
   }
 
   Future<void> _publish() async {
@@ -1701,13 +1759,28 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _pickProfileImage() async {
-    final image = await profileImagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 82,
-      maxWidth: 1800,
-    );
+    final source = await chooseImageSource(context);
+    if (source == null || !mounted) return;
+    XFile? image;
+    try {
+      image = await profileImagePicker.pickImage(
+        source: source,
+        imageQuality: 82,
+        maxWidth: 1800,
+      );
+    } on PlatformException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Camera or photo access is not available'),
+          ),
+        );
+      }
+      return;
+    }
     if (image == null) return;
-    final bytes = await image.readAsBytes();
+    final selectedImage = image;
+    final bytes = await selectedImage.readAsBytes();
     if (bytes.length > 8 * 1024 * 1024) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1719,7 +1792,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       _applyUser(
         await ApiService.instance.uploadProfileImage(
-          UploadImage(image.name, bytes),
+          UploadImage(selectedImage.name, bytes),
         ),
       );
       if (mounted)
