@@ -54,6 +54,7 @@ const translations = <String, Map<String, String>>{
     'Email': 'ইমেইল',
     'Cancel': 'বাতিল',
     'Verify': 'যাচাই করুন',
+    'Privacy Policy': 'গোপনীয়তা নীতি',
   },
   'ur': {
     'Home': 'ہوم',
@@ -89,6 +90,7 @@ const translations = <String, Map<String, String>>{
     'Email': 'ای میل',
     'Cancel': 'منسوخ',
     'Verify': 'تصدیق کریں',
+    'Privacy Policy': 'رازداری کی پالیسی',
   },
   'hi': {
     'Home': 'होम',
@@ -124,6 +126,7 @@ const translations = <String, Map<String, String>>{
     'Email': 'ईमेल',
     'Cancel': 'रद्द करें',
     'Verify': 'सत्यापित करें',
+    'Privacy Policy': 'गोपनीयता नीति',
   },
 };
 
@@ -443,6 +446,11 @@ String tr(String english) =>
     extendedTranslations[appLanguage.value]?[english] ??
     translations[appLanguage.value]?[english] ??
     english;
+
+Future<void> openPrivacyPolicy() => launchUrl(
+  Uri.parse('https://www.torik-dammam.com/privacy.html'),
+  mode: LaunchMode.externalApplication,
+);
 
 Future<void> setLanguage(String code) async {
   appLanguage.value = code;
@@ -910,6 +918,11 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                             ? tr('Already registered? Back to login')
                             : tr('New user? Register'),
                       ),
+                    ),
+                    TextButton.icon(
+                      onPressed: openPrivacyPolicy,
+                      icon: const Icon(Icons.privacy_tip_outlined, size: 18),
+                      label: Text(tr('Privacy Policy')),
                     ),
                   ],
                 ),
@@ -3900,6 +3913,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: openPrivacyPolicy,
+                    icon: const Icon(Icons.privacy_tip_outlined),
+                    label: Text(tr('Privacy Policy')),
+                  ),
+                  const SizedBox(height: 4),
                   OutlinedButton.icon(
                     onPressed: savingProfile ? null : widget.onSignOut,
                     icon: const Icon(Icons.logout),
