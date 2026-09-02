@@ -165,6 +165,99 @@
     @media (prefers-reduced-motion: reduce) {
       .startup-icon { animation-duration: 1800ms; }
     }
+
+    #install-app-banner {
+      position: fixed;
+      left: 50%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      z-index: 10001;
+      display: none;
+      width: min(620px, calc(100% - 28px));
+      box-sizing: border-box;
+      align-items: center;
+      gap: 13px;
+      padding: 14px;
+      border: 1px solid rgba(23, 107, 82, 0.22);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.97);
+      box-shadow: 0 18px 55px rgba(11, 45, 36, 0.24);
+      font-family: Arial, sans-serif;
+      transform: translate(-50%, 24px);
+      opacity: 0;
+      transition: opacity 220ms ease, transform 220ms ease;
+      backdrop-filter: blur(14px);
+    }
+
+    #install-app-banner.show {
+      display: flex;
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    .install-app-logo {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 52px;
+      padding: 5px;
+      box-sizing: border-box;
+      border-radius: 15px;
+      background: #eef8f3;
+    }
+
+    .install-app-copy {
+      min-width: 0;
+      flex: 1;
+    }
+
+    #install-app-title {
+      color: #153d31;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    #install-app-message {
+      margin-top: 4px;
+      color: #63746d;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .install-app-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .install-app-button {
+      min-height: 38px;
+      padding: 0 13px;
+      border: 0;
+      border-radius: 20px;
+      font: 700 12px Arial, sans-serif;
+      cursor: pointer;
+    }
+
+    #install-app-confirm {
+      color: white;
+      background: #176b52;
+    }
+
+    #install-app-dismiss {
+      color: #52635c;
+      background: #edf2ef;
+    }
+
+    @media (max-width: 560px) {
+      #install-app-banner {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .install-app-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
   </style>
 </head>
 <body>
@@ -175,6 +268,17 @@
       <div id="startup-status">Loading marketplace...</div>
     </div>
   </div>
+  <aside id="install-app-banner" role="dialog" aria-labelledby="install-app-title" aria-describedby="install-app-message">
+    <img class="install-app-logo" src="logo.png" alt="">
+    <div class="install-app-copy">
+      <div id="install-app-title">Install Torik Dammam</div>
+      <div id="install-app-message">Get faster access and open the marketplace from your home screen.</div>
+    </div>
+    <div class="install-app-actions">
+      <button id="install-app-dismiss" class="install-app-button" type="button">Not now</button>
+      <button id="install-app-confirm" class="install-app-button" type="button">Install app</button>
+    </div>
+  </aside>
   <noscript>
     <main style="max-width:760px;margin:48px auto;padding:24px;font-family:Arial,sans-serif">
       <h1>Torik Dammam Local Marketplace</h1>
@@ -199,6 +303,110 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <script>
+    (() => {
+      const banner = document.getElementById('install-app-banner');
+      const title = document.getElementById('install-app-title');
+      const message = document.getElementById('install-app-message');
+      const installButton = document.getElementById('install-app-confirm');
+      const dismissButton = document.getElementById('install-app-dismiss');
+      const dismissalKey = 'torik_install_prompt_dismissed_at';
+      const dismissalPeriod = 7 * 24 * 60 * 60 * 1000;
+      let deferredInstallPrompt = null;
+      let iosInstructions = false;
+
+      const copy = {
+        en: {
+          title: 'Install Torik Dammam',
+          message: 'Get faster access and open the marketplace from your home screen.',
+          install: 'Install app',
+          later: 'Not now',
+          ios: 'Tap Share, then choose Add to Home Screen.'
+        },
+        bn: {
+          title: 'Torik Dammam ইনস্টল করুন',
+          message: 'দ্রুত ব্যবহার করুন এবং হোম স্ক্রিন থেকে মার্কেটপ্লেস খুলুন।',
+          install: 'অ্যাপ ইনস্টল',
+          later: 'এখন নয়',
+          ios: 'Share চাপুন, তারপর Add to Home Screen নির্বাচন করুন।'
+        },
+        ur: {
+          title: 'Torik Dammam انسٹال کریں',
+          message: 'تیز رسائی حاصل کریں اور ہوم اسکرین سے مارکیٹ پلیس کھولیں۔',
+          install: 'ایپ انسٹال کریں',
+          later: 'ابھی نہیں',
+          ios: 'Share دبائیں، پھر Add to Home Screen منتخب کریں۔'
+        },
+        hi: {
+          title: 'Torik Dammam इंस्टॉल करें',
+          message: 'तेज़ पहुँच पाएँ और होम स्क्रीन से मार्केटप्लेस खोलें।',
+          install: 'ऐप इंस्टॉल करें',
+          later: 'अभी नहीं',
+          ios: 'Share दबाएँ, फिर Add to Home Screen चुनें।'
+        }
+      };
+
+      const language = (navigator.language || 'en').toLowerCase().split('-')[0];
+      const text = copy[language] || copy.en;
+      title.textContent = text.title;
+      message.textContent = text.message;
+      installButton.textContent = text.install;
+      dismissButton.textContent = text.later;
+
+      const installed = () =>
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+      const recentlyDismissed = () => {
+        const value = Number(localStorage.getItem(dismissalKey) || 0);
+        return value > 0 && Date.now() - value < dismissalPeriod;
+      };
+      const showBanner = () => {
+        if (installed() || recentlyDismissed()) return;
+        banner.style.display = 'flex';
+        requestAnimationFrame(() => banner.classList.add('show'));
+      };
+      const hideBanner = () => {
+        banner.classList.remove('show');
+        setTimeout(() => { banner.style.display = 'none'; }, 230);
+      };
+
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        showBanner();
+      });
+
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      if (isIos && !installed()) {
+        iosInstructions = true;
+        message.textContent = text.ios;
+        installButton.textContent = 'OK';
+        window.addEventListener('load', () => setTimeout(showBanner, 1800));
+      }
+
+      installButton.addEventListener('click', async () => {
+        if (iosInstructions || !deferredInstallPrompt) {
+          hideBanner();
+          return;
+        }
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        hideBanner();
+      });
+
+      dismissButton.addEventListener('click', () => {
+        localStorage.setItem(dismissalKey, String(Date.now()));
+        hideBanner();
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        localStorage.removeItem(dismissalKey);
+        hideBanner();
+      });
+    })();
+  </script>
   <script src="flutter_bootstrap.js" defer></script>
 </body>
 </html>
