@@ -1,15 +1,167 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'api.dart';
 import 'google_auth_service.dart';
 import 'google_button.dart';
 
-void main() => runApp(const ScrapMarketApp());
+final appLanguage = ValueNotifier<String>('en');
+
+const languageNames = {
+  'en': 'English',
+  'bn': 'বাংলা',
+  'ur': 'اردو',
+  'hi': 'हिन्दी',
+};
+
+const translations = <String, Map<String, String>>{
+  'bn': {
+    'Home': 'হোম',
+    'Saved': 'সংরক্ষিত',
+    'My posts': 'আমার পোস্ট',
+    'Profile': 'প্রোফাইল',
+    'Post': 'পোস্ট',
+    'Login': 'লগইন',
+    'Login / Sign up': 'লগইন / নিবন্ধন',
+    'Create account': 'অ্যাকাউন্ট তৈরি করুন',
+    'Create a post': 'পোস্ট তৈরি করুন',
+    'Post details': 'পোস্টের বিস্তারিত',
+    'Saved posts': 'সংরক্ষিত পোস্ট',
+    'Your profile': 'আপনার প্রোফাইল',
+    'Publish post': 'পোস্ট প্রকাশ করুন',
+    'Sign out': 'সাইন আউট',
+    'Language': 'ভাষা',
+    'Title': 'শিরোনাম',
+    'Description': 'বিবরণ',
+    'Store number': 'দোকান নম্বর',
+    'Salary (optional)': 'বেতন (ঐচ্ছিক)',
+    'Price (optional)': 'মূল্য (ঐচ্ছিক)',
+    'Unit (optional)': 'একক (ঐচ্ছিক)',
+    'Photos (maximum 3)': 'ছবি (সর্বোচ্চ ৩টি)',
+    'Post category': 'পোস্টের বিভাগ',
+    'No saved posts': 'কোনো সংরক্ষিত পোস্ট নেই',
+    'No posts yet': 'এখনও কোনো পোস্ট নেই',
+    'Save profile': 'প্রোফাইল সংরক্ষণ করুন',
+    'Phone': 'ফোন',
+    'Email': 'ইমেইল',
+    'Cancel': 'বাতিল',
+    'Verify': 'যাচাই করুন',
+  },
+  'ur': {
+    'Home': 'ہوم',
+    'Saved': 'محفوظ',
+    'My posts': 'میری پوسٹس',
+    'Profile': 'پروفائل',
+    'Post': 'پوسٹ',
+    'Login': 'لاگ اِن',
+    'Login / Sign up': 'لاگ اِن / رجسٹر',
+    'Create account': 'اکاؤنٹ بنائیں',
+    'Create a post': 'پوسٹ بنائیں',
+    'Post details': 'پوسٹ کی تفصیل',
+    'Saved posts': 'محفوظ پوسٹس',
+    'Your profile': 'آپ کی پروفائل',
+    'Publish post': 'پوسٹ شائع کریں',
+    'Sign out': 'سائن آؤٹ',
+    'Language': 'زبان',
+    'Title': 'عنوان',
+    'Description': 'تفصیل',
+    'Store number': 'دکان نمبر',
+    'Salary (optional)': 'تنخواہ (اختیاری)',
+    'Price (optional)': 'قیمت (اختیاری)',
+    'Unit (optional)': 'اکائی (اختیاری)',
+    'Photos (maximum 3)': 'تصاویر (زیادہ سے زیادہ 3)',
+    'Post category': 'پوسٹ کی قسم',
+    'No saved posts': 'کوئی محفوظ پوسٹ نہیں',
+    'No posts yet': 'ابھی کوئی پوسٹ نہیں',
+    'Save profile': 'پروفائل محفوظ کریں',
+    'Phone': 'فون',
+    'Email': 'ای میل',
+    'Cancel': 'منسوخ',
+    'Verify': 'تصدیق کریں',
+  },
+  'hi': {
+    'Home': 'होम',
+    'Saved': 'सहेजे गए',
+    'My posts': 'मेरी पोस्ट',
+    'Profile': 'प्रोफ़ाइल',
+    'Post': 'पोस्ट',
+    'Login': 'लॉग इन',
+    'Login / Sign up': 'लॉग इन / पंजीकरण',
+    'Create account': 'खाता बनाएँ',
+    'Create a post': 'पोस्ट बनाएँ',
+    'Post details': 'पोस्ट विवरण',
+    'Saved posts': 'सहेजी गई पोस्ट',
+    'Your profile': 'आपकी प्रोफ़ाइल',
+    'Publish post': 'पोस्ट प्रकाशित करें',
+    'Sign out': 'साइन आउट',
+    'Language': 'भाषा',
+    'Title': 'शीर्षक',
+    'Description': 'विवरण',
+    'Store number': 'स्टोर नंबर',
+    'Salary (optional)': 'वेतन (वैकल्पिक)',
+    'Price (optional)': 'मूल्य (वैकल्पिक)',
+    'Unit (optional)': 'इकाई (वैकल्पिक)',
+    'Photos (maximum 3)': 'फ़ोटो (अधिकतम 3)',
+    'Post category': 'पोस्ट श्रेणी',
+    'No saved posts': 'कोई सहेजी गई पोस्ट नहीं',
+    'No posts yet': 'अभी कोई पोस्ट नहीं',
+    'Save profile': 'प्रोफ़ाइल सहेजें',
+    'Phone': 'फ़ोन',
+    'Email': 'ईमेल',
+    'Cancel': 'रद्द करें',
+    'Verify': 'सत्यापित करें',
+  },
+};
+
+String tr(String english) =>
+    translations[appLanguage.value]?[english] ?? english;
+
+Future<void> setLanguage(String code) async {
+  appLanguage.value = code;
+  await (await SharedPreferences.getInstance()).setString('app_language', code);
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final saved = (await SharedPreferences.getInstance()).getString(
+    'app_language',
+  );
+  if (languageNames.containsKey(saved)) appLanguage.value = saved!;
+  runApp(const ScrapMarketApp());
+}
+
+class LanguageSelector extends StatelessWidget {
+  const LanguageSelector({super.key});
+
+  @override
+  Widget build(BuildContext context) => PopupMenuButton<String>(
+    tooltip: tr('Language'),
+    initialValue: appLanguage.value,
+    onSelected: setLanguage,
+    icon: const Icon(Icons.translate),
+    itemBuilder: (_) => languageNames.entries
+        .map(
+          (entry) => PopupMenuItem<String>(
+            value: entry.key,
+            child: Row(
+              children: [
+                if (entry.key == appLanguage.value)
+                  const Icon(Icons.check, size: 18),
+                if (entry.key == appLanguage.value) const SizedBox(width: 8),
+                Text(entry.value),
+              ],
+            ),
+          ),
+        )
+        .toList(),
+  );
+}
 
 class RotatingLoader extends StatefulWidget {
   const RotatingLoader({super.key, this.size = 24});
@@ -111,27 +263,42 @@ class ScrapMarketApp extends StatelessWidget {
   const ScrapMarketApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'ScrapMarket',
-    theme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xff176b52),
-        primary: const Color(0xff176b52),
-        secondary: const Color(0xfff1a43c),
-      ),
-      scaffoldBackgroundColor: const Color(0xfff4f7f3),
-      useMaterial3: true,
-      inputDecorationTheme: const InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(14)),
-          borderSide: BorderSide.none,
+  Widget build(BuildContext context) => ValueListenableBuilder<String>(
+    valueListenable: appLanguage,
+    builder: (context, language, _) => MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Torik Dammam',
+      locale: Locale(language),
+      supportedLocales: const [
+        Locale('en'),
+        Locale('bn'),
+        Locale('ur'),
+        Locale('hi'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xff176b52),
+          primary: const Color(0xff176b52),
+          secondary: const Color(0xfff1a43c),
+        ),
+        scaffoldBackgroundColor: const Color(0xfff4f7f3),
+        useMaterial3: true,
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
+      home: const MarketplaceShell(),
     ),
-    home: const MarketplaceShell(),
   );
 }
 
@@ -231,7 +398,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                     ),
                     const SizedBox(height: 22),
                     Text(
-                      registering ? 'Create account' : 'Login',
+                      registering ? tr('Create account') : tr('Login'),
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.w800),
@@ -323,7 +490,11 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         child: loading
                             ? const RotatingLoader(size: 22)
-                            : Text(registering ? 'Create account' : 'Login'),
+                            : Text(
+                                registering
+                                    ? tr('Create account')
+                                    : tr('Login'),
+                              ),
                       ),
                     ),
                     if (!registering && googleReady) ...[
@@ -769,24 +940,27 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openPost,
         icon: const Icon(Icons.add),
-        label: const Text('Post'),
+        label: Text(tr('Post')),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: _selectDestination,
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.bookmark_outline),
-            label: 'Saved',
+            icon: const Icon(Icons.home_outlined),
+            label: tr('Home'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.article_outlined),
-            label: 'My posts',
+            icon: const Icon(Icons.bookmark_outline),
+            label: tr('Saved'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
+            icon: const Icon(Icons.article_outlined),
+            label: tr('My posts'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.person_outline),
+            label: tr('Profile'),
           ),
         ],
       ),
@@ -994,6 +1168,7 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                           ),
+                          const LanguageSelector(),
                           TextButton.icon(
                             onPressed: widget.signedIn ? null : widget.onLogin,
                             icon: Icon(
@@ -1005,8 +1180,8 @@ class _HomePageState extends State<HomePage> {
                               widget.signedIn
                                   ? 'Signed in'
                                   : MediaQuery.sizeOf(context).width < 600
-                                  ? 'Login'
-                                  : 'Login / Sign up',
+                                  ? tr('Login')
+                                  : tr('Login / Sign up'),
                             ),
                           ),
                         ],
@@ -1605,7 +1780,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Post details')),
+    appBar: AppBar(title: Text(tr('Post details'))),
     body: ListView(
       padding: const EdgeInsets.only(bottom: 32),
       children: [
@@ -1872,7 +2047,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Create a post')),
+    appBar: AppBar(title: Text(tr('Create a post'))),
     body: Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -1881,11 +2056,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text.rich(
+              Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: 'Post category '),
-                    TextSpan(
+                    TextSpan(text: '${tr('Post category')} '),
+                    const TextSpan(
                       text: '*',
                       style: TextStyle(color: Colors.red),
                     ),
@@ -1937,9 +2112,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     .toList(),
               ),
               const SizedBox(height: 22),
-              const Text(
-                'Photos (maximum 3)',
-                style: TextStyle(fontWeight: FontWeight.w700),
+              Text(
+                tr('Photos (maximum 3)'),
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 10),
               Row(
@@ -2004,22 +2179,22 @@ class _CreatePostPageState extends State<CreatePostPage> {
               const SizedBox(height: 16),
               TextField(
                 controller: title,
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(labelText: tr('Title')),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: description,
                 maxLines: 4,
-                decoration: const InputDecoration(labelText: 'Description'),
+                decoration: InputDecoration(labelText: tr('Description')),
               ),
               const SizedBox(height: 12),
               if (usesSalary)
                 TextField(
                   controller: price,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Salary (optional)',
-                    prefixIcon: Icon(Icons.payments_outlined),
+                  decoration: InputDecoration(
+                    labelText: tr('Salary (optional)'),
+                    prefixIcon: const Icon(Icons.payments_outlined),
                   ),
                 )
               else
@@ -2029,8 +2204,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       child: TextField(
                         controller: price,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Price (optional)',
+                        decoration: InputDecoration(
+                          labelText: tr('Price (optional)'),
                         ),
                       ),
                     ),
@@ -2038,8 +2213,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     Expanded(
                       child: TextField(
                         controller: unit,
-                        decoration: const InputDecoration(
-                          labelText: 'Unit (optional)',
+                        decoration: InputDecoration(
+                          labelText: tr('Unit (optional)'),
                           hintText: 'kg / item',
                         ),
                       ),
@@ -2055,10 +2230,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(4),
                 ],
-                decoration: const InputDecoration(
-                  labelText: 'Store number',
+                decoration: InputDecoration(
+                  labelText: tr('Store number'),
                   hintText: 'Example: 0101',
-                  prefixIcon: Icon(Icons.store_outlined),
+                  prefixIcon: const Icon(Icons.store_outlined),
                   counterText: '',
                 ),
               ),
@@ -2069,7 +2244,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   child: publishing
                       ? const RotatingLoader(size: 22)
-                      : const Text('Publish post'),
+                      : Text(tr('Publish post')),
                 ),
               ),
             ],
@@ -2128,7 +2303,7 @@ class _SavedPageState extends State<SavedPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Saved posts',
+            tr('Saved posts'),
             style: Theme.of(context).textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.w800),
           ),
@@ -2149,10 +2324,10 @@ class _SavedPageState extends State<SavedPage> {
               ),
             )
           else if (posts.isEmpty)
-            const Expanded(
+            Expanded(
               child: EmptyPage(
                 icon: Icons.bookmark_outline,
-                title: 'No saved posts',
+                title: tr('No saved posts'),
                 message: 'Tap a bookmark icon to save a post here.',
               ),
             )
@@ -2245,7 +2420,7 @@ class _MyPostsPageState extends State<MyPostsPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'My posts',
+            tr('My posts'),
             style: Theme.of(context).textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.w800),
           ),
@@ -2278,10 +2453,10 @@ class _MyPostsPageState extends State<MyPostsPage> {
               ),
             )
           else if (posts.isEmpty)
-            const Expanded(
+            Expanded(
               child: EmptyPage(
                 icon: Icons.article_outlined,
-                title: 'No posts yet',
+                title: tr('No posts yet'),
                 message: 'Your published advertisements will appear here.',
               ),
             )
@@ -2503,7 +2678,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   Text(
-                    'Your profile',
+                    tr('Your profile'),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall
                         ?.copyWith(fontWeight: FontWeight.w800),
@@ -2614,16 +2789,16 @@ class _ProfilePageState extends State<ProfilePage> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       child: savingProfile
                           ? const RotatingLoader(size: 22)
-                          : const Text('Save profile'),
+                          : Text(tr('Save profile')),
                     ),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: savingProfile ? null : widget.onSignOut,
                     icon: const Icon(Icons.logout),
-                    label: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      child: Text('Sign out'),
+                    label: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Text(tr('Sign out')),
                     ),
                   ),
                 ],
