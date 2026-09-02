@@ -5,7 +5,7 @@ import 'package:scrap_market/main.dart';
 void main() {
   testWidgets('shows public home and opens login from Post', (tester) async {
     await tester.pumpWidget(const ScrapMarketApp());
-    expect(find.text('Torik-Dammam Scrap Market'), findsOneWidget);
+    expect(find.text('Torik Dammam Marketplace'), findsOneWidget);
     expect(find.text('Post'), findsOneWidget);
 
     await tester.tap(find.text('Post'));
@@ -39,18 +39,24 @@ void main() {
       Icons.engineering,
       Colors.white,
     );
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: SizedBox(width: 900, height: 390, child: ListingCard(listing: listing)),
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 390,
+            child: ListingCard(listing: listing),
+          ),
+        ),
       ),
-    ));
+    );
 
-    final categoryRight = tester.getTopRight(
-      find.byKey(const Key('post-category-right')),
-    ).dx;
-    final timeRight = tester.getTopRight(
-      find.byKey(const Key('post-time-left')),
-    ).dx;
+    final categoryRight = tester
+        .getTopRight(find.byKey(const Key('post-category-right')))
+        .dx;
+    final timeRight = tester
+        .getTopRight(find.byKey(const Key('post-time-left')))
+        .dx;
     final cardRight = tester.getTopRight(find.byType(Card)).dx;
     expect(categoryRight, greaterThan(timeRight));
     expect(cardRight - categoryRight, lessThan(20));

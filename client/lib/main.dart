@@ -1502,6 +1502,13 @@ class _HomePageState extends State<HomePage> {
     ),
   };
 
+  String get marketplaceSlogan => switch (appLanguage.value) {
+    'bn' => 'পোস্ট করুন। যুক্ত হোন। একসাথে এগিয়ে যান।',
+    'ur' => 'پوسٹ کریں۔ جڑیں۔ مل کر آگے بڑھیں۔',
+    'hi' => 'पोस्ट करें। जुड़ें। साथ आगे बढ़ें।',
+    _ => 'Post. Connect. Grow together.',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -1648,7 +1655,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Torik-Dammam Scrap Market',
+                                  'Torik Dammam Marketplace',
                                   style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(fontWeight: FontWeight.w800),
                                 ),
@@ -1680,10 +1687,19 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                       const SizedBox(height: 18),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
+                      Card(
+                        margin: EdgeInsets.zero,
+                        elevation: 8,
+                        shadowColor: const Color(0x40176B52),
+                        clipBehavior: Clip.antiAlias,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26),
+                          side: const BorderSide(color: Color(0x33176B52)),
+                        ),
                         child: SizedBox(
-                          height: 220,
+                          height: MediaQuery.sizeOf(context).width < 600
+                              ? 280
+                              : 300,
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
@@ -1699,14 +1715,104 @@ class _HomePageState extends State<HomePage> {
                                       'Scrap market banner ${index + 1}',
                                 ),
                               ),
+                              const Positioned.fill(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color(0x4D000000),
+                                        Color(0x12000000),
+                                        Color(0x990B2D24),
+                                      ],
+                                      stops: [0, 0.42, 1],
+                                    ),
+                                  ),
+                                ),
+                              ),
                               Positioned(
-                                left: 14,
-                                right: 14,
+                                left: 16,
                                 top: 14,
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xE6176B52),
-                                    borderRadius: BorderRadius.circular(16),
+                                    color: const Color(0xEFFFFFFF),
+                                    borderRadius: BorderRadius.circular(30),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x33000000),
+                                        blurRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      7,
+                                      6,
+                                      13,
+                                      6,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Image.asset(
+                                          'assets/branding/torik-dammam-logo.png',
+                                          width: 30,
+                                          height: 30,
+                                        ),
+                                        const SizedBox(width: 7),
+                                        const Text(
+                                          'TORIK DAMMAM',
+                                          style: TextStyle(
+                                            color: Color(0xff153d31),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 0.7,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                right: 16,
+                                top: 17,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0x99000000),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    child: Text(
+                                      '${bannerIndex + 1} / ${bannerImages.length}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                left: 18,
+                                right: 18,
+                                top: 70,
+                                bottom: 42,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xE6176B52),
+                                        Color(0xE60E4E3B),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
                                       color: Colors.white.withValues(
                                         alpha: 0.35,
@@ -1727,7 +1833,26 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
+                                        Text(
+                                          marketplaceSlogan,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize:
+                                                MediaQuery.sizeOf(context)
+                                                        .width <
+                                                    600
+                                                ? 21
+                                                : 27,
+                                            fontWeight: FontWeight.w900,
+                                            height: 1.1,
+                                            letterSpacing: -0.3,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -1735,7 +1860,7 @@ class _HomePageState extends State<HomePage> {
                                             const Icon(
                                               Icons.card_giftcard_rounded,
                                               color: Color(0xFFFFD166),
-                                              size: 23,
+                                              size: 22,
                                             ),
                                             const SizedBox(width: 8),
                                             Flexible(
@@ -1744,7 +1869,7 @@ class _HomePageState extends State<HomePage> {
                                                 textAlign: TextAlign.center,
                                                 style: const TextStyle(
                                                   color: Colors.white,
-                                                  fontSize: 17,
+                                                  fontSize: 15,
                                                   fontWeight: FontWeight.w800,
                                                   height: 1.2,
                                                 ),
@@ -1752,14 +1877,28 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 5),
-                                        Text(
-                                          promotionCopy.$2,
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            color: Color(0xFFFFE9A8),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
+                                        const SizedBox(height: 8),
+                                        DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            color: const Color(0x26FFFFFF),
+                                            borderRadius: BorderRadius.circular(
+                                              30,
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 13,
+                                              vertical: 6,
+                                            ),
+                                            child: Text(
+                                              promotionCopy.$2,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                color: Color(0xFFFFE9A8),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],
