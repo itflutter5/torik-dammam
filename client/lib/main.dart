@@ -65,7 +65,8 @@ const translations = <String, Map<String, String>>{
     'Login / Sign up': 'لاگ اِن / رجسٹر',
     'Create account': 'اکاؤنٹ بنائیں',
     'All fields marked * are required': '* کے نشان والے تمام خانے لازمی ہیں',
-    'All registration fields are required': 'رجسٹریشن کے تمام خانے پُر کرنا ضروری ہیں',
+    'All registration fields are required':
+        'رجسٹریشن کے تمام خانے پُر کرنا ضروری ہیں',
     'Create a post': 'پوسٹ بنائیں',
     'Post details': 'پوسٹ کی تفصیل',
     'Saved posts': 'محفوظ پوسٹس',
@@ -99,7 +100,8 @@ const translations = <String, Map<String, String>>{
     'Login / Sign up': 'लॉग इन / पंजीकरण',
     'Create account': 'खाता बनाएँ',
     'All fields marked * are required': '* चिह्न वाले सभी फ़ील्ड आवश्यक हैं',
-    'All registration fields are required': 'पंजीकरण के सभी फ़ील्ड भरना आवश्यक है',
+    'All registration fields are required':
+        'पंजीकरण के सभी फ़ील्ड भरना आवश्यक है',
     'Create a post': 'पोस्ट बनाएँ',
     'Post details': 'पोस्ट विवरण',
     'Saved posts': 'सहेजी गई पोस्ट',
@@ -143,8 +145,10 @@ const extendedTranslations = <String, Map<String, String>>{
     'Verified phone or email': 'যাচাইকৃত ফোন বা ইমেইল',
     'New password': 'নতুন পাসওয়ার্ড',
     'Send code': 'কোড পাঠান',
-    'Password must be at least 8 characters': 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে',
-    'Password changed. You can now log in.': 'পাসওয়ার্ড পরিবর্তন হয়েছে। এখন লগইন করুন।',
+    'Password must be at least 8 characters':
+        'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে',
+    'Password changed. You can now log in.':
+        'পাসওয়ার্ড পরিবর্তন হয়েছে। এখন লগইন করুন।',
     'Create your marketplace account.':
         'আপনার মার্কেটপ্লেস অ্যাকাউন্ট তৈরি করুন।',
     'Log in with your Saudi phone number.':
@@ -246,8 +250,10 @@ const extendedTranslations = <String, Map<String, String>>{
     'Verified phone or email': 'تصدیق شدہ فون یا ای میل',
     'New password': 'نیا پاس ورڈ',
     'Send code': 'کوڈ بھیجیں',
-    'Password must be at least 8 characters': 'پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے',
-    'Password changed. You can now log in.': 'پاس ورڈ تبدیل ہوگیا۔ اب لاگ اِن کریں۔',
+    'Password must be at least 8 characters':
+        'پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے',
+    'Password changed. You can now log in.':
+        'پاس ورڈ تبدیل ہوگیا۔ اب لاگ اِن کریں۔',
     'Create your marketplace account.': 'اپنا مارکیٹ پلیس اکاؤنٹ بنائیں۔',
     'Log in with your Saudi phone number.':
         'اپنے سعودی فون نمبر سے لاگ اِن کریں۔',
@@ -346,7 +352,8 @@ const extendedTranslations = <String, Map<String, String>>{
     'Verified phone or email': 'सत्यापित फ़ोन या ईमेल',
     'New password': 'नया पासवर्ड',
     'Send code': 'कोड भेजें',
-    'Password must be at least 8 characters': 'पासवर्ड कम से कम 8 अक्षरों का होना चाहिए',
+    'Password must be at least 8 characters':
+        'पासवर्ड कम से कम 8 अक्षरों का होना चाहिए',
     'Password changed. You can now log in.': 'पासवर्ड बदल गया। अब लॉग इन करें।',
     'Create your marketplace account.': 'अपना मार्केटप्लेस खाता बनाएँ।',
     'Log in with your Saudi phone number.':
@@ -726,7 +733,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       backgroundColor: const Color(0xffe1f0e9),
                       child: Padding(
                         padding: const EdgeInsets.all(7),
-                        child: Image.asset('assets/branding/torik-dammam-logo.png'),
+                        child: Image.asset(
+                          'assets/branding/torik-dammam-logo.png',
+                        ),
                       ),
                     ),
                     const SizedBox(height: 22),
@@ -1310,7 +1319,8 @@ Listing listingFromApiRow(Map<String, dynamic> row) {
     icon,
     const Color(0xffd8e8e4),
     urls,
-    row['post_number'] as String? ?? '#${row['id'].toString().padLeft(11, '0')}',
+    row['post_number'] as String? ??
+        '#${row['id'].toString().padLeft(11, '0')}',
     row['user_profile_image_url'] as String?,
     row['id'].toString(),
     row['is_saved'] as bool? ?? false,
@@ -1472,6 +1482,25 @@ class _HomePageState extends State<HomePage> {
     'November',
     'December',
   ];
+
+  (String, String) get promotionCopy => switch (appLanguage.value) {
+    'bn' => (
+      'নতুন ব্যবহারকারীদের প্রথম ৫টি পোস্ট ফ্রি!',
+      'এরপর প্রতি পোস্ট মাত্র ৫ রিয়াল অথবা ১৬৫ টাকা',
+    ),
+    'ur' => (
+      'نئے صارفین کے لیے پہلی 5 پوسٹس مفت!',
+      'اس کے بعد ہر پوسٹ صرف 5 ریال یا 165 ٹکا',
+    ),
+    'hi' => (
+      'नए उपयोगकर्ताओं की पहली 5 पोस्ट मुफ़्त!',
+      'उसके बाद प्रति पोस्ट केवल 5 रियाल या 165 टका',
+    ),
+    _ => (
+      'New users get their first 5 posts FREE!',
+      'After that, only 5 SAR or ৳165 per post',
+    ),
+  };
 
   @override
   void initState() {
@@ -1668,6 +1697,74 @@ class _HomePageState extends State<HomePage> {
                                   fit: BoxFit.cover,
                                   semanticLabel:
                                       'Scrap market banner ${index + 1}',
+                                ),
+                              ),
+                              Positioned(
+                                left: 14,
+                                right: 14,
+                                top: 14,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xE6176B52),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.35,
+                                      ),
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x4D000000),
+                                        blurRadius: 12,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.card_giftcard_rounded,
+                                              color: Color(0xFFFFD166),
+                                              size: 23,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Flexible(
+                                              child: Text(
+                                                promotionCopy.$1,
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 17,
+                                                  fontWeight: FontWeight.w800,
+                                                  height: 1.2,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          promotionCopy.$2,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: Color(0xFFFFE9A8),
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                               Positioned(
@@ -2429,13 +2526,14 @@ class _CreatePostPageState extends State<CreatePostPage> {
   Future<void> _loadQuota() async {
     try {
       final quota = await ApiService.instance.fetchPostQuota();
-      if (mounted) setState(() {
-        freeRemaining = quota['freeRemaining'] as int? ?? 0;
-        bdtAmount = (quota['bdtAmount'] as num?)?.round() ?? 165;
-        instructionsSar = quota['instructionsSar'] as String? ?? '';
-        instructionsBdt = quota['instructionsBdt'] as String? ?? '';
-        loadingQuota = false;
-      });
+      if (mounted)
+        setState(() {
+          freeRemaining = quota['freeRemaining'] as int? ?? 0;
+          bdtAmount = (quota['bdtAmount'] as num?)?.round() ?? 165;
+          instructionsSar = quota['instructionsSar'] as String? ?? '';
+          instructionsBdt = quota['instructionsBdt'] as String? ?? '';
+          loadingQuota = false;
+        });
     } catch (_) {
       if (mounted) setState(() => loadingQuota = false);
     }
@@ -2512,13 +2610,19 @@ class _CreatePostPageState extends State<CreatePostPage> {
       if (bytes.length > 8 * 1024 * 1024) {
         throw const ApiException('Image must be smaller than 8 MB');
       }
-      if (mounted) setState(() => paymentProof = UploadImage(image.name, bytes));
+      if (mounted)
+        setState(() => paymentProof = UploadImage(image.name, bytes));
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error is ApiException
-            ? tr(error.message)
-            : tr('Camera or photo access is not available'))),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error is ApiException
+                  ? tr(error.message)
+                  : tr('Camera or photo access is not available'),
+            ),
+          ),
+        );
     }
   }
 
@@ -2556,10 +2660,17 @@ class _CreatePostPageState extends State<CreatePostPage> {
         paymentCurrency: freeRemaining == 0 ? paymentCurrency : null,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(tr(pendingApproval
-              ? 'Payment submitted. Your post is waiting for admin approval.'
-              : 'Post published'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            tr(
+              pendingApproval
+                  ? 'Payment submitted. Your post is waiting for admin approval.'
+                  : 'Post published',
+            ),
+          ),
+        ),
+      );
       Navigator.pop(context, true);
     } on ApiException catch (error) {
       if (mounted)
@@ -2773,53 +2884,76 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   child: loadingQuota
                       ? const Center(child: RotatingLoader(size: 26))
                       : freeRemaining > 0
-                          ? Text(
-                              '${tr('Free posts remaining')}: $freeRemaining / 5',
-                              style: const TextStyle(fontWeight: FontWeight.w700),
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  tr('Your 5 free posts are used. Pay and upload proof for admin approval.'),
-                                  style: const TextStyle(fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 10),
-                                SegmentedButton<String>(
-                                  segments: [
-                                    const ButtonSegment(value: 'SAR', label: Text('5 SAR')),
-                                    ButtonSegment(value: 'BDT', label: Text('$bdtAmount BDT')),
-                                  ],
-                                  selected: {paymentCurrency},
-                                  onSelectionChanged: publishing
-                                      ? null
-                                      : (value) => setState(() => paymentCurrency = value.first),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(paymentCurrency == 'SAR'
-                                    ? (instructionsSar.isEmpty
-                                        ? tr('Pay 5 SAR using the administrator payment account.')
-                                        : instructionsSar)
-                                    : (instructionsBdt.isEmpty
-                                        ? '${tr('Pay using the administrator payment account')}: $bdtAmount BDT'
-                                        : instructionsBdt)),
-                                const SizedBox(height: 12),
-                                OutlinedButton.icon(
-                                  onPressed: publishing ? null : _pickPaymentProof,
-                                  icon: const Icon(Icons.receipt_long_outlined),
-                                  label: Text(paymentProof == null
-                                      ? tr('Upload payment proof *')
-                                      : tr('Payment proof selected — tap to replace')),
-                                ),
-                                if (paymentProof != null) ...[
-                                  const SizedBox(height: 8),
-                                  SizedBox(
-                                    height: 130,
-                                    child: Image.memory(paymentProof!.bytes, fit: BoxFit.contain),
-                                  ),
-                                ],
-                              ],
+                      ? Text(
+                          '${tr('Free posts remaining')}: $freeRemaining / 5',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              tr(
+                                'Your 5 free posts are used. Pay and upload proof for admin approval.',
+                              ),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
+                            const SizedBox(height: 10),
+                            SegmentedButton<String>(
+                              segments: [
+                                const ButtonSegment(
+                                  value: 'SAR',
+                                  label: Text('5 SAR'),
+                                ),
+                                ButtonSegment(
+                                  value: 'BDT',
+                                  label: Text('$bdtAmount BDT'),
+                                ),
+                              ],
+                              selected: {paymentCurrency},
+                              onSelectionChanged: publishing
+                                  ? null
+                                  : (value) => setState(
+                                      () => paymentCurrency = value.first,
+                                    ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              paymentCurrency == 'SAR'
+                                  ? (instructionsSar.isEmpty
+                                        ? tr(
+                                            'Pay 5 SAR using the administrator payment account.',
+                                          )
+                                        : instructionsSar)
+                                  : (instructionsBdt.isEmpty
+                                        ? '${tr('Pay using the administrator payment account')}: $bdtAmount BDT'
+                                        : instructionsBdt),
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: publishing ? null : _pickPaymentProof,
+                              icon: const Icon(Icons.receipt_long_outlined),
+                              label: Text(
+                                paymentProof == null
+                                    ? tr('Upload payment proof *')
+                                    : tr(
+                                        'Payment proof selected — tap to replace',
+                                      ),
+                              ),
+                            ),
+                            if (paymentProof != null) ...[
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                height: 130,
+                                child: Image.memory(
+                                  paymentProof!.bytes,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                 ),
               ),
               const SizedBox(height: 22),
@@ -3457,7 +3591,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     if (!RegExp(r'^\+9665\d{8}$').hasMatch(phone.text.trim()) ||
         password.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('Enter a valid admin phone number and password'))),
+        SnackBar(
+          content: Text(tr('Enter a valid admin phone number and password')),
+        ),
       );
       return;
     }
@@ -3467,16 +3603,19 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         phone: phone.text.trim(),
         password: password.text,
       );
-      if (mounted) Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const AdminReviewPage()),
-      );
+      if (mounted)
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AdminReviewPage()),
+        );
     } on ApiException catch (error) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('Cannot connect to the server'))),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('Cannot connect to the server'))),
+        );
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -3528,10 +3667,13 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       labelText: tr('Password'),
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        onPressed: () => setState(() => obscurePassword = !obscurePassword),
-                        icon: Icon(obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined),
+                        onPressed: () =>
+                            setState(() => obscurePassword = !obscurePassword),
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
                       ),
                     ),
                   ),
@@ -3572,10 +3714,11 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
 
   Future<void> _logout() async {
     await ApiService.instance.signOut();
-    if (mounted) Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const AdminLoginPage()),
-      (_) => false,
-    );
+    if (mounted)
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AdminLoginPage()),
+        (_) => false,
+      );
   }
 
   @override
@@ -3587,9 +3730,18 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
   Future<void> _load() async {
     try {
       final values = await ApiService.instance.fetchAdminPosts(statusFilter);
-      if (mounted) setState(() { posts = values; loading = false; error = null; });
+      if (mounted)
+        setState(() {
+          posts = values;
+          loading = false;
+          error = null;
+        });
     } on ApiException catch (exception) {
-      if (mounted) setState(() { error = exception.message; loading = false; });
+      if (mounted)
+        setState(() {
+          error = exception.message;
+          loading = false;
+        });
     }
   }
 
@@ -3648,8 +3800,9 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
         if (statusFilter == newStatus) await _load();
       }
     } on ApiException catch (exception) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(exception.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(exception.message)));
     } finally {
       if (mounted) setState(() => reviewing.remove(id));
     }
@@ -3673,7 +3826,8 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
             child: Image.network(
               proofUrl,
               fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => Text(tr('Payment proof could not be loaded')),
+              errorBuilder: (_, _, _) =>
+                  Text(tr('Payment proof could not be loaded')),
             ),
           ),
         ),
@@ -3688,16 +3842,14 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
       actions: [
         IconButton(
           tooltip: tr('Dashboard statistics'),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AdminStatsPage()),
-          ),
+          onPressed: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const AdminStatsPage())),
           icon: const Icon(Icons.analytics_outlined),
         ),
         IconButton(
           tooltip: tr('Manage users'),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AdminUsersPage()),
-          ),
+          onPressed: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const AdminUsersPage())),
           icon: const Icon(Icons.manage_accounts_outlined),
         ),
         IconButton(
@@ -3721,14 +3873,22 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
           child: Row(
             children: [
-              for (final value in <String?>[null, 'pending', 'approved', 'rejected'])
+              for (final value in <String?>[
+                null,
+                'pending',
+                'approved',
+                'rejected',
+              ])
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
                     label: Text(tr(value == null ? 'All posts' : value)),
                     selected: statusFilter == value,
                     onSelected: (_) {
-                      setState(() { statusFilter = value; loading = true; });
+                      setState(() {
+                        statusFilter = value;
+                        loading = true;
+                      });
                       _load();
                     },
                   ),
@@ -3736,125 +3896,149 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
             ],
           ),
         ),
-        Expanded(child: loading
-        ? const Center(child: RotatingLoader(size: 38))
-        : error != null
-            ? Center(child: Text(error!))
-            : posts.isEmpty
-                ? Center(child: Text(tr('No posts found')))
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: posts.length,
-                    itemBuilder: (context, index) {
-                      final post = posts[index];
-                      final id = post['id'].toString();
-                      final proofUrl = post['payment_proof_url'] as String?;
-                      final status = post['status'] as String? ?? 'approved';
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 14),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(post['title'] as String? ?? '',
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.w800)),
-                              const SizedBox(height: 4),
-                              Text('${post['user_name']} - ${post['phone']}'),
-                              Text(
-                                '${tr('Post number')}: ${post['post_number'] ?? '-'}',
-                                style: const TextStyle(fontWeight: FontWeight.w800),
+        Expanded(
+          child: loading
+              ? const Center(child: RotatingLoader(size: 38))
+              : error != null
+              ? Center(child: Text(error!))
+              : posts.isEmpty
+              ? Center(child: Text(tr('No posts found')))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: posts.length,
+                  itemBuilder: (context, index) {
+                    final post = posts[index];
+                    final id = post['id'].toString();
+                    final proofUrl = post['payment_proof_url'] as String?;
+                    final status = post['status'] as String? ?? 'approved';
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              post['title'] as String? ?? '',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 4),
+                            Text('${post['user_name']} - ${post['phone']}'),
+                            Text(
+                              '${tr('Post number')}: ${post['post_number'] ?? '-'}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
                               ),
-                              Text('${tr('Status')}: ${tr(status)}'),
-                              Text('${tr('Category')}: ${tr(post['category'] as String? ?? '')}'),
-                              if (post['payment_amount'] != null)
-                                Text('${post['payment_amount']} ${post['payment_currency']}'),
-                              const SizedBox(height: 6),
-                              Text(post['description'] as String? ?? ''),
-                              if (proofUrl != null) ...[
-                                const SizedBox(height: 12),
-                                Text(
-                                  tr('Uploaded payment proof'),
-                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            Text('${tr('Status')}: ${tr(status)}'),
+                            Text(
+                              '${tr('Category')}: ${tr(post['category'] as String? ?? '')}',
+                            ),
+                            if (post['payment_amount'] != null)
+                              Text(
+                                '${post['payment_amount']} ${post['payment_currency']}',
+                              ),
+                            const SizedBox(height: 6),
+                            Text(post['description'] as String? ?? ''),
+                            if (proofUrl != null) ...[
+                              const SizedBox(height: 12),
+                              Text(
+                                tr('Uploaded payment proof'),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                const SizedBox(height: 8),
-                                InkWell(
-                                  onTap: () => _showPaymentProof(proofUrl),
+                              ),
+                              const SizedBox(height: 8),
+                              InkWell(
+                                onTap: () => _showPaymentProof(proofUrl),
+                                borderRadius: BorderRadius.circular(12),
+                                child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      proofUrl,
-                                      height: 260,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, _, _) => SizedBox(
-                                        height: 120,
-                                        child: Center(
-                                          child: Text(tr('Payment proof could not be loaded')),
+                                  child: Image.network(
+                                    proofUrl,
+                                    height: 260,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, _, _) => SizedBox(
+                                      height: 120,
+                                      child: Center(
+                                        child: Text(
+                                          tr(
+                                            'Payment proof could not be loaded',
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                                TextButton.icon(
-                                  onPressed: () => _showPaymentProof(proofUrl),
-                                  icon: const Icon(Icons.fullscreen),
-                                  label: Text(tr('View payment proof full screen')),
+                              ),
+                              TextButton.icon(
+                                onPressed: () => _showPaymentProof(proofUrl),
+                                icon: const Icon(Icons.fullscreen),
+                                label: Text(
+                                  tr('View payment proof full screen'),
                                 ),
-                              ],
-                              const SizedBox(height: 12),
-                              if (status == 'approved')
-                                FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.error,
-                                  ),
-                                  onPressed: reviewing.contains(id)
-                                      ? null : () => _review(post, false),
-                                  icon: reviewing.contains(id)
-                                      ? const RotatingLoader(size: 20)
-                                      : const Icon(Icons.block_outlined),
-                                  label: Text(tr('Reject post')),
-                                )
-                              else if (status == 'rejected')
-                                FilledButton.icon(
-                                  onPressed: reviewing.contains(id)
-                                      ? null : () => _review(post, true),
-                                  icon: reviewing.contains(id)
-                                      ? const RotatingLoader(size: 20)
-                                      : const Icon(Icons.restore),
-                                  label: Text(tr('Restore and approve')),
-                                )
-                              else
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton.icon(
-                                        onPressed: reviewing.contains(id)
-                                            ? null : () => _review(post, false),
-                                        icon: const Icon(Icons.close),
-                                        label: Text(tr('Reject')),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: FilledButton.icon(
-                                        onPressed: reviewing.contains(id)
-                                            ? null : () => _review(post, true),
-                                        icon: reviewing.contains(id)
-                                            ? const RotatingLoader(size: 20)
-                                            : const Icon(Icons.check),
-                                        label: Text(tr('Approve')),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              ),
                             ],
-                          ),
+                            const SizedBox(height: 12),
+                            if (status == 'approved')
+                              FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .error,
+                                ),
+                                onPressed: reviewing.contains(id)
+                                    ? null
+                                    : () => _review(post, false),
+                                icon: reviewing.contains(id)
+                                    ? const RotatingLoader(size: 20)
+                                    : const Icon(Icons.block_outlined),
+                                label: Text(tr('Reject post')),
+                              )
+                            else if (status == 'rejected')
+                              FilledButton.icon(
+                                onPressed: reviewing.contains(id)
+                                    ? null
+                                    : () => _review(post, true),
+                                icon: reviewing.contains(id)
+                                    ? const RotatingLoader(size: 20)
+                                    : const Icon(Icons.restore),
+                                label: Text(tr('Restore and approve')),
+                              )
+                            else
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: reviewing.contains(id)
+                                          ? null
+                                          : () => _review(post, false),
+                                      icon: const Icon(Icons.close),
+                                      label: Text(tr('Reject')),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: FilledButton.icon(
+                                      onPressed: reviewing.contains(id)
+                                          ? null
+                                          : () => _review(post, true),
+                                      icon: reviewing.contains(id)
+                                          ? const RotatingLoader(size: 20)
+                                          : const Icon(Icons.check),
+                                      label: Text(tr('Approve')),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
-                      );
-                    },
-                  ),),
+                      ),
+                    );
+                  },
+                ),
+        ),
       ],
     ),
   );
@@ -3864,7 +4048,8 @@ class AdminPaymentSettingsPage extends StatefulWidget {
   const AdminPaymentSettingsPage({super.key});
 
   @override
-  State<AdminPaymentSettingsPage> createState() => _AdminPaymentSettingsPageState();
+  State<AdminPaymentSettingsPage> createState() =>
+      _AdminPaymentSettingsPageState();
 }
 
 class _AdminPaymentSettingsPageState extends State<AdminPaymentSettingsPage> {
@@ -3887,9 +4072,17 @@ class _AdminPaymentSettingsPageState extends State<AdminPaymentSettingsPage> {
       sarNumber.text = settings['sarNumber'] as String? ?? '';
       bdtNumber.text = settings['bdtNumber'] as String? ?? '';
       bdtAmount.text = '${settings['bdtAmount'] ?? 165}';
-      if (mounted) setState(() { loading = false; error = null; });
+      if (mounted)
+        setState(() {
+          loading = false;
+          error = null;
+        });
     } on ApiException catch (exception) {
-      if (mounted) setState(() { loading = false; error = exception.message; });
+      if (mounted)
+        setState(() {
+          loading = false;
+          error = exception.message;
+        });
     }
   }
 
@@ -3909,12 +4102,14 @@ class _AdminPaymentSettingsPageState extends State<AdminPaymentSettingsPage> {
         bdtNumber: bdtNumber.text.trim(),
         bdtAmount: bdtAmount.text.trim(),
       );
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('Payment settings saved'))),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr('Payment settings saved'))));
     } on ApiException catch (exception) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(exception.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(exception.message)));
     } finally {
       if (mounted) setState(() => saving = false);
     }
@@ -3934,60 +4129,64 @@ class _AdminPaymentSettingsPageState extends State<AdminPaymentSettingsPage> {
     body: loading
         ? const Center(child: RotatingLoader(size: 38))
         : error != null
-            ? Center(child: Text(error!))
-            : Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 560),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(22),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            TextField(
-                              controller: sarNumber,
-                              decoration: InputDecoration(
-                                labelText: tr('Saudi payment number'),
-                                prefixIcon: const Icon(Icons.payments_outlined),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            TextField(
-                              controller: bdtNumber,
-                              decoration: InputDecoration(
-                                labelText: tr('Bangladesh payment number'),
-                                prefixIcon: const Icon(Icons.phone_android_outlined),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            TextField(
-                              controller: bdtAmount,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              decoration: InputDecoration(
-                                labelText: tr('BDT amount equivalent to 5 SAR'),
-                                prefixIcon: const Icon(Icons.currency_exchange),
-                              ),
-                            ),
-                            const SizedBox(height: 22),
-                            FilledButton.icon(
-                              onPressed: saving ? null : _save,
-                              icon: saving
-                                  ? const RotatingLoader(size: 20)
-                                  : const Icon(Icons.save_outlined),
-                              label: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                child: Text(tr('Save payment settings')),
-                              ),
-                            ),
-                          ],
+        ? Center(child: Text(error!))
+        : Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(22),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(
+                          controller: sarNumber,
+                          decoration: InputDecoration(
+                            labelText: tr('Saudi payment number'),
+                            prefixIcon: const Icon(Icons.payments_outlined),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: bdtNumber,
+                          decoration: InputDecoration(
+                            labelText: tr('Bangladesh payment number'),
+                            prefixIcon: const Icon(
+                              Icons.phone_android_outlined,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: bdtAmount,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: tr('BDT amount equivalent to 5 SAR'),
+                            prefixIcon: const Icon(Icons.currency_exchange),
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        FilledButton.icon(
+                          onPressed: saving ? null : _save,
+                          icon: saving
+                              ? const RotatingLoader(size: 20)
+                              : const Icon(Icons.save_outlined),
+                          label: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            child: Text(tr('Save payment settings')),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
+            ),
+          ),
   );
 }
 
@@ -4011,7 +4210,11 @@ class _AdminStatsPageState extends State<AdminStatsPage> {
   Future<void> _load() async {
     try {
       final value = await ApiService.instance.fetchAdminStats();
-      if (mounted) setState(() { stats = value; error = null; });
+      if (mounted)
+        setState(() {
+          stats = value;
+          error = null;
+        });
     } on ApiException catch (exception) {
       if (mounted) setState(() => error = exception.message);
     }
@@ -4022,49 +4225,70 @@ class _AdminStatsPageState extends State<AdminStatsPage> {
     final items = <(String, String, IconData)>[
       ('Total users', '${stats?['total_users'] ?? 0}', Icons.people_outline),
       ('Unique visitors', '${stats?['unique_visitors'] ?? 0}', Icons.public),
-      ('Total visits', '${stats?['total_visits'] ?? 0}', Icons.visibility_outlined),
-      ('Visitors today', '${stats?['visitors_today'] ?? 0}', Icons.today_outlined),
-      ('Restricted users', '${stats?['restricted_users'] ?? 0}', Icons.block_outlined),
+      (
+        'Total visits',
+        '${stats?['total_visits'] ?? 0}',
+        Icons.visibility_outlined,
+      ),
+      (
+        'Visitors today',
+        '${stats?['visitors_today'] ?? 0}',
+        Icons.today_outlined,
+      ),
+      (
+        'Restricted users',
+        '${stats?['restricted_users'] ?? 0}',
+        Icons.block_outlined,
+      ),
       ('Total posts', '${stats?['total_posts'] ?? 0}', Icons.article_outlined),
-      ('Pending posts', '${stats?['pending_posts'] ?? 0}', Icons.pending_actions_outlined),
+      (
+        'Pending posts',
+        '${stats?['pending_posts'] ?? 0}',
+        Icons.pending_actions_outlined,
+      ),
     ];
     return Scaffold(
       appBar: AppBar(
         title: Text(tr('Dashboard statistics')),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh))],
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+        ],
       ),
       body: stats == null && error == null
           ? const Center(child: RotatingLoader(size: 38))
           : error != null
-              ? Center(child: Text(error!))
-              : GridView.builder(
-                  padding: const EdgeInsets.all(18),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 260,
-                    mainAxisExtent: 150,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                  ),
-                  itemCount: items.length,
-                  itemBuilder: (_, index) {
-                    final item = items[index];
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(18),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(item.$3, size: 34),
-                            const SizedBox(height: 8),
-                            Text(item.$2, style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(fontWeight: FontWeight.w900)),
-                            Text(tr(item.$1), textAlign: TextAlign.center),
-                          ],
+          ? Center(child: Text(error!))
+          : GridView.builder(
+              padding: const EdgeInsets.all(18),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 260,
+                mainAxisExtent: 150,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+              ),
+              itemCount: items.length,
+              itemBuilder: (_, index) {
+                final item = items[index];
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(item.$3, size: 34),
+                        const SizedBox(height: 8),
+                        Text(
+                          item.$2,
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(fontWeight: FontWeight.w900),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                        Text(tr(item.$1), textAlign: TextAlign.center),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -4091,10 +4315,21 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   Future<void> _load() async {
     setState(() => loading = true);
     try {
-      final values = await ApiService.instance.fetchAdminUsers(search.text.trim());
-      if (mounted) setState(() { users = values; loading = false; error = null; });
+      final values = await ApiService.instance.fetchAdminUsers(
+        search.text.trim(),
+      );
+      if (mounted)
+        setState(() {
+          users = values;
+          loading = false;
+          error = null;
+        });
     } on ApiException catch (exception) {
-      if (mounted) setState(() { error = exception.message; loading = false; });
+      if (mounted)
+        setState(() {
+          error = exception.message;
+          loading = false;
+        });
     }
   }
 
@@ -4102,10 +4337,13 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
     final name = TextEditingController(text: user['name'] as String? ?? '');
     final phone = TextEditingController(text: user['phone'] as String? ?? '');
     final email = TextEditingController(text: user['email'] as String? ?? '');
-    final store = TextEditingController(text: user['store_number'] as String? ?? '');
+    final store = TextEditingController(
+      text: user['store_number'] as String? ?? '',
+    );
     final newPassword = TextEditingController();
     DateTime? restrictedUntil = user['suspended_until'] == null
-        ? null : DateTime.tryParse(user['suspended_until'] as String);
+        ? null
+        : DateTime.tryParse(user['suspended_until'] as String);
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -4117,13 +4355,25 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(controller: name, decoration: InputDecoration(labelText: tr('Name'))),
+                  TextField(
+                    controller: name,
+                    decoration: InputDecoration(labelText: tr('Name')),
+                  ),
                   const SizedBox(height: 10),
-                  TextField(controller: phone, decoration: InputDecoration(labelText: tr('Phone'))),
+                  TextField(
+                    controller: phone,
+                    decoration: InputDecoration(labelText: tr('Phone')),
+                  ),
                   const SizedBox(height: 10),
-                  TextField(controller: email, decoration: InputDecoration(labelText: tr('Email'))),
+                  TextField(
+                    controller: email,
+                    decoration: InputDecoration(labelText: tr('Email')),
+                  ),
                   const SizedBox(height: 10),
-                  TextField(controller: store, decoration: InputDecoration(labelText: tr('Store number'))),
+                  TextField(
+                    controller: store,
+                    decoration: InputDecoration(labelText: tr('Store number')),
+                  ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: newPassword,
@@ -4136,27 +4386,41 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                   const SizedBox(height: 16),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(tr('Account restriction'),
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text(
+                      tr('Account restriction'),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
                   const SizedBox(height: 6),
-                  Text(restrictedUntil == null
-                      ? tr('Not restricted')
-                      : '${tr('Restricted until')} ${restrictedUntil!.toLocal()}'),
+                  Text(
+                    restrictedUntil == null
+                        ? tr('Not restricted')
+                        : '${tr('Restricted until')} ${restrictedUntil!.toLocal()}',
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: [
                       TextButton(
-                        onPressed: () => setDialogState(() => restrictedUntil = null),
+                        onPressed: () =>
+                            setDialogState(() => restrictedUntil = null),
                         child: Text(tr('Remove restriction')),
                       ),
-                      for (final option in const [(1, '1 hour'), (3, '3 hours'),
-                        (24, '1 day'), (72, '3 days'), (168, '7 days'), (720, '30 days')])
+                      for (final option in const [
+                        (1, '1 hour'),
+                        (3, '3 hours'),
+                        (24, '1 day'),
+                        (72, '3 days'),
+                        (168, '7 days'),
+                        (720, '30 days'),
+                      ])
                         OutlinedButton(
-                          onPressed: () => setDialogState(() => restrictedUntil =
-                              DateTime.now().toUtc().add(Duration(hours: option.$1))),
+                          onPressed: () => setDialogState(
+                            () => restrictedUntil = DateTime.now().toUtc().add(
+                              Duration(hours: option.$1),
+                            ),
+                          ),
                           child: Text(tr(option.$2)),
                         ),
                     ],
@@ -4166,10 +4430,14 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(tr('Cancel'))),
-            FilledButton(onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(tr('Save'))),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(tr('Cancel')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(tr('Save')),
+            ),
           ],
         ),
       ),
@@ -4186,11 +4454,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
         });
         await _load();
       } on ApiException catch (exception) {
-        if (mounted) ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(exception.message)));
+        if (mounted)
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(exception.message)));
       }
     }
-    name.dispose(); phone.dispose(); email.dispose(); store.dispose(); newPassword.dispose();
+    name.dispose();
+    phone.dispose();
+    email.dispose();
+    store.dispose();
+    newPassword.dispose();
   }
 
   @override
@@ -4212,7 +4485,10 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             decoration: InputDecoration(
               labelText: tr('Search users'),
               prefixIcon: const Icon(Icons.search),
-              suffixIcon: IconButton(onPressed: _load, icon: const Icon(Icons.search)),
+              suffixIcon: IconButton(
+                onPressed: _load,
+                icon: const Icon(Icons.search),
+              ),
             ),
           ),
         ),
@@ -4220,40 +4496,46 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
           child: loading
               ? const Center(child: RotatingLoader(size: 38))
               : error != null
-                  ? Center(child: Text(error!))
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                      itemCount: users.length,
-                      itemBuilder: (context, index) {
-                        final user = users[index];
-                        final restricted = user['suspended_until'] != null &&
-                            (DateTime.tryParse(user['suspended_until'] as String)
-                                    ?.isAfter(DateTime.now()) ?? false);
-                        return Card(
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: user['profile_image_url'] == null
-                                  ? null : NetworkImage(user['profile_image_url'] as String),
-                              child: user['profile_image_url'] == null
-                                  ? const Icon(Icons.person_outline) : null,
-                            ),
-                            title: Text(user['name'] as String? ?? ''),
-                            subtitle: Text(
-                              '${user['phone'] ?? '-'}\n${user['email'] ?? '-'}\n'
-                              '${tr('Store number')}: ${user['store_number']}  |  '
-                              '${tr('Posts')}: ${user['post_count']}\n'
-                              '${restricted ? tr('Restricted') : tr('Active')}',
-                            ),
-                            isThreeLine: true,
-                            trailing: IconButton(
-                              tooltip: tr('Edit user'),
-                              onPressed: () => _edit(user),
-                              icon: const Icon(Icons.edit_outlined),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+              ? Center(child: Text(error!))
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                  itemCount: users.length,
+                  itemBuilder: (context, index) {
+                    final user = users[index];
+                    final restricted =
+                        user['suspended_until'] != null &&
+                        (DateTime.tryParse(user['suspended_until'] as String)
+                                ?.isAfter(DateTime.now()) ??
+                            false);
+                    return Card(
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: user['profile_image_url'] == null
+                              ? null
+                              : NetworkImage(
+                                  user['profile_image_url'] as String,
+                                ),
+                          child: user['profile_image_url'] == null
+                              ? const Icon(Icons.person_outline)
+                              : null,
+                        ),
+                        title: Text(user['name'] as String? ?? ''),
+                        subtitle: Text(
+                          '${user['phone'] ?? '-'}\n${user['email'] ?? '-'}\n'
+                          '${tr('Store number')}: ${user['store_number']}  |  '
+                          '${tr('Posts')}: ${user['post_count']}\n'
+                          '${restricted ? tr('Restricted') : tr('Active')}',
+                        ),
+                        isThreeLine: true,
+                        trailing: IconButton(
+                          tooltip: tr('Edit user'),
+                          onPressed: () => _edit(user),
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     ),
