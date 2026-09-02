@@ -10,6 +10,59 @@ import 'google_button.dart';
 
 void main() => runApp(const ScrapMarketApp());
 
+class RotatingLoader extends StatefulWidget {
+  const RotatingLoader({super.key, this.size = 24});
+
+  final double size;
+
+  @override
+  State<RotatingLoader> createState() => _RotatingLoaderState();
+}
+
+class _RotatingLoaderState extends State<RotatingLoader>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat();
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return SizedBox.square(
+      dimension: widget.size,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withValues(alpha: 0.12),
+          border: Border.all(color: color.withValues(alpha: 0.28)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.18),
+              blurRadius: 8,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: RotationTransition(
+          turns: CurvedAnimation(parent: controller, curve: Curves.linear),
+          child: Icon(
+            Icons.recycling_rounded,
+            color: color,
+            size: widget.size * 0.7,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class ScrapMarketApp extends StatelessWidget {
   const ScrapMarketApp({super.key});
 
@@ -86,17 +139,19 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
       await ApiService.instance.loginWithGoogle(idToken);
       if (mounted) Navigator.of(context).pop(true);
     } on ApiException catch (error) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) setState(() => loading = false);
     }
   }
 
   void _showGoogleError() {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google sign-in was not completed')),
-    );
+    if (mounted)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in was not completed')),
+      );
   }
 
   @override
@@ -206,7 +261,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                         controller: storeNumber,
                         keyboardType: TextInputType.number,
                         maxLength: 4,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         decoration: const InputDecoration(
                           labelText: 'Store number',
                           hintText: '0101',
@@ -221,10 +278,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         child: loading
-                            ? const SizedBox.square(
-                                dimension: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
+                            ? const RotatingLoader(size: 22)
                             : Text(registering ? 'Create account' : 'Login'),
                       ),
                     ),
@@ -249,11 +303,13 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       onPressed: loading
                           ? null
                           : registering
-                              ? () => Navigator.of(context).pop(false)
-                              : _openRegistration,
-                      child: Text(registering
-                          ? 'Already registered? Back to login'
-                          : 'New user? Register'),
+                          ? () => Navigator.of(context).pop(false)
+                          : _openRegistration,
+                      child: Text(
+                        registering
+                            ? 'Already registered? Back to login'
+                            : 'New user? Register',
+                      ),
                     ),
                   ],
                 ),
@@ -268,14 +324,17 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   Future<void> _enterApp() async {
     if (!RegExp(r'^\+9665\d{8}$').hasMatch(phone.text.trim()) ||
         password.text.length < (registering ? 8 : 1) ||
-        (registering && (name.text.trim().length < 2 ||
-            !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                .hasMatch(email.text.trim()) ||
-            !RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())))) {
+        (registering &&
+            (name.text.trim().length < 2 ||
+                !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                    .hasMatch(email.text.trim()) ||
+                !RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())))) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(
-          'Check your name, email, +9665XXXXXXXX phone, password (8+ characters), and store number (up to 4 digits)',
-        )),
+        const SnackBar(
+          content: Text(
+            'Check your name, email, +9665XXXXXXXX phone, password (8+ characters), and store number (up to 4 digits)',
+          ),
+        ),
       );
       return;
     }
@@ -288,8 +347,10 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     try {
       if (registering) {
         final pending = await ApiService.instance.startRegistration(
-          name: name.text.trim(), phone: phone.text.trim(),
-          email: email.text.trim().toLowerCase(), password: password.text,
+          name: name.text.trim(),
+          phone: phone.text.trim(),
+          email: email.text.trim().toLowerCase(),
+          password: password.text,
           storeNumber: storeNumber.text.trim(),
           verificationMethod: verificationMethod!,
         );
@@ -304,17 +365,20 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
         );
       } else {
         await ApiService.instance.login(
-          phone: phone.text.trim(), password: password.text,
+          phone: phone.text.trim(),
+          password: password.text,
         );
       }
       if (mounted) Navigator.of(context).pop(true);
     } on ApiException catch (error) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot connect to the server')),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot connect to the server')),
+        );
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -324,7 +388,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     context: context,
     builder: (dialogContext) => AlertDialog(
       title: const Text('Verify your account'),
-      content: const Text('Where should we send your 6-digit verification code?'),
+      content: const Text(
+        'Where should we send your 6-digit verification code?',
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext),
@@ -363,7 +429,8 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
               maxLength: 6,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: const InputDecoration(
-                labelText: 'Verification code', counterText: '',
+                labelText: 'Verification code',
+                counterText: '',
               ),
             ),
           ],
@@ -389,9 +456,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   }
 
   Future<void> _openRegistration() async {
-    final registered = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const RegistrationPage()),
-    );
+    final registered = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const RegistrationPage()));
     if (registered == true && mounted) Navigator.of(context).pop(true);
   }
 }
@@ -418,9 +485,9 @@ class Listing {
     this.postedMonth,
     this.postedDay,
     this.icon,
-    this.color,
-    [this.imageUrl]
-  );
+    this.color, [
+    this.imageUrl,
+  ]);
 
   final String title;
   final String type;
@@ -568,10 +635,11 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
   Future<void> _signOut() async {
     await ApiService.instance.signOut();
     await GoogleAuthService.instance.signOut();
-    if (mounted) setState(() {
-      signedIn = false;
-      index = 0;
-    });
+    if (mounted)
+      setState(() {
+        signedIn = false;
+        index = 0;
+      });
   }
 
   @override
@@ -705,28 +773,37 @@ class _HomePageState extends State<HomePage> {
         final priceValue = row['price'];
         final unitValue = row['unit'] as String?;
         return Listing(
-          row['title'] as String, category,
+          row['title'] as String,
+          category,
           priceValue == null
               ? 'Negotiable'
               : '$priceValue${unitValue == null ? '' : ' / $unitValue'}',
-          row['store_number'] as String, row['description'] as String,
-          row['user_name'] as String, row['phone'] as String,
+          row['store_number'] as String,
+          row['description'] as String,
+          row['user_name'] as String,
+          row['phone'] as String,
           '${created.day}/${created.month}/${created.year}',
-          created.year, created.month, created.day, icon,
-          const Color(0xffd8e8e4), urls.isEmpty ? null : urls.first,
+          created.year,
+          created.month,
+          created.day,
+          icon,
+          const Color(0xffd8e8e4),
+          urls.isEmpty ? null : urls.first,
         );
       }).toList();
-      if (mounted) setState(() {
-        remoteListings = mapped;
-        loadingPosts = false;
-        postsError = null;
-        if (mapped.isNotEmpty) selectedMonth = mapped.first.postedMonth;
-      });
+      if (mounted)
+        setState(() {
+          remoteListings = mapped;
+          loadingPosts = false;
+          postsError = null;
+          if (mapped.isNotEmpty) selectedMonth = mapped.first.postedMonth;
+        });
     } catch (_) {
-      if (mounted) setState(() {
-        loadingPosts = false;
-        postsError = 'Could not load posts';
-      });
+      if (mounted)
+        setState(() {
+          loadingPosts = false;
+          postsError = 'Could not load posts';
+        });
     }
   }
 
@@ -896,11 +973,16 @@ class _HomePageState extends State<HomePage> {
                           alignment: WrapAlignment.end,
                           spacing: 8,
                           runSpacing: 8,
-                          children: ['All', ...categories].map((label) => ChoiceChip(
-                            label: Text(label),
-                            selected: filter == label,
-                            onSelected: (_) => setState(() => filter = label),
-                          )).toList(),
+                          children: ['All', ...categories]
+                              .map(
+                                (label) => ChoiceChip(
+                                  label: Text(label),
+                                  selected: filter == label,
+                                  onSelected: (_) =>
+                                      setState(() => filter = label),
+                                ),
+                              )
+                              .toList(),
                         ),
                       ),
                       const SizedBox(height: 18),
@@ -981,7 +1063,13 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                       const SizedBox(height: 18),
-                      if (loadingPosts) const LinearProgressIndicator(),
+                      if (loadingPosts)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(12),
+                            child: RotatingLoader(size: 34),
+                          ),
+                        ),
                       if (postsError != null)
                         Row(
                           children: [
@@ -1200,10 +1288,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
   Future<void> _loadCategories() async {
     try {
       final values = await ApiService.instance.fetchCategories();
-      if (mounted) setState(() {
-        categories = values;
-        loadingCategories = false;
-      });
+      if (mounted)
+        setState(() {
+          categories = values;
+          loadingCategories = false;
+        });
     } catch (_) {
       if (mounted) setState(() => loadingCategories = false);
     }
@@ -1229,43 +1318,51 @@ class _CreatePostPageState extends State<CreatePostPage> {
     if (image == null) return;
     final bytes = await image.readAsBytes();
     if (bytes.length > 8 * 1024 * 1024) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Each image must be smaller than 8 MB')),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Each image must be smaller than 8 MB')),
+        );
       return;
     }
     setState(() => images.add(UploadImage(image.name, bytes)));
   }
 
   Future<void> _publish() async {
-    if (type == null || title.text.trim().length < 3 ||
+    if (type == null ||
+        title.text.trim().length < 3 ||
         description.text.trim().length < 10 ||
         !RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Select a category and complete all required fields'),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Select a category and complete all required fields'),
+        ),
+      );
       return;
     }
     setState(() => publishing = true);
     try {
       await ApiService.instance.createPost(
-        category: type!, title: title.text.trim(),
-        description: description.text.trim(), price: price.text.trim(),
-        unit: unit.text.trim(), storeNumber: storeNumber.text.trim(),
+        category: type!,
+        title: title.text.trim(),
+        description: description.text.trim(),
+        price: price.text.trim(),
+        unit: unit.text.trim(),
+        storeNumber: storeNumber.text.trim(),
         images: images,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Post published')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Post published')));
       Navigator.pop(context, true);
     } on ApiException catch (error) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot connect to the server')),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot connect to the server')),
+        );
     } finally {
       if (mounted) setState(() => publishing = false);
     }
@@ -1299,11 +1396,19 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 style: TextStyle(color: Colors.black54, fontSize: 12),
               ),
               const SizedBox(height: 8),
-              if (loadingCategories) const LinearProgressIndicator(),
+              if (loadingCategories)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: RotatingLoader(size: 32),
+                  ),
+                ),
               if (!loadingCategories && categories.isEmpty)
                 Row(
                   children: [
-                    const Expanded(child: Text('Categories could not be loaded')),
+                    const Expanded(
+                      child: Text('Categories could not be loaded'),
+                    ),
                     TextButton(
                       onPressed: () {
                         setState(() => loadingCategories = true);
@@ -1317,16 +1422,15 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 spacing: 8,
                 runSpacing: 8,
                 children: categories
-                        .map(
-                          (category) => ChoiceChip(
-                            label: Text(category),
-                            selected: type == category,
-                            onSelected: (selected) => setState(
-                              () => type = selected ? category : null,
-                            ),
-                          ),
-                        )
-                        .toList(),
+                    .map(
+                      (category) => ChoiceChip(
+                        label: Text(category),
+                        selected: type == category,
+                        onSelected: (selected) =>
+                            setState(() => type = selected ? category : null),
+                      ),
+                    )
+                    .toList(),
               ),
               const SizedBox(height: 22),
               const Text(
@@ -1343,7 +1447,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       child: AspectRatio(
                         aspectRatio: 1.25,
                         child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                          ),
                           clipBehavior: Clip.antiAlias,
                           onPressed: publishing || index > images.length
                               ? null
@@ -1358,14 +1464,21 @@ class _CreatePostPageState extends State<CreatePostPage> {
                               ? Stack(
                                   fit: StackFit.expand,
                                   children: [
-                                    Image.memory(images[index].bytes, fit: BoxFit.cover),
+                                    Image.memory(
+                                      images[index].bytes,
+                                      fit: BoxFit.cover,
+                                    ),
                                     const Positioned(
                                       right: 6,
                                       top: 6,
                                       child: CircleAvatar(
                                         radius: 13,
                                         backgroundColor: Colors.black54,
-                                        child: Icon(Icons.close, size: 17, color: Colors.white),
+                                        child: Icon(
+                                          Icons.close,
+                                          size: 17,
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -1439,10 +1552,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   child: publishing
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const RotatingLoader(size: 22)
                       : const Text('Publish post'),
                 ),
               ),
@@ -1537,34 +1647,45 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _saveProfile() async {
     if (!RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Store number must contain 1 to 4 digits'),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Store number must contain 1 to 4 digits'),
+        ),
+      );
       return;
     }
     final changed = storeNumber.text.trim() != savedStoreNumber;
     if (changed && !canChangeStoreNumber) {
       storeNumber.text = savedStoreNumber;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-          'Store number can be changed again in $daysUntilStoreChange days',
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Store number can be changed again in $daysUntilStoreChange days',
+          ),
         ),
-      ));
+      );
       return;
     }
     setState(() => savingProfile = true);
     try {
-      final user = await ApiService.instance
-          .updateStoreNumber(storeNumber.text.trim());
+      final user = await ApiService.instance.updateStoreNumber(
+        storeNumber.text.trim(),
+      );
       _applyUser(user);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(changed
-            ? 'Profile saved. Store number is locked for 30 days.'
-            : 'Profile is up to date'),
-      ));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              changed
+                  ? 'Profile saved. Store number is locked for 30 days.'
+                  : 'Profile is up to date',
+            ),
+          ),
+        );
     } on ApiException catch (error) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) setState(() => savingProfile = false);
     }
@@ -1579,22 +1700,27 @@ class _ProfilePageState extends State<ProfilePage> {
     if (image == null) return;
     final bytes = await image.readAsBytes();
     if (bytes.length > 8 * 1024 * 1024) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image must be smaller than 8 MB')),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image must be smaller than 8 MB')),
+        );
       return;
     }
     setState(() => uploadingProfileImage = true);
     try {
-      _applyUser(await ApiService.instance.uploadProfileImage(
-        UploadImage(image.name, bytes),
-      ));
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile picture updated')),
+      _applyUser(
+        await ApiService.instance.uploadProfileImage(
+          UploadImage(image.name, bytes),
+        ),
       );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated')),
+        );
     } on ApiException catch (error) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error.message)));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) setState(() => uploadingProfileImage = false);
     }
@@ -1632,7 +1758,13 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (loadingProfile) const LinearProgressIndicator(),
+                  if (loadingProfile)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 16),
+                        child: RotatingLoader(size: 34),
+                      ),
+                    ),
                   Text(
                     'Your profile',
                     textAlign: TextAlign.center,
@@ -1669,10 +1801,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ? null
                                 : _pickProfileImage,
                             icon: uploadingProfileImage
-                                ? const SizedBox.square(
-                                    dimension: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
+                                ? const RotatingLoader(size: 20)
                                 : const Icon(Icons.add_a_photo_outlined),
                           ),
                         ),
@@ -1683,9 +1812,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   TextButton.icon(
                     onPressed: uploadingProfileImage ? null : _pickProfileImage,
                     icon: const Icon(Icons.photo_library_outlined),
-                    label: Text(profileImageUrl == null
-                        ? 'Add profile picture'
-                        : 'Change profile picture'),
+                    label: Text(
+                      profileImageUrl == null
+                          ? 'Add profile picture'
+                          : 'Change profile picture',
+                    ),
                   ),
                   const SizedBox(height: 14),
                   TextField(
@@ -1745,10 +1876,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     label: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       child: savingProfile
-                          ? const SizedBox.square(
-                              dimension: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                          ? const RotatingLoader(size: 22)
                           : const Text('Save profile'),
                     ),
                   ),
