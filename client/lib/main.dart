@@ -2292,27 +2292,39 @@ class _ListingCardState extends State<ListingCard> {
                         horizontal: 11,
                         vertical: 7,
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              listing.price,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                color: categoryColor,
-                              ),
+                          Text(
+                            listing.price,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              color: categoryColor,
                             ),
                           ),
-                          const Icon(Icons.storefront_outlined, size: 16),
-                          const SizedBox(width: 5),
-                          Text(
-                            listing.storeNumber,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.storefront_rounded,
+                                size: 17,
+                                color: categoryColor,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  '${tr('Store number')}: ${listing.storeNumber}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
