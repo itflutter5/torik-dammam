@@ -60,7 +60,9 @@ INSERT INTO categories (name, sort_order) VALUES
   ('Need Worker', 20),
   ('Buy Scrap', 30),
   ('Sell Scrap', 40),
-  ('Driver', 50)
+  ('Driver', 50),
+  ('Serviceman', 60),
+  ('House Items', 70)
 ON CONFLICT (name) DO UPDATE SET sort_order = EXCLUDED.sort_order;
 
 CREATE TABLE IF NOT EXISTS posts (

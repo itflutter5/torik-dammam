@@ -212,6 +212,8 @@ const extendedTranslations = <String, Map<String, String>>{
     'Buy Scrap': 'স্ক্র্যাপ কিনুন',
     'Sell Scrap': 'স্ক্র্যাপ বিক্রি করুন',
     'Driver': 'ড্রাইভার',
+    'Serviceman': 'সেবাকর্মী',
+    'House Items': 'গৃহস্থালি সামগ্রী',
   },
   'ur': {
     'Add a photo': 'تصویر شامل کریں',
@@ -304,6 +306,8 @@ const extendedTranslations = <String, Map<String, String>>{
     'Buy Scrap': 'اسکریپ خریدیں',
     'Sell Scrap': 'اسکریپ بیچیں',
     'Driver': 'ڈرائیور',
+    'Serviceman': 'سروس مین',
+    'House Items': 'گھریلو اشیاء',
   },
   'hi': {
     'Add a photo': 'फ़ोटो जोड़ें',
@@ -396,6 +400,8 @@ const extendedTranslations = <String, Map<String, String>>{
     'Buy Scrap': 'स्क्रैप खरीदें',
     'Sell Scrap': 'स्क्रैप बेचें',
     'Driver': 'ड्राइवर',
+    'Serviceman': 'सर्विसमैन',
+    'House Items': 'घरेलू सामान',
   },
 };
 
@@ -1124,6 +1130,8 @@ Listing listingFromApiRow(Map<String, dynamic> row) {
     'Need Worker' => Icons.engineering,
     'Buy Scrap' => Icons.shopping_cart_outlined,
     'Driver' => Icons.local_shipping_outlined,
+    'Serviceman' => Icons.home_repair_service_outlined,
+    'House Items' => Icons.chair_outlined,
     _ => Icons.recycling,
   };
   final priceValue = row['price'];
