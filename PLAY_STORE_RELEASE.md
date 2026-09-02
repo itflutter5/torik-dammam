@@ -7,6 +7,9 @@ The GitHub workflow produces two artifacts:
 
 The permanent Android application ID is `com.torikdammam.marketplace`.
 
+Use `client/store-assets/play-store-icon.png` for the Google Play listing
+app icon. It is an opaque 512 by 512 PNG prepared for Play Console.
+
 ## Configure Play upload signing
 
 Create and securely back up one upload keystore. Never commit it to Git. Add
