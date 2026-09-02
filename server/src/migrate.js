@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS posts (
   price NUMERIC(12, 2),
   unit VARCHAR(30),
   store_number VARCHAR(4) NOT NULL,
-  post_number VARCHAR(13) UNIQUE,
+  post_number VARCHAR(30) UNIQUE,
   image_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
   status VARCHAR(20) NOT NULL DEFAULT 'approved',
   payment_proof_url TEXT,
@@ -114,10 +114,14 @@ ALTER TABLE posts ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS reviewed_by BIGINT REFERENCES users(id);
 UPDATE posts SET status = 'approved' WHERE status IS NULL;
 ALTER TABLE posts ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
-ALTER TABLE posts ADD COLUMN IF NOT EXISTS post_number VARCHAR(13);
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS post_number VARCHAR(30);
+ALTER TABLE posts ALTER COLUMN post_number TYPE VARCHAR(30);
 UPDATE posts
-SET post_number = '#' || LPAD(id::text, 12, '0')
-WHERE post_number IS NULL OR post_number !~ '^#[0-9]{12}$';
+SET post_number = CASE
+  WHEN LENGTH(id::text) < 11 THEN LPAD(id::text, 11, '0')
+  ELSE id::text
+END
+WHERE post_number IS NULL OR post_number !~ '^[0-9]{11,}$';
 ALTER TABLE posts ALTER COLUMN post_number SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS posts_post_number_unique_idx ON posts(post_number);
 ALTER TABLE pending_registrations ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);

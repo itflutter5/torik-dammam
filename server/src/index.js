@@ -465,7 +465,6 @@ app.post('/api/posts', requireAuth, upload.fields([
   try {
     const input = postSchema.parse(req.body);
     const employmentPost = input.category === 'Need Worker' || input.category === 'Need Job';
-    const postNumber = `#${crypto.randomInt(100000000000, 1000000000000)}`;
     const files = req.files ?? {};
     const imageUrls = await Promise.all((files.images ?? []).map((file) => uploadImage(file, req.auth.sub)));
     const countResult = await pool.query(
@@ -488,15 +487,20 @@ app.post('/api/posts', requireAuth, upload.fields([
       ? (paymentCurrency === 'SAR' ? 5 : Number(process.env.PAYMENT_BDT_AMOUNT ?? 165))
       : null;
     const result = await pool.query(
-      `INSERT INTO posts
-       (user_id, category, title, description, price, unit, store_number, image_urls,
+      `WITH next_post AS (
+         SELECT nextval(pg_get_serial_sequence('posts', 'id')) AS id
+       )
+       INSERT INTO posts
+       (id, user_id, category, title, description, price, unit, store_number, image_urls,
         post_number, status, payment_proof_url, payment_currency, payment_amount)
-       VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8::jsonb, $9, $10, $11, $12, $13)
+       SELECT id, $1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8::jsonb,
+              CASE WHEN LENGTH(id::text) < 11 THEN LPAD(id::text, 11, '0') ELSE id::text END,
+              $9, $10, $11, $12
+       FROM next_post
        RETURNING *`,
       [req.auth.sub, input.category, input.title, input.description,
         input.price === '' ? null : input.price, employmentPost ? '' : input.unit, input.storeNumber,
-        JSON.stringify(imageUrls), postNumber, status, paymentProofUrl,
-        paymentCurrency, paymentAmount],
+        JSON.stringify(imageUrls), status, paymentProofUrl, paymentCurrency, paymentAmount],
     );
     res.status(201).json({ post: result.rows[0], pendingApproval: requiresPayment });
   } catch (error) {

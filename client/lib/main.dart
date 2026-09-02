@@ -1304,7 +1304,7 @@ Listing listingFromApiRow(Map<String, dynamic> row) {
     icon,
     const Color(0xffd8e8e4),
     urls,
-    row['post_number'] as String? ?? '#${row['id']}',
+    row['post_number'] as String? ?? row['id'].toString().padLeft(11, '0'),
     row['user_profile_image_url'] as String?,
     row['id'].toString(),
     row['is_saved'] as bool? ?? false,
