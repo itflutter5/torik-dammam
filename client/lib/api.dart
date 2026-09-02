@@ -205,7 +205,7 @@ class ApiService {
     return data;
   }
 
-  Future<void> createPost({
+  Future<bool> createPost({
     required String category,
     required String title,
     required String description,
@@ -213,6 +213,8 @@ class ApiService {
     required String unit,
     required String storeNumber,
     required List<UploadImage> images,
+    UploadImage? paymentProof,
+    String? paymentCurrency,
   }) async {
     if (token == null) throw const ApiException('Please log in again');
     final request =
@@ -225,6 +227,7 @@ class ApiService {
             'price': price,
             'unit': unit,
             'storeNumber': storeNumber,
+            if (paymentCurrency != null) 'paymentCurrency': paymentCurrency,
           });
     for (final image in images) {
       request.files.add(
@@ -235,10 +238,60 @@ class ApiService {
         ),
       );
     }
+    if (paymentProof != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'paymentProof',
+          paymentProof.bytes,
+          filename: paymentProof.name,
+        ),
+      );
+    }
     final response = await http.Response.fromStream(await request.send());
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw ApiException(data['error'] as String? ?? 'Could not publish post');
+    }
+    return data['pendingApproval'] == true;
+  }
+
+  Future<Map<String, dynamic>> fetchPostQuota() async {
+    if (token == null) throw const ApiException('Please log in again');
+    final response = await http.get(
+      Uri.parse('$apiBaseUrl/posts/quota'),
+      headers: {'authorization': 'Bearer $token'},
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(data['error'] as String? ?? 'Could not load post quota');
+    }
+    return data;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPendingPosts() async {
+    final response = await http.get(
+      Uri.parse('$apiBaseUrl/admin/posts/pending'),
+      headers: {'authorization': 'Bearer $token'},
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(data['error'] as String? ?? 'Could not load pending posts');
+    }
+    return (data['posts'] as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> reviewPost(String postId, bool approved) async {
+    final response = await http.patch(
+      Uri.parse('$apiBaseUrl/admin/posts/$postId/review'),
+      headers: {
+        'authorization': 'Bearer $token',
+        'content-type': 'application/json',
+      },
+      body: jsonEncode({'approved': approved}),
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(data['error'] as String? ?? 'Could not review post');
     }
   }
 

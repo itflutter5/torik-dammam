@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   store_number VARCHAR(4) NOT NULL DEFAULT '0000',
   store_number_changed_at TIMESTAMPTZ,
   profile_image_url TEXT,
+  is_admin BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -26,6 +27,7 @@ ALTER TABLE users ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_num
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
 UPDATE users SET email = LOWER(TRIM(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_unique_idx
   ON users (LOWER(email)) WHERE email IS NOT NULL;
@@ -89,6 +91,12 @@ CREATE TABLE IF NOT EXISTS posts (
   store_number VARCHAR(4) NOT NULL,
   post_number VARCHAR(13) UNIQUE,
   image_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
+  status VARCHAR(20) NOT NULL DEFAULT 'approved',
+  payment_proof_url TEXT,
+  payment_currency VARCHAR(3),
+  payment_amount NUMERIC(12, 2),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by BIGINT REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '30 days'
 );
@@ -98,6 +106,13 @@ CREATE INDEX IF NOT EXISTS posts_user_id_idx ON posts(user_id);
 CREATE INDEX IF NOT EXISTS posts_expires_at_idx ON posts(expires_at);
 
 ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_category_check;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'approved';
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS payment_proof_url TEXT;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS payment_currency VARCHAR(3);
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS payment_amount NUMERIC(12, 2);
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS reviewed_by BIGINT REFERENCES users(id);
+UPDATE posts SET status = 'approved' WHERE status IS NULL;
 ALTER TABLE posts ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS post_number VARCHAR(13);
 UPDATE posts
@@ -128,6 +143,10 @@ END $$;
 
 try {
   await pool.query(sql);
+  const adminPhone = process.env.ADMIN_PHONE?.trim();
+  if (adminPhone) {
+    await pool.query('UPDATE users SET is_admin = (phone = $1)', [adminPhone]);
+  }
   console.log('Database schema is ready.');
 } finally {
   await pool.end();

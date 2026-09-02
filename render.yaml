@@ -25,5 +25,13 @@ services:
         value: Torik-Dammam
       - key: BREVO_SMS_SENDER
         value: TorikDammam
+      - key: ADMIN_PHONE
+        sync: false
+      - key: PAYMENT_BDT_AMOUNT
+        value: 165
+      - key: PAYMENT_INSTRUCTIONS_SAR
+        sync: false
+      - key: PAYMENT_INSTRUCTIONS_BDT
+        sync: false
       - key: ALLOWED_ORIGINS
         value: https://torik-dammam.onrender.com

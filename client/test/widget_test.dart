@@ -15,8 +15,8 @@ void main() {
     await tester.tap(find.text('New user? Register'));
     await tester.pumpAndSettle();
     expect(find.text('Create account'), findsNWidgets(2));
-    expect(find.text('Name'), findsOneWidget);
-    expect(find.text('Store number'), findsOneWidget);
+    expect(find.text('Name *'), findsOneWidget);
+    expect(find.text('Store number *'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox());
   });

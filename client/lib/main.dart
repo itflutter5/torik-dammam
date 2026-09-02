@@ -2388,11 +2388,18 @@ class _CreatePostPageState extends State<CreatePostPage> {
   final unit = TextEditingController();
   final storeNumber = TextEditingController();
   final images = <UploadImage>[];
+  UploadImage? paymentProof;
   final imagePicker = ImagePicker();
   List<String> categories = [];
   bool loadingCategories = true;
   String? type;
   bool publishing = false;
+  bool loadingQuota = true;
+  int freeRemaining = 5;
+  int bdtAmount = 165;
+  String paymentCurrency = 'SAR';
+  String instructionsSar = '';
+  String instructionsBdt = '';
 
   bool get usesSalary => type == 'Need Worker' || type == 'Need Job';
 
@@ -2400,6 +2407,22 @@ class _CreatePostPageState extends State<CreatePostPage> {
   void initState() {
     super.initState();
     _loadCategories();
+    _loadQuota();
+  }
+
+  Future<void> _loadQuota() async {
+    try {
+      final quota = await ApiService.instance.fetchPostQuota();
+      if (mounted) setState(() {
+        freeRemaining = quota['freeRemaining'] as int? ?? 0;
+        bdtAmount = (quota['bdtAmount'] as num?)?.round() ?? 165;
+        instructionsSar = quota['instructionsSar'] as String? ?? '';
+        instructionsBdt = quota['instructionsBdt'] as String? ?? '';
+        loadingQuota = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => loadingQuota = false);
+    }
   }
 
   Future<void> _loadCategories() async {
@@ -2459,6 +2482,30 @@ class _CreatePostPageState extends State<CreatePostPage> {
     setState(() => images.add(UploadImage(selectedImage.name, bytes)));
   }
 
+  Future<void> _pickPaymentProof() async {
+    final source = await chooseImageSource(context);
+    if (source == null || !mounted) return;
+    try {
+      final image = await imagePicker.pickImage(
+        source: source,
+        imageQuality: 82,
+        maxWidth: 1800,
+      );
+      if (image == null) return;
+      final bytes = await image.readAsBytes();
+      if (bytes.length > 8 * 1024 * 1024) {
+        throw const ApiException('Image must be smaller than 8 MB');
+      }
+      if (mounted) setState(() => paymentProof = UploadImage(image.name, bytes));
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error is ApiException
+            ? tr(error.message)
+            : tr('Camera or photo access is not available'))),
+      );
+    }
+  }
+
   Future<void> _publish() async {
     if (type == null ||
         title.text.trim().length < 3 ||
@@ -2473,9 +2520,15 @@ class _CreatePostPageState extends State<CreatePostPage> {
       );
       return;
     }
+    if (freeRemaining == 0 && paymentProof == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('Upload payment proof to submit this post'))),
+      );
+      return;
+    }
     setState(() => publishing = true);
     try {
-      await ApiService.instance.createPost(
+      final pendingApproval = await ApiService.instance.createPost(
         category: type!,
         title: title.text.trim(),
         description: description.text.trim(),
@@ -2483,10 +2536,14 @@ class _CreatePostPageState extends State<CreatePostPage> {
         unit: usesSalary ? '' : unit.text.trim(),
         storeNumber: storeNumber.text.trim(),
         images: images,
+        paymentProof: freeRemaining == 0 ? paymentProof : null,
+        paymentCurrency: freeRemaining == 0 ? paymentCurrency : null,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(tr('Post published'))));
+          .showSnackBar(SnackBar(content: Text(tr(pendingApproval
+              ? 'Payment submitted. Your post is waiting for admin approval.'
+              : 'Post published'))));
       Navigator.pop(context, true);
     } on ApiException catch (error) {
       if (mounted)
@@ -2690,6 +2747,63 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   hintText: tr('Example: 0101'),
                   prefixIcon: const Icon(Icons.store_outlined),
                   counterText: '',
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                color: const Color(0xfff5faf7),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: loadingQuota
+                      ? const Center(child: RotatingLoader(size: 26))
+                      : freeRemaining > 0
+                          ? Text(
+                              '${tr('Free posts remaining')}: $freeRemaining / 5',
+                              style: const TextStyle(fontWeight: FontWeight.w700),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  tr('Your 5 free posts are used. Pay and upload proof for admin approval.'),
+                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 10),
+                                SegmentedButton<String>(
+                                  segments: [
+                                    const ButtonSegment(value: 'SAR', label: Text('5 SAR')),
+                                    ButtonSegment(value: 'BDT', label: Text('$bdtAmount BDT')),
+                                  ],
+                                  selected: {paymentCurrency},
+                                  onSelectionChanged: publishing
+                                      ? null
+                                      : (value) => setState(() => paymentCurrency = value.first),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(paymentCurrency == 'SAR'
+                                    ? (instructionsSar.isEmpty
+                                        ? tr('Pay 5 SAR using the administrator payment account.')
+                                        : instructionsSar)
+                                    : (instructionsBdt.isEmpty
+                                        ? '${tr('Pay using the administrator payment account')}: $bdtAmount BDT'
+                                        : instructionsBdt)),
+                                const SizedBox(height: 12),
+                                OutlinedButton.icon(
+                                  onPressed: publishing ? null : _pickPaymentProof,
+                                  icon: const Icon(Icons.receipt_long_outlined),
+                                  label: Text(paymentProof == null
+                                      ? tr('Upload payment proof *')
+                                      : tr('Payment proof selected — tap to replace')),
+                                ),
+                                if (paymentProof != null) ...[
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    height: 130,
+                                    child: Image.memory(paymentProof!.bytes, fit: BoxFit.contain),
+                                  ),
+                                ],
+                              ],
+                            ),
                 ),
               ),
               const SizedBox(height: 22),
@@ -3285,6 +3399,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  if (ApiService.instance.currentUser?['isAdmin'] == true) ...[
+                    FilledButton.tonalIcon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const AdminReviewPage()),
+                      ),
+                      icon: const Icon(Icons.admin_panel_settings_outlined),
+                      label: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: Text(tr('Review paid posts')),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   OutlinedButton.icon(
                     onPressed: savingProfile ? null : widget.onSignOut,
                     icon: const Icon(Icons.logout),
@@ -3300,6 +3427,109 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
     ),
+  );
+}
+
+class AdminReviewPage extends StatefulWidget {
+  const AdminReviewPage({super.key});
+
+  @override
+  State<AdminReviewPage> createState() => _AdminReviewPageState();
+}
+
+class _AdminReviewPageState extends State<AdminReviewPage> {
+  bool loading = true;
+  String? error;
+  List<Map<String, dynamic>> posts = [];
+  final reviewing = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final values = await ApiService.instance.fetchPendingPosts();
+      if (mounted) setState(() { posts = values; loading = false; error = null; });
+    } on ApiException catch (exception) {
+      if (mounted) setState(() { error = exception.message; loading = false; });
+    }
+  }
+
+  Future<void> _review(Map<String, dynamic> post, bool approved) async {
+    final id = post['id'].toString();
+    if (reviewing.contains(id)) return;
+    setState(() => reviewing.add(id));
+    try {
+      await ApiService.instance.reviewPost(id, approved);
+      if (mounted) setState(() => posts.removeWhere((item) => item['id'].toString() == id));
+    } on ApiException catch (exception) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(exception.message)));
+    } finally {
+      if (mounted) setState(() => reviewing.remove(id));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(tr('Review paid posts'))),
+    body: loading
+        ? const Center(child: RotatingLoader(size: 38))
+        : error != null
+            ? Center(child: Text(error!))
+            : posts.isEmpty
+                ? Center(child: Text(tr('No paid posts waiting for review')))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: posts.length,
+                    itemBuilder: (context, index) {
+                      final post = posts[index];
+                      final id = post['id'].toString();
+                      final proofUrl = post['payment_proof_url'] as String?;
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(post['title'] as String? ?? '',
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w800)),
+                              const SizedBox(height: 4),
+                              Text('${post['user_name']} - ${post['phone']}'),
+                              Text('${post['payment_amount']} ${post['payment_currency']}'),
+                              if (proofUrl != null) ...[
+                                const SizedBox(height: 12),
+                                Image.network(proofUrl, height: 260, fit: BoxFit.contain),
+                              ],
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(child: OutlinedButton.icon(
+                                    onPressed: reviewing.contains(id) ? null : () => _review(post, false),
+                                    icon: const Icon(Icons.close),
+                                    label: Text(tr('Reject')),
+                                  )),
+                                  const SizedBox(width: 10),
+                                  Expanded(child: FilledButton.icon(
+                                    onPressed: reviewing.contains(id) ? null : () => _review(post, true),
+                                    icon: reviewing.contains(id)
+                                        ? const RotatingLoader(size: 20)
+                                        : const Icon(Icons.check),
+                                    label: Text(tr('Approve')),
+                                  )),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
   );
 }
 

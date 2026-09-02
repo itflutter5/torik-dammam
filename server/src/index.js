@@ -21,8 +21,16 @@ app.use(express.json({ limit: '1mb' }));
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { files: 3, fileSize: 8 * 1024 * 1024 },
+  limits: { files: 4, fileSize: 8 * 1024 * 1024 },
 });
+
+async function requireAdmin(req, res, next) {
+  try {
+    const result = await pool.query('SELECT is_admin FROM users WHERE id = $1', [req.auth.sub]);
+    if (!result.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
+    next();
+  } catch (error) { next(error); }
+}
 
 const phone = z.string().trim().regex(/^\+9665\d{8}$/, 'Use +9665XXXXXXXX');
 const registerSchema = z.object({
@@ -47,6 +55,7 @@ const publicUser = (row) => ({
   id: String(row.id), name: row.name, phone: row.phone, email: row.email,
   storeNumber: row.store_number, profileImageUrl: row.profile_image_url,
   storeNumberChangedAt: row.store_number_changed_at,
+  isAdmin: row.is_admin === true,
 });
 
 app.get('/health', async (_req, res, next) => {
@@ -54,7 +63,12 @@ app.get('/health', async (_req, res, next) => {
 });
 
 app.get('/api/config', (_req, res) => {
-  res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID ?? '' });
+  res.json({
+    googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
+    paymentBdtAmount: Number(process.env.PAYMENT_BDT_AMOUNT ?? 165),
+    paymentInstructionsSar: process.env.PAYMENT_INSTRUCTIONS_SAR ?? '',
+    paymentInstructionsBdt: process.env.PAYMENT_INSTRUCTIONS_BDT ?? '',
+  });
 });
 
 app.get('/api/categories', async (_req, res, next) => {
@@ -124,7 +138,7 @@ app.post('/api/auth/register/verify', async (req, res, next) => {
        (name, phone, email, password_hash, store_number, phone_verified, email_verified)
        VALUES ($1,$2,$3,$4,$5,$6,$7)
        RETURNING id, name, phone, email, store_number,
-                 store_number_changed_at, profile_image_url`,
+                 store_number_changed_at, profile_image_url, is_admin`,
       [pending.name, pending.phone, pending.email, pending.password_hash,
         pending.store_number, pending.verification_method === 'phone',
         pending.verification_method === 'email'],
@@ -270,7 +284,7 @@ app.post('/api/auth/google', async (req, res, next) => {
          profile_image_url = EXCLUDED.profile_image_url,
          updated_at = NOW()
        RETURNING id, name, phone, email, store_number,
-                 store_number_changed_at, profile_image_url`,
+                 store_number_changed_at, profile_image_url, is_admin`,
       [payload.name ?? googleEmail.split('@')[0], googleEmail,
         payload.sub, payload.picture ?? null],
     );
@@ -287,8 +301,8 @@ app.post('/api/auth/google', async (req, res, next) => {
 app.get('/api/auth/me', requireAuth, async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT id, name, phone, store_number, store_number_changed_at,
-              profile_image_url
+      `SELECT id, name, phone, email, store_number, store_number_changed_at,
+              profile_image_url, is_admin
        FROM users WHERE id = $1`,
       [req.auth.sub],
     );
@@ -314,7 +328,7 @@ app.patch('/api/users/me', requireAuth, async (req, res, next) => {
          store_number_changed_at <= NOW() - INTERVAL '30 days'
        )
        RETURNING id, name, phone, store_number, store_number_changed_at,
-                 profile_image_url`,
+                 profile_image_url, is_admin`,
       [input.storeNumber, req.auth.sub],
     );
     if (!result.rows[0]) {
@@ -332,7 +346,7 @@ app.patch('/api/users/me/image', requireAuth, upload.single('image'), async (req
       `UPDATE users SET profile_image_url = $1, updated_at = NOW()
        WHERE id = $2
        RETURNING id, name, phone, email, store_number,
-                 store_number_changed_at, profile_image_url`,
+                 store_number_changed_at, profile_image_url, is_admin`,
       [imageUrl, req.auth.sub],
     );
     res.json({ user: publicUser(result.rows[0]) });
@@ -345,7 +359,8 @@ app.get('/api/posts', async (_req, res, next) => {
       `SELECT p.*, u.name AS user_name, u.phone,
               u.profile_image_url AS user_profile_image_url
        FROM posts p JOIN users u ON u.id = p.user_id
-       WHERE p.expires_at > NOW() ORDER BY p.created_at DESC LIMIT 100`,
+       WHERE p.expires_at > NOW() AND p.status = 'approved'
+       ORDER BY p.created_at DESC LIMIT 100`,
     );
     res.json({ posts: result.rows });
   } catch (error) { next(error); }
@@ -411,25 +426,93 @@ app.delete('/api/posts/:postId/save', requireAuth, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-app.post('/api/posts', requireAuth, upload.array('images', 3), async (req, res, next) => {
+app.get('/api/posts/quota', requireAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT COUNT(*)::int AS used FROM posts
+       WHERE user_id = $1 AND status <> 'rejected'`, [req.auth.sub],
+    );
+    const used = result.rows[0].used;
+    res.json({
+      freeRemaining: Math.max(0, 5 - used),
+      sarAmount: 5,
+      bdtAmount: Number(process.env.PAYMENT_BDT_AMOUNT ?? 165),
+      instructionsSar: process.env.PAYMENT_INSTRUCTIONS_SAR ?? '',
+      instructionsBdt: process.env.PAYMENT_INSTRUCTIONS_BDT ?? '',
+    });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/posts', requireAuth, upload.fields([
+  { name: 'images', maxCount: 3 },
+  { name: 'paymentProof', maxCount: 1 },
+]), async (req, res, next) => {
   try {
     const input = postSchema.parse(req.body);
     const employmentPost = input.category === 'Need Worker' || input.category === 'Need Job';
     const postNumber = `#${crypto.randomInt(100000000000, 1000000000000)}`;
-    const imageUrls = await Promise.all((req.files ?? []).map((file) => uploadImage(file, req.auth.sub)));
+    const files = req.files ?? {};
+    const imageUrls = await Promise.all((files.images ?? []).map((file) => uploadImage(file, req.auth.sub)));
+    const countResult = await pool.query(
+      `SELECT COUNT(*)::int AS used FROM posts WHERE user_id = $1 AND status <> 'rejected'`,
+      [req.auth.sub],
+    );
+    const requiresPayment = countResult.rows[0].used >= 5;
+    const paymentCurrency = requiresPayment
+      ? z.enum(['SAR', 'BDT']).parse(req.body.paymentCurrency)
+      : null;
+    const proofFile = files.paymentProof?.[0];
+    if (requiresPayment && !proofFile) {
+      return res.status(402).json({ error: 'Payment proof is required after 5 free posts' });
+    }
+    const paymentProofUrl = proofFile
+      ? await uploadImage(proofFile, req.auth.sub, 'payment-proofs')
+      : null;
+    const status = requiresPayment ? 'pending' : 'approved';
+    const paymentAmount = requiresPayment
+      ? (paymentCurrency === 'SAR' ? 5 : Number(process.env.PAYMENT_BDT_AMOUNT ?? 165))
+      : null;
     const result = await pool.query(
       `INSERT INTO posts
-       (user_id, category, title, description, price, unit, store_number, image_urls, post_number)
-       VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8::jsonb, $9) RETURNING *`,
+       (user_id, category, title, description, price, unit, store_number, image_urls,
+        post_number, status, payment_proof_url, payment_currency, payment_amount)
+       VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8::jsonb, $9, $10, $11, $12, $13)
+       RETURNING *`,
       [req.auth.sub, input.category, input.title, input.description,
         input.price === '' ? null : input.price, employmentPost ? '' : input.unit, input.storeNumber,
-        JSON.stringify(imageUrls), postNumber],
+        JSON.stringify(imageUrls), postNumber, status, paymentProofUrl,
+        paymentCurrency, paymentAmount],
     );
-    res.status(201).json({ post: result.rows[0] });
+    res.status(201).json({ post: result.rows[0], pendingApproval: requiresPayment });
   } catch (error) {
     if (error.code === '23503') return res.status(400).json({ error: 'Invalid or inactive category' });
     next(error);
   }
+});
+
+app.get('/api/admin/posts/pending', requireAuth, requireAdmin, async (_req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT p.*, u.name AS user_name, u.phone
+       FROM posts p JOIN users u ON u.id = p.user_id
+       WHERE p.status = 'pending' ORDER BY p.created_at`,
+    );
+    res.json({ posts: result.rows });
+  } catch (error) { next(error); }
+});
+
+app.patch('/api/admin/posts/:postId/review', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const postId = z.coerce.number().int().positive().parse(req.params.postId);
+    const { approved } = z.object({ approved: z.boolean() }).parse(req.body);
+    const result = await pool.query(
+      `UPDATE posts SET status = $1, reviewed_at = NOW(), reviewed_by = $2
+       WHERE id = $3 AND status = 'pending' RETURNING id, status`,
+      [approved ? 'approved' : 'rejected', req.auth.sub, postId],
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Pending post not found' });
+    res.json({ post: result.rows[0] });
+  } catch (error) { next(error); }
 });
 
 const staticDirectory = process.env.STATIC_DIR ?? path.resolve('public');
