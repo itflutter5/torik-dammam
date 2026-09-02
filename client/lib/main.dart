@@ -119,8 +119,290 @@ const translations = <String, Map<String, String>>{
   },
 };
 
+const extendedTranslations = <String, Map<String, String>>{
+  'bn': {
+    'Add a photo': 'ছবি যোগ করুন',
+    'Take photo with camera': 'ক্যামেরা দিয়ে ছবি তুলুন',
+    'Upload from gallery': 'গ্যালারি থেকে আপলোড করুন',
+    'Name': 'নাম',
+    'Saudi phone number': 'সৌদি ফোন নম্বর',
+    'Email address': 'ইমেইল ঠিকানা',
+    'Password': 'পাসওয়ার্ড',
+    'Enter any password': 'পাসওয়ার্ড লিখুন',
+    'or': 'অথবা',
+    'New user? Register': 'নতুন ব্যবহারকারী? নিবন্ধন করুন',
+    'Already registered? Back to login': 'আগেই নিবন্ধিত? লগইনে ফিরুন',
+    'Create your marketplace account.':
+        'আপনার মার্কেটপ্লেস অ্যাকাউন্ট তৈরি করুন।',
+    'Log in with your Saudi phone number.':
+        'আপনার সৌদি ফোন নম্বর দিয়ে লগইন করুন।',
+    'Verify your account': 'আপনার অ্যাকাউন্ট যাচাই করুন',
+    'Where should we send your 6-digit verification code?':
+        '৬ সংখ্যার যাচাইকরণ কোড কোথায় পাঠাব?',
+    'Enter verification code': 'যাচাইকরণ কোড লিখুন',
+    'Verification code': 'যাচাইকরণ কোড',
+    'Cannot connect to the server': 'সার্ভারের সাথে সংযোগ করা যাচ্ছে না',
+    'Search work, metal, batteries…': 'কাজ, ধাতু, ব্যাটারি খুঁজুন…',
+    'Choose month': 'মাস নির্বাচন করুন',
+    'All days': 'সব দিন',
+    'Retry': 'আবার চেষ্টা করুন',
+    'Phone dialer is not available': 'ফোন ডায়ালার পাওয়া যাচ্ছে না',
+    'Camera or photo access is not available':
+        'ক্যামেরা বা ছবির অনুমতি পাওয়া যায়নি',
+    'Each image must be smaller than 8 MB': 'প্রতিটি ছবি ৮ এমবির কম হতে হবে',
+    'Image must be smaller than 8 MB': 'ছবিটি ৮ এমবির কম হতে হবে',
+    'Select a category and complete all required fields':
+        'একটি বিভাগ বেছে নিয়ে সব প্রয়োজনীয় ঘর পূরণ করুন',
+    'Post published': 'পোস্ট প্রকাশিত হয়েছে',
+    'Categories could not be loaded': 'বিভাগগুলো লোড করা যায়নি',
+    'Example: 0101': 'উদাহরণ: 0101',
+    'Tap a bookmark icon to save a post here.':
+        'এখানে পোস্ট রাখতে বুকমার্ক আইকনে চাপুন।',
+    'Remove from saved': 'সংরক্ষিত থেকে সরান',
+    'Your published advertisements will appear here.':
+        'আপনার প্রকাশিত বিজ্ঞাপন এখানে দেখা যাবে।',
+    'Your published advertisements appear here.':
+        'আপনার প্রকাশিত বিজ্ঞাপন এখানে দেখা যায়।',
+    'Profile picture updated': 'প্রোফাইল ছবি আপডেট হয়েছে',
+    'Add profile picture': 'প্রোফাইল ছবি যোগ করুন',
+    'Name cannot be changed': 'নাম পরিবর্তন করা যাবে না',
+    'These details will appear below your posts.':
+        'এই তথ্য আপনার পোস্টের নিচে দেখা যাবে।',
+    'Google sign-in was not completed': 'গুগল সাইন-ইন সম্পন্ন হয়নি',
+    'We sent a 6-digit code to': 'আমরা ৬ সংখ্যার কোড পাঠিয়েছি',
+    'Call': 'কল করুন',
+    'Find everything to buy and sell in one place.':
+        'এক জায়গায় কেনাবেচার সবকিছু খুঁজুন।',
+    'Signed in': 'লগইন করা হয়েছে',
+    'Post number': 'পোস্ট নম্বর',
+    'Salary': 'বেতন',
+    'Negotiable': 'আলোচনা সাপেক্ষ',
+    'Required to create a post': 'পোস্ট তৈরির জন্য প্রয়োজনীয়',
+    'Store number must contain 1 to 4 digits':
+        'দোকান নম্বরে ১ থেকে ৪টি সংখ্যা থাকতে হবে',
+    'Posts show for 30 days. Older posts are automatically deleted.':
+        'পোস্ট ৩০ দিন দেখা যায়। পুরোনো পোস্ট স্বয়ংক্রিয়ভাবে মুছে যায়।',
+    'All dates in this 30-day window are shown. Dates without posts remain empty.':
+        'এই ৩০ দিনের সব তারিখ দেখানো হয়। পোস্ট না থাকলে তারিখ খালি থাকে।',
+    'posts': 'পোস্ট',
+    'January': 'জানুয়ারি',
+    'February': 'ফেব্রুয়ারি',
+    'March': 'মার্চ',
+    'April': 'এপ্রিল',
+    'May': 'মে',
+    'June': 'জুন',
+    'July': 'জুলাই',
+    'August': 'আগস্ট',
+    'September': 'সেপ্টেম্বর',
+    'October': 'অক্টোবর',
+    'November': 'নভেম্বর',
+    'December': 'ডিসেম্বর',
+    'Change profile picture': 'প্রোফাইল ছবি পরিবর্তন করুন',
+    'Saudi numbers only (+966); cannot be changed':
+        'শুধু সৌদি নম্বর (+966); পরিবর্তন করা যাবে না',
+    'Store number can be changed now': 'দোকান নম্বর এখন পরিবর্তন করা যাবে',
+    'Can be changed again in': 'আবার পরিবর্তন করা যাবে',
+    'days': 'দিন পরে',
+    'Profile saved. Store number is locked for 30 days.':
+        'প্রোফাইল সংরক্ষিত। দোকান নম্বর ৩০ দিনের জন্য লক করা হয়েছে।',
+    'Profile is up to date': 'প্রোফাইল হালনাগাদ আছে',
+    'Photo': 'ছবি',
+    'Need Job': 'কাজ চাই',
+    'Need Worker': 'কর্মী চাই',
+    'Buy Scrap': 'স্ক্র্যাপ কিনুন',
+    'Sell Scrap': 'স্ক্র্যাপ বিক্রি করুন',
+    'Driver': 'ড্রাইভার',
+  },
+  'ur': {
+    'Add a photo': 'تصویر شامل کریں',
+    'Take photo with camera': 'کیمرے سے تصویر لیں',
+    'Upload from gallery': 'گیلری سے اپ لوڈ کریں',
+    'Name': 'نام',
+    'Saudi phone number': 'سعودی فون نمبر',
+    'Email address': 'ای میل پتہ',
+    'Password': 'پاس ورڈ',
+    'Enter any password': 'پاس ورڈ درج کریں',
+    'or': 'یا',
+    'New user? Register': 'نئے صارف؟ رجسٹر کریں',
+    'Already registered? Back to login':
+        'پہلے سے رجسٹرڈ؟ لاگ اِن پر واپس جائیں',
+    'Create your marketplace account.': 'اپنا مارکیٹ پلیس اکاؤنٹ بنائیں۔',
+    'Log in with your Saudi phone number.':
+        'اپنے سعودی فون نمبر سے لاگ اِن کریں۔',
+    'Verify your account': 'اپنے اکاؤنٹ کی تصدیق کریں',
+    'Where should we send your 6-digit verification code?':
+        '6 ہندسوں کا تصدیقی کوڈ کہاں بھیجیں؟',
+    'Enter verification code': 'تصدیقی کوڈ درج کریں',
+    'Verification code': 'تصدیقی کوڈ',
+    'Cannot connect to the server': 'سرور سے رابطہ نہیں ہو سکا',
+    'Search work, metal, batteries…': 'کام، دھات، بیٹریاں تلاش کریں…',
+    'Choose month': 'مہینہ منتخب کریں',
+    'All days': 'تمام دن',
+    'Retry': 'دوبارہ کوشش کریں',
+    'Phone dialer is not available': 'فون ڈائلر دستیاب نہیں',
+    'Camera or photo access is not available':
+        'کیمرے یا تصویر تک رسائی دستیاب نہیں',
+    'Each image must be smaller than 8 MB':
+        'ہر تصویر 8 ایم بی سے کم ہونی چاہیے',
+    'Image must be smaller than 8 MB': 'تصویر 8 ایم بی سے کم ہونی چاہیے',
+    'Select a category and complete all required fields':
+        'قسم منتخب کریں اور تمام ضروری خانے مکمل کریں',
+    'Post published': 'پوسٹ شائع ہو گئی',
+    'Categories could not be loaded': 'اقسام لوڈ نہیں ہو سکیں',
+    'Example: 0101': 'مثال: 0101',
+    'Tap a bookmark icon to save a post here.':
+        'پوسٹ یہاں محفوظ کرنے کے لیے بک مارک دبائیں۔',
+    'Remove from saved': 'محفوظ سے ہٹائیں',
+    'Your published advertisements will appear here.':
+        'آپ کے شائع شدہ اشتہارات یہاں نظر آئیں گے۔',
+    'Your published advertisements appear here.':
+        'آپ کے شائع شدہ اشتہارات یہاں دکھائی دیتے ہیں۔',
+    'Profile picture updated': 'پروفائل تصویر اپ ڈیٹ ہو گئی',
+    'Add profile picture': 'پروفائل تصویر شامل کریں',
+    'Name cannot be changed': 'نام تبدیل نہیں کیا جا سکتا',
+    'These details will appear below your posts.':
+        'یہ تفصیلات آپ کی پوسٹس کے نیچے نظر آئیں گی۔',
+    'Google sign-in was not completed': 'گوگل سائن اِن مکمل نہیں ہوا',
+    'We sent a 6-digit code to': 'ہم نے 6 ہندسوں کا کوڈ بھیجا ہے',
+    'Call': 'کال کریں',
+    'Find everything to buy and sell in one place.':
+        'خرید و فروخت کی ہر چیز ایک جگہ تلاش کریں۔',
+    'Signed in': 'لاگ اِن ہو چکا ہے',
+    'Post number': 'پوسٹ نمبر',
+    'Salary': 'تنخواہ',
+    'Negotiable': 'قابلِ گفت و شنید',
+    'Required to create a post': 'پوسٹ بنانے کے لیے ضروری',
+    'Store number must contain 1 to 4 digits':
+        'دکان نمبر میں 1 سے 4 ہندسے ہونے چاہئیں',
+    'Posts show for 30 days. Older posts are automatically deleted.': 'پوسٹس 30 دن تک دکھائی جاتی ہیں۔ پرانی پوسٹس خودکار طور پر حذف ہو جاتی ہیں۔',
+    'All dates in this 30-day window are shown. Dates without posts remain empty.': 'اس 30 دن کی تمام تاریخیں دکھائی جاتی ہیں۔ بغیر پوسٹ والی تاریخیں خالی رہتی ہیں۔',
+    'posts': 'پوسٹس',
+    'January': 'جنوری',
+    'February': 'فروری',
+    'March': 'مارچ',
+    'April': 'اپریل',
+    'May': 'مئی',
+    'June': 'جون',
+    'July': 'جولائی',
+    'August': 'اگست',
+    'September': 'ستمبر',
+    'October': 'اکتوبر',
+    'November': 'نومبر',
+    'December': 'دسمبر',
+    'Change profile picture': 'پروفائل تصویر تبدیل کریں',
+    'Saudi numbers only (+966); cannot be changed':
+        'صرف سعودی نمبر (+966)؛ تبدیل نہیں کیا جا سکتا',
+    'Store number can be changed now': 'دکان نمبر اب تبدیل کیا جا سکتا ہے',
+    'Can be changed again in': 'دوبارہ تبدیل کیا جا سکتا ہے',
+    'days': 'دن بعد',
+    'Profile saved. Store number is locked for 30 days.':
+        'پروفائل محفوظ ہو گئی۔ دکان نمبر 30 دن کے لیے مقفل ہے۔',
+    'Profile is up to date': 'پروفائل تازہ ہے',
+    'Photo': 'تصویر',
+    'Need Job': 'کام چاہیے',
+    'Need Worker': 'کارکن چاہیے',
+    'Buy Scrap': 'اسکریپ خریدیں',
+    'Sell Scrap': 'اسکریپ بیچیں',
+    'Driver': 'ڈرائیور',
+  },
+  'hi': {
+    'Add a photo': 'फ़ोटो जोड़ें',
+    'Take photo with camera': 'कैमरे से फ़ोटो लें',
+    'Upload from gallery': 'गैलरी से अपलोड करें',
+    'Name': 'नाम',
+    'Saudi phone number': 'सऊदी फ़ोन नंबर',
+    'Email address': 'ईमेल पता',
+    'Password': 'पासवर्ड',
+    'Enter any password': 'पासवर्ड दर्ज करें',
+    'or': 'या',
+    'New user? Register': 'नए उपयोगकर्ता? पंजीकरण करें',
+    'Already registered? Back to login': 'पहले से पंजीकृत? लॉग इन पर लौटें',
+    'Create your marketplace account.': 'अपना मार्केटप्लेस खाता बनाएँ।',
+    'Log in with your Saudi phone number.':
+        'अपने सऊदी फ़ोन नंबर से लॉग इन करें।',
+    'Verify your account': 'अपने खाते को सत्यापित करें',
+    'Where should we send your 6-digit verification code?':
+        '6 अंकों का सत्यापन कोड कहाँ भेजें?',
+    'Enter verification code': 'सत्यापन कोड दर्ज करें',
+    'Verification code': 'सत्यापन कोड',
+    'Cannot connect to the server': 'सर्वर से कनेक्ट नहीं हो सका',
+    'Search work, metal, batteries…': 'काम, धातु, बैटरी खोजें…',
+    'Choose month': 'महीना चुनें',
+    'All days': 'सभी दिन',
+    'Retry': 'फिर प्रयास करें',
+    'Phone dialer is not available': 'फ़ोन डायलर उपलब्ध नहीं है',
+    'Camera or photo access is not available':
+        'कैमरा या फ़ोटो एक्सेस उपलब्ध नहीं है',
+    'Each image must be smaller than 8 MB':
+        'हर तस्वीर 8 एमबी से छोटी होनी चाहिए',
+    'Image must be smaller than 8 MB': 'तस्वीर 8 एमबी से छोटी होनी चाहिए',
+    'Select a category and complete all required fields':
+        'एक श्रेणी चुनें और सभी आवश्यक फ़ील्ड भरें',
+    'Post published': 'पोस्ट प्रकाशित हो गई',
+    'Categories could not be loaded': 'श्रेणियाँ लोड नहीं हो सकीं',
+    'Example: 0101': 'उदाहरण: 0101',
+    'Tap a bookmark icon to save a post here.':
+        'पोस्ट यहाँ सहेजने के लिए बुकमार्क आइकन दबाएँ।',
+    'Remove from saved': 'सहेजे गए से हटाएँ',
+    'Your published advertisements will appear here.':
+        'आपके प्रकाशित विज्ञापन यहाँ दिखाई देंगे।',
+    'Your published advertisements appear here.':
+        'आपके प्रकाशित विज्ञापन यहाँ दिखाई देते हैं।',
+    'Profile picture updated': 'प्रोफ़ाइल चित्र अपडेट हो गया',
+    'Add profile picture': 'प्रोफ़ाइल चित्र जोड़ें',
+    'Name cannot be changed': 'नाम बदला नहीं जा सकता',
+    'These details will appear below your posts.':
+        'ये विवरण आपकी पोस्ट के नीचे दिखाई देंगे।',
+    'Google sign-in was not completed': 'Google साइन-इन पूरा नहीं हुआ',
+    'We sent a 6-digit code to': 'हमने 6 अंकों का कोड भेजा है',
+    'Call': 'कॉल करें',
+    'Find everything to buy and sell in one place.':
+        'खरीदने और बेचने की हर चीज़ एक जगह पाएँ।',
+    'Signed in': 'लॉग इन है',
+    'Post number': 'पोस्ट नंबर',
+    'Salary': 'वेतन',
+    'Negotiable': 'बातचीत योग्य',
+    'Required to create a post': 'पोस्ट बनाने के लिए आवश्यक',
+    'Store number must contain 1 to 4 digits':
+        'स्टोर नंबर में 1 से 4 अंक होने चाहिए',
+    'Posts show for 30 days. Older posts are automatically deleted.':
+        'पोस्ट 30 दिनों तक दिखाई देती हैं। पुरानी पोस्ट अपने आप हट जाती हैं।',
+    'All dates in this 30-day window are shown. Dates without posts remain empty.': 'इस 30-दिन की अवधि की सभी तारीखें दिखाई जाती हैं। बिना पोस्ट वाली तारीखें खाली रहती हैं।',
+    'posts': 'पोस्ट',
+    'January': 'जनवरी',
+    'February': 'फ़रवरी',
+    'March': 'मार्च',
+    'April': 'अप्रैल',
+    'May': 'मई',
+    'June': 'जून',
+    'July': 'जुलाई',
+    'August': 'अगस्त',
+    'September': 'सितंबर',
+    'October': 'अक्टूबर',
+    'November': 'नवंबर',
+    'December': 'दिसंबर',
+    'Change profile picture': 'प्रोफ़ाइल चित्र बदलें',
+    'Saudi numbers only (+966); cannot be changed':
+        'केवल सऊदी नंबर (+966); बदला नहीं जा सकता',
+    'Store number can be changed now': 'स्टोर नंबर अब बदला जा सकता है',
+    'Can be changed again in': 'फिर बदला जा सकता है',
+    'days': 'दिन बाद',
+    'Profile saved. Store number is locked for 30 days.':
+        'प्रोफ़ाइल सहेजी गई। स्टोर नंबर 30 दिनों के लिए लॉक है।',
+    'Profile is up to date': 'प्रोफ़ाइल अपडेट है',
+    'Photo': 'फ़ोटो',
+    'Need Job': 'काम चाहिए',
+    'Need Worker': 'कर्मचारी चाहिए',
+    'Buy Scrap': 'स्क्रैप खरीदें',
+    'Sell Scrap': 'स्क्रैप बेचें',
+    'Driver': 'ड्राइवर',
+  },
+};
+
 String tr(String english) =>
-    translations[appLanguage.value]?[english] ?? english;
+    extendedTranslations[appLanguage.value]?[english] ??
+    translations[appLanguage.value]?[english] ??
+    english;
 
 Future<void> setLanguage(String code) async {
   appLanguage.value = code;
@@ -144,7 +426,17 @@ class LanguageSelector extends StatelessWidget {
     tooltip: tr('Language'),
     initialValue: appLanguage.value,
     onSelected: setLanguage,
-    icon: const Icon(Icons.translate),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.translate, size: 21),
+          const SizedBox(width: 6),
+          Text(languageNames[appLanguage.value]!),
+        ],
+      ),
+    ),
     itemBuilder: (_) => languageNames.entries
         .map(
           (entry) => PopupMenuItem<String>(
@@ -228,7 +520,7 @@ Future<ImageSource?> chooseImageSource(BuildContext context) =>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Add a photo',
+                tr('Add a photo'),
                 textAlign: TextAlign.center,
                 style: Theme.of(sheetContext).textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800),
@@ -238,9 +530,9 @@ Future<ImageSource?> chooseImageSource(BuildContext context) =>
                 onPressed: () =>
                     Navigator.pop(sheetContext, ImageSource.camera),
                 icon: const Icon(Icons.camera_alt_outlined),
-                label: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 13),
-                  child: Text('Take photo with camera'),
+                label: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  child: Text(tr('Take photo with camera')),
                 ),
               ),
               const SizedBox(height: 10),
@@ -248,9 +540,9 @@ Future<ImageSource?> chooseImageSource(BuildContext context) =>
                 onPressed: () =>
                     Navigator.pop(sheetContext, ImageSource.gallery),
                 icon: const Icon(Icons.photo_library_outlined),
-                label: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 13),
-                  child: Text('Upload from gallery'),
+                label: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  child: Text(tr('Upload from gallery')),
                 ),
               ),
             ],
@@ -352,7 +644,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     } on ApiException catch (error) {
       if (mounted)
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.message)));
+            .showSnackBar(SnackBar(content: Text(tr(error.message))));
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -361,7 +653,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   void _showGoogleError() {
     if (mounted)
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google sign-in was not completed')),
+        SnackBar(content: Text(tr('Google sign-in was not completed'))),
       );
   }
 
@@ -406,8 +698,8 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                     const SizedBox(height: 8),
                     Text(
                       registering
-                          ? 'Create your marketplace account.'
-                          : 'Log in with your Saudi phone number.',
+                          ? tr('Create your marketplace account.')
+                          : tr('Log in with your Saudi phone number.'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.black54),
                     ),
@@ -416,9 +708,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       TextField(
                         controller: name,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Name',
-                          prefixIcon: Icon(Icons.person_outline),
+                        decoration: InputDecoration(
+                          labelText: tr('Name'),
+                          prefixIcon: const Icon(Icons.person_outline),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -427,10 +719,10 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       controller: phone,
                       keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'Saudi phone number',
+                      decoration: InputDecoration(
+                        labelText: tr('Saudi phone number'),
                         hintText: '+9665XXXXXXXX',
-                        prefixIcon: Icon(Icons.phone_outlined),
+                        prefixIcon: const Icon(Icons.phone_outlined),
                       ),
                     ),
                     if (registering) ...[
@@ -439,9 +731,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                         controller: email,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Email address',
-                          prefixIcon: Icon(Icons.email_outlined),
+                        decoration: InputDecoration(
+                          labelText: tr('Email address'),
+                          prefixIcon: const Icon(Icons.email_outlined),
                         ),
                       ),
                     ],
@@ -451,8 +743,8 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       obscureText: obscurePassword,
                       onSubmitted: registering ? null : (_) => _enterApp(),
                       decoration: InputDecoration(
-                        labelText: 'Password',
-                        hintText: 'Enter any password',
+                        labelText: tr('Password'),
+                        hintText: tr('Enter any password'),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           onPressed: () => setState(
@@ -475,11 +767,11 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        decoration: const InputDecoration(
-                          labelText: 'Store number',
+                        decoration: InputDecoration(
+                          labelText: tr('Store number'),
                           hintText: '0101',
                           counterText: '',
-                          prefixIcon: Icon(Icons.store_outlined),
+                          prefixIcon: const Icon(Icons.store_outlined),
                         ),
                       ),
                     ],
@@ -498,14 +790,16 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       ),
                     ),
                     if (!registering && googleReady) ...[
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Row(
                           children: [
                             Expanded(child: Divider()),
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Text('or'),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: Text(tr('or')),
                             ),
                             Expanded(child: Divider()),
                           ],
@@ -522,8 +816,8 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                           : _openRegistration,
                       child: Text(
                         registering
-                            ? 'Already registered? Back to login'
-                            : 'New user? Register',
+                            ? tr('Already registered? Back to login')
+                            : tr('New user? Register'),
                       ),
                     ),
                   ],
@@ -592,7 +886,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     } catch (_) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cannot connect to the server')),
+          SnackBar(content: Text(tr('Cannot connect to the server'))),
         );
     } finally {
       if (mounted) setState(() => loading = false);
@@ -602,24 +896,22 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   Future<String?> _chooseVerificationMethod() => showDialog<String>(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      title: const Text('Verify your account'),
-      content: const Text(
-        'Where should we send your 6-digit verification code?',
-      ),
+      title: Text(tr('Verify your account')),
+      content: Text(tr('Where should we send your 6-digit verification code?')),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Cancel'),
+          child: Text(tr('Cancel')),
         ),
         OutlinedButton.icon(
           onPressed: () => Navigator.pop(dialogContext, 'phone'),
           icon: const Icon(Icons.sms_outlined),
-          label: const Text('Phone'),
+          label: Text(tr('Phone')),
         ),
         FilledButton.icon(
           onPressed: () => Navigator.pop(dialogContext, 'email'),
           icon: const Icon(Icons.email_outlined),
-          label: const Text('Email'),
+          label: Text(tr('Email')),
         ),
       ],
     ),
@@ -631,11 +923,11 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Enter verification code'),
+        title: Text(tr('Enter verification code')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('We sent a 6-digit code to $destination.'),
+            Text('${tr('We sent a 6-digit code to')} $destination.'),
             const SizedBox(height: 14),
             TextField(
               controller: controller,
@@ -643,8 +935,8 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
               keyboardType: TextInputType.number,
               maxLength: 6,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Verification code',
+              decoration: InputDecoration(
+                labelText: tr('Verification code'),
                 counterText: '',
               ),
             ),
@@ -653,7 +945,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(tr('Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -661,7 +953,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                 Navigator.pop(dialogContext, controller.text);
               }
             },
-            child: const Text('Verify'),
+            child: Text(tr('Verify')),
           ),
         ],
       ),
@@ -841,9 +1133,11 @@ Listing listingFromApiRow(Map<String, dynamic> row) {
     row['title'] as String,
     category,
     priceValue == null
-        ? (employmentPost ? 'Salary: Negotiable' : 'Negotiable')
+        ? (employmentPost
+              ? '${tr('Salary')}: ${tr('Negotiable')}'
+              : tr('Negotiable'))
         : employmentPost
-        ? 'Salary: $priceValue'
+        ? '${tr('Salary')}: $priceValue'
         : '$priceValue${unitValue == null || unitValue.isEmpty ? '' : ' / $unitValue'}',
     row['store_number'] as String,
     row['description'] as String,
@@ -1161,8 +1455,10 @@ class _HomePageState extends State<HomePage> {
                                   style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(fontWeight: FontWeight.w800),
                                 ),
-                                const Text(
-                                  'Find everything to buy and sell in one place.',
+                                Text(
+                                  tr(
+                                    'Find everything to buy and sell in one place.',
+                                  ),
                                   style: TextStyle(color: Colors.black54),
                                 ),
                               ],
@@ -1178,7 +1474,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             label: Text(
                               widget.signedIn
-                                  ? 'Signed in'
+                                  ? tr('Signed in')
                                   : MediaQuery.sizeOf(context).width < 600
                                   ? tr('Login')
                                   : tr('Login / Sign up'),
@@ -1240,9 +1536,9 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 22),
                       TextField(
                         onChanged: (value) => setState(() => query = value),
-                        decoration: const InputDecoration(
-                          hintText: 'Search work, metal, batteries…',
-                          prefixIcon: Icon(Icons.search),
+                        decoration: InputDecoration(
+                          hintText: tr('Search work, metal, batteries…'),
+                          prefixIcon: const Icon(Icons.search),
                           suffixIcon: Icon(Icons.tune),
                         ),
                       ),
@@ -1256,7 +1552,7 @@ class _HomePageState extends State<HomePage> {
                           children: ['All', ...categories]
                               .map(
                                 (label) => ChoiceChip(
-                                  label: Text(label),
+                                  label: Text(tr(label)),
                                   selected: filter == label,
                                   onSelected: (_) =>
                                       setState(() => filter = label),
@@ -1279,10 +1575,12 @@ class _HomePageState extends State<HomePage> {
                               color: Color(0xff9a6414),
                             ),
                             const SizedBox(width: 10),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'Posts show for 30 days. Older posts are automatically deleted.',
-                                style: TextStyle(
+                                tr(
+                                  'Posts show for 30 days. Older posts are automatically deleted.',
+                                ),
+                                style: const TextStyle(
                                   color: Color(0xff68430c),
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1296,15 +1594,15 @@ class _HomePageState extends State<HomePage> {
                         initialValue: availableMonths.isEmpty
                             ? null
                             : monthToShow,
-                        decoration: const InputDecoration(
-                          labelText: 'Choose month',
-                          prefixIcon: Icon(Icons.calendar_month_outlined),
+                        decoration: InputDecoration(
+                          labelText: tr('Choose month'),
+                          prefixIcon: const Icon(Icons.calendar_month_outlined),
                         ),
                         items: availableMonths
                             .map(
                               (month) => DropdownMenuItem(
                                 value: month,
-                                child: Text(monthNames[month - 1]),
+                                child: Text(tr(monthNames[month - 1])),
                               ),
                             )
                             .toList(),
@@ -1317,9 +1615,14 @@ class _HomePageState extends State<HomePage> {
                         },
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        'All dates in this 30-day window are shown. Dates without posts remain empty.',
-                        style: TextStyle(color: Colors.black54, fontSize: 12),
+                      Text(
+                        tr(
+                          'All dates in this 30-day window are shown. Dates without posts remain empty.',
+                        ),
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Wrap(
@@ -1327,7 +1630,7 @@ class _HomePageState extends State<HomePage> {
                         runSpacing: 8,
                         children: [
                           ChoiceChip(
-                            label: const Text('All days'),
+                            label: Text(tr('All days')),
                             selected: selectedDay == null,
                             onSelected: (_) =>
                                 setState(() => selectedDay = null),
@@ -1356,12 +1659,12 @@ class _HomePageState extends State<HomePage> {
                             Expanded(child: Text(postsError!)),
                             TextButton(
                               onPressed: _loadPosts,
-                              child: const Text('Retry'),
+                              child: Text(tr('Retry')),
                             ),
                           ],
                         ),
                       Text(
-                        '${monthNames[monthToShow - 1]} posts',
+                        '${tr(monthNames[monthToShow - 1])} ${tr('posts')}',
                         style: Theme.of(context).textTheme.titleLarge
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
@@ -1453,7 +1756,7 @@ class _ListingCardState extends State<ListingCard> {
     if (number.isEmpty || !await launchUrl(Uri(scheme: 'tel', path: number))) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Phone dialer is not available')),
+          SnackBar(content: Text(tr('Phone dialer is not available'))),
         );
       }
     }
@@ -1641,7 +1944,7 @@ class _ListingCardState extends State<ListingCard> {
                           top: 0,
                           child: Chip(
                             key: const Key('post-category-right'),
-                            label: Text(listing.type),
+                            label: Text(tr(listing.type)),
                             visualDensity: VisualDensity.compact,
                           ),
                         ),
@@ -1674,12 +1977,12 @@ class _ListingCardState extends State<ListingCard> {
                     ),
                   ),
                   Text(
-                    'Store number: ${listing.storeNumber}',
+                    '${tr('Store number')}: ${listing.storeNumber}',
                     style: const TextStyle(color: Colors.black54, fontSize: 12),
                   ),
                   if (listing.postNumber.isNotEmpty)
                     Text(
-                      'Post number: ${listing.postNumber}',
+                      '${tr('Post number')}: ${listing.postNumber}',
                       style: const TextStyle(
                         color: Colors.black54,
                         fontSize: 12,
@@ -1720,7 +2023,7 @@ class _ListingCardState extends State<ListingCard> {
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Call ${listing.userName}',
+                        tooltip: '${tr('Call')} ${listing.userName}',
                         onPressed: _callPhone,
                         icon: const Icon(Icons.call_outlined),
                       ),
@@ -1772,7 +2075,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     if (number.isEmpty || !await launchUrl(Uri(scheme: 'tel', path: number))) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Phone dialer is not available')),
+          SnackBar(content: Text(tr('Phone dialer is not available'))),
         );
       }
     }
@@ -1835,7 +2138,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
             children: [
               Row(
                 children: [
-                  Chip(label: Text(listing.type)),
+                  Chip(label: Text(tr(listing.type))),
                   const Spacer(),
                   const Icon(Icons.schedule_outlined, size: 17),
                   const SizedBox(width: 5),
@@ -1868,13 +2171,13 @@ class _PostDetailPageState extends State<PostDetailPage> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Store number: ${listing.storeNumber}',
+                '${tr('Store number')}: ${listing.storeNumber}',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               if (listing.postNumber.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Text(
-                  'Post number: ${listing.postNumber}',
+                  '${tr('Post number')}: ${listing.postNumber}',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w800,
@@ -1883,7 +2186,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
               ],
               const Divider(height: 32),
               Text(
-                'Description',
+                tr('Description'),
                 style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w800),
               ),
@@ -1906,7 +2209,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 ),
                 subtitle: Text(listing.phoneNumber),
                 trailing: IconButton(
-                  tooltip: 'Call ${listing.userName}',
+                  tooltip: '${tr('Call')} ${listing.userName}',
                   onPressed: _callPhone,
                   icon: const Icon(Icons.call_outlined),
                 ),
@@ -1984,8 +2287,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
     } on PlatformException {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Camera or photo access is not available'),
+          SnackBar(
+            content: Text(tr('Camera or photo access is not available')),
           ),
         );
       }
@@ -1997,7 +2300,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
     if (bytes.length > 8 * 1024 * 1024) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Each image must be smaller than 8 MB')),
+          SnackBar(content: Text(tr('Each image must be smaller than 8 MB'))),
         );
       return;
     }
@@ -2010,8 +2313,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
         description.text.trim().length < 10 ||
         !RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Select a category and complete all required fields'),
+        SnackBar(
+          content: Text(
+            tr('Select a category and complete all required fields'),
+          ),
         ),
       );
       return;
@@ -2029,7 +2334,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Post published')));
+          .showSnackBar(SnackBar(content: Text(tr('Post published'))));
       Navigator.pop(context, true);
     } on ApiException catch (error) {
       if (mounted)
@@ -2038,7 +2343,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
     } catch (_) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cannot connect to the server')),
+          SnackBar(content: Text(tr('Cannot connect to the server'))),
         );
     } finally {
       if (mounted) setState(() => publishing = false);
@@ -2068,9 +2373,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 ),
                 style: TextStyle(fontWeight: FontWeight.w700),
               ),
-              const Text(
-                'Required to create a post',
-                style: TextStyle(color: Colors.black54, fontSize: 12),
+              Text(
+                tr('Required to create a post'),
+                style: const TextStyle(color: Colors.black54, fontSize: 12),
               ),
               const SizedBox(height: 8),
               if (loadingCategories)
@@ -2083,15 +2388,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
               if (!loadingCategories && categories.isEmpty)
                 Row(
                   children: [
-                    const Expanded(
-                      child: Text('Categories could not be loaded'),
-                    ),
+                    Expanded(child: Text(tr('Categories could not be loaded'))),
                     TextButton(
                       onPressed: () {
                         setState(() => loadingCategories = true);
                         _loadCategories();
                       },
-                      child: const Text('Retry'),
+                      child: Text(tr('Retry')),
                     ),
                   ],
                 ),
@@ -2101,7 +2404,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 children: categories
                     .map(
                       (category) => ChoiceChip(
-                        label: Text(category),
+                        label: Text(tr(category)),
                         selected: type == category,
                         onSelected: (selected) => setState(() {
                           type = selected ? category : null;
@@ -2167,7 +2470,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                   children: [
                                     const Icon(Icons.add_a_photo_outlined),
                                     const SizedBox(height: 5),
-                                    Text('Photo ${index + 1}'),
+                                    Text('${tr('Photo')} ${index + 1}'),
                                   ],
                                 ),
                         ),
@@ -2232,7 +2535,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 ],
                 decoration: InputDecoration(
                   labelText: tr('Store number'),
-                  hintText: 'Example: 0101',
+                  hintText: tr('Example: 0101'),
                   prefixIcon: const Icon(Icons.store_outlined),
                   counterText: '',
                 ),
@@ -2268,6 +2571,7 @@ class _SavedPageState extends State<SavedPage> {
   bool loading = true;
   String? error;
   List<Listing> posts = [];
+  final removingPostIds = <String>{};
 
   @override
   void initState() {
@@ -2288,9 +2592,29 @@ class _SavedPageState extends State<SavedPage> {
     } on ApiException catch (exception) {
       if (mounted) {
         setState(() {
-          error = exception.message;
+          error = tr(exception.message);
           loading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _removeSavedPost(Listing post) async {
+    if (removingPostIds.contains(post.postId)) return;
+    setState(() => removingPostIds.add(post.postId));
+    try {
+      await ApiService.instance.setPostSaved(post.postId, false);
+      if (mounted) {
+        setState(() {
+          posts.removeWhere((item) => item.postId == post.postId);
+          removingPostIds.remove(post.postId);
+        });
+      }
+    } on ApiException catch (exception) {
+      if (mounted) {
+        setState(() => removingPostIds.remove(post.postId));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(tr(exception.message))));
       }
     }
   }
@@ -2328,7 +2652,7 @@ class _SavedPageState extends State<SavedPage> {
               child: EmptyPage(
                 icon: Icons.bookmark_outline,
                 title: tr('No saved posts'),
-                message: 'Tap a bookmark icon to save a post here.',
+                message: tr('Tap a bookmark icon to save a post here.'),
               ),
             )
           else
@@ -2342,19 +2666,36 @@ class _SavedPageState extends State<SavedPage> {
                   itemBuilder: (context, index) {
                     final post = posts[index];
                     return SizedBox(
-                      height: 410,
-                      child: ListingCard(
-                        listing: post,
-                        onLogin: widget.onLogin,
-                        onSavedChanged: (saved) {
-                          if (!saved && mounted) {
-                            setState(
-                              () => posts.removeWhere(
-                                (item) => item.postId == post.postId,
-                              ),
-                            );
-                          }
-                        },
+                      height: 470,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: ListingCard(
+                              listing: post,
+                              onLogin: widget.onLogin,
+                              onSavedChanged: (saved) {
+                                if (!saved && mounted) {
+                                  setState(
+                                    () => posts.removeWhere(
+                                      (item) => item.postId == post.postId,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: removingPostIds.contains(post.postId)
+                                ? null
+                                : () => _removeSavedPost(post),
+                            icon: removingPostIds.contains(post.postId)
+                                ? const RotatingLoader(size: 20)
+                                : const Icon(Icons.bookmark_remove_outlined),
+                            label: Text(tr('Remove from saved')),
+                          ),
+                        ],
                       ),
                     );
                   },
@@ -2425,8 +2766,8 @@ class _MyPostsPageState extends State<MyPostsPage> {
                 ?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Your published advertisements appear here.',
+          Text(
+            tr('Your published advertisements appear here.'),
             style: TextStyle(color: Colors.black54),
           ),
           const SizedBox(height: 18),
@@ -2446,7 +2787,7 @@ class _MyPostsPageState extends State<MyPostsPage> {
                         _loadPosts();
                       },
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      label: Text(tr('Retry')),
                     ),
                   ],
                 ),
@@ -2457,7 +2798,7 @@ class _MyPostsPageState extends State<MyPostsPage> {
               child: EmptyPage(
                 icon: Icons.article_outlined,
                 title: tr('No posts yet'),
-                message: 'Your published advertisements will appear here.',
+                message: tr('Your published advertisements will appear here.'),
               ),
             )
           else
@@ -2545,9 +2886,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _saveProfile() async {
     if (!RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Store number must contain 1 to 4 digits'),
-        ),
+        SnackBar(content: Text(tr('Store number must contain 1 to 4 digits'))),
       );
       return;
     }
@@ -2557,7 +2896,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Store number can be changed again in $daysUntilStoreChange days',
+            '${tr('Can be changed again in')} $daysUntilStoreChange ${tr('days')}',
           ),
         ),
       );
@@ -2574,15 +2913,15 @@ class _ProfilePageState extends State<ProfilePage> {
           SnackBar(
             content: Text(
               changed
-                  ? 'Profile saved. Store number is locked for 30 days.'
-                  : 'Profile is up to date',
+                  ? tr('Profile saved. Store number is locked for 30 days.')
+                  : tr('Profile is up to date'),
             ),
           ),
         );
     } on ApiException catch (error) {
       if (mounted)
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.message)));
+            .showSnackBar(SnackBar(content: Text(tr(error.message))));
     } finally {
       if (mounted) setState(() => savingProfile = false);
     }
@@ -2601,8 +2940,8 @@ class _ProfilePageState extends State<ProfilePage> {
     } on PlatformException {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Camera or photo access is not available'),
+          SnackBar(
+            content: Text(tr('Camera or photo access is not available')),
           ),
         );
       }
@@ -2614,7 +2953,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (bytes.length > 8 * 1024 * 1024) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image must be smaller than 8 MB')),
+          SnackBar(content: Text(tr('Image must be smaller than 8 MB'))),
         );
       return;
     }
@@ -2626,13 +2965,13 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       );
       if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile picture updated')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr('Profile picture updated'))));
     } on ApiException catch (error) {
       if (mounted)
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.message)));
+            .showSnackBar(SnackBar(content: Text(tr(error.message))));
     } finally {
       if (mounted) setState(() => uploadingProfileImage = false);
     }
@@ -2684,8 +3023,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'These details will appear below your posts.',
+                  Text(
+                    tr('These details will appear below your posts.'),
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.black54),
                   ),
@@ -2708,7 +3047,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           right: -4,
                           bottom: -4,
                           child: IconButton.filled(
-                            tooltip: 'Add profile picture',
+                            tooltip: tr('Add profile picture'),
                             onPressed: uploadingProfileImage
                                 ? null
                                 : _pickProfileImage,
@@ -2726,19 +3065,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     icon: const Icon(Icons.photo_library_outlined),
                     label: Text(
                       profileImageUrl == null
-                          ? 'Add profile picture'
-                          : 'Change profile picture',
+                          ? tr('Add profile picture')
+                          : tr('Change profile picture'),
                     ),
                   ),
                   const SizedBox(height: 14),
                   TextField(
                     controller: name,
                     readOnly: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      prefixIcon: Icon(Icons.person_outline),
-                      suffixIcon: Icon(Icons.lock_outline),
-                      helperText: 'Name cannot be changed',
+                    decoration: InputDecoration(
+                      labelText: tr('Name'),
+                      prefixIcon: const Icon(Icons.person_outline),
+                      suffixIcon: const Icon(Icons.lock_outline),
+                      helperText: tr('Name cannot be changed'),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -2746,12 +3085,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     controller: phone,
                     readOnly: true,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Saudi phone number',
-                      prefixIcon: Icon(Icons.phone_outlined),
-                      suffixIcon: Icon(Icons.lock_outline),
-                      helperText:
-                          'Saudi numbers only (+966); cannot be changed',
+                    decoration: InputDecoration(
+                      labelText: tr('Saudi phone number'),
+                      prefixIcon: const Icon(Icons.phone_outlined),
+                      suffixIcon: const Icon(Icons.lock_outline),
+                      helperText: tr(
+                        'Saudi numbers only (+966); cannot be changed',
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -2765,8 +3105,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       LengthLimitingTextInputFormatter(4),
                     ],
                     decoration: InputDecoration(
-                      labelText: 'Store number',
-                      hintText: 'Example: 0101',
+                      labelText: tr('Store number'),
+                      hintText: tr('Example: 0101'),
                       prefixIcon: const Icon(Icons.store_outlined),
                       suffixIcon: Icon(
                         canChangeStoreNumber
@@ -2774,8 +3114,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             : Icons.lock_clock_outlined,
                       ),
                       helperText: canChangeStoreNumber
-                          ? 'Store number can be changed now'
-                          : 'Can be changed again in $daysUntilStoreChange days',
+                          ? tr('Store number can be changed now')
+                          : '${tr('Can be changed again in')} $daysUntilStoreChange ${tr('days')}',
                       counterText: '',
                     ),
                   ),
