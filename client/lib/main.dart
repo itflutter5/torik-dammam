@@ -3583,6 +3583,44 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
   Future<void> _review(Map<String, dynamic> post, bool approved) async {
     final id = post['id'].toString();
     if (reviewing.contains(id)) return;
+    final currentStatus = post['status'] as String? ?? 'approved';
+    final action = approved
+        ? (currentStatus == 'rejected' ? 'Restore and approve' : 'Approve post')
+        : 'Reject post';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: Icon(
+          approved ? Icons.check_circle_outline : Icons.warning_amber_rounded,
+          color: approved
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.error,
+          size: 38,
+        ),
+        title: Text(tr('Confirm moderation action')),
+        content: Text(
+          '${tr('Are you sure you want to')} ${tr(action).toLowerCase()}?\n\n'
+          '${post['title'] as String? ?? ''}',
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(tr('Cancel')),
+          ),
+          FilledButton(
+            style: approved
+                ? null
+                : FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(tr(action)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     setState(() => reviewing.add(id));
     try {
       await ApiService.instance.reviewPost(id, approved);
