@@ -34,12 +34,26 @@ class ApiService {
     var visitorId = preferences.getString('anonymous_visitor_id');
     if (visitorId == null) {
       final random = Random.secure();
-      visitorId = List.generate(32, (_) => random.nextInt(256)
-          .toRadixString(16).padLeft(2, '0')).join();
+      visitorId = List.generate(
+        32,
+        (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+      ).join();
       await preferences.setString('anonymous_visitor_id', visitorId);
     }
     try {
-      await _jsonRequest('/analytics/visit', {'visitorId': visitorId});
+      final campaignSource = Uri.base.queryParameters['utm_source'];
+      final zone = DateTime.now();
+      final offset = zone.timeZoneOffset;
+      final sign = offset.isNegative ? '-' : '+';
+      final hours = offset.inHours.abs().toString().padLeft(2, '0');
+      final minutes = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+      await _jsonRequest('/analytics/visit', {
+        'visitorId': visitorId,
+        'timezone': '${zone.timeZoneName} (UTC$sign$hours:$minutes)',
+        'source': campaignSource?.trim().isNotEmpty == true
+            ? campaignSource!.trim()
+            : 'Direct / app',
+      });
     } catch (_) {
       // Analytics must never block the application.
     }
@@ -106,7 +120,10 @@ class ApiService {
     );
   }
 
-  Future<void> loginAdmin({required String phone, required String password}) async {
+  Future<void> loginAdmin({
+    required String phone,
+    required String password,
+  }) async {
     final data = await _jsonRequest('/auth/admin-login', {
       'phone': phone,
       'password': password,
@@ -291,7 +308,9 @@ class ApiService {
     );
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException(data['error'] as String? ?? 'Could not load post quota');
+      throw ApiException(
+        data['error'] as String? ?? 'Could not load post quota',
+      );
     }
     return data;
   }
@@ -304,7 +323,9 @@ class ApiService {
     );
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException(data['error'] as String? ?? 'Could not load pending posts');
+      throw ApiException(
+        data['error'] as String? ?? 'Could not load pending posts',
+      );
     }
     return (data['posts'] as List).cast<Map<String, dynamic>>();
   }
@@ -331,7 +352,9 @@ class ApiService {
     );
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException(data['error'] as String? ?? 'Could not load statistics');
+      throw ApiException(
+        data['error'] as String? ?? 'Could not load statistics',
+      );
     }
     return data['stats'] as Map<String, dynamic>;
   }
@@ -343,7 +366,9 @@ class ApiService {
     );
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException(data['error'] as String? ?? 'Could not load payment settings');
+      throw ApiException(
+        data['error'] as String? ?? 'Could not load payment settings',
+      );
     }
     return data['settings'] as Map<String, dynamic>;
   }
@@ -367,15 +392,21 @@ class ApiService {
     );
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException(data['error'] as String? ?? 'Could not update payment settings');
+      throw ApiException(
+        data['error'] as String? ?? 'Could not update payment settings',
+      );
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchAdminUsers([String search = '']) async {
-    final uri = Uri.parse('$apiBaseUrl/admin/users').replace(
-      queryParameters: search.isEmpty ? null : {'search': search},
+  Future<List<Map<String, dynamic>>> fetchAdminUsers([
+    String search = '',
+  ]) async {
+    final uri = Uri.parse('$apiBaseUrl/admin/users')
+        .replace(queryParameters: search.isEmpty ? null : {'search': search});
+    final response = await http.get(
+      uri,
+      headers: {'authorization': 'Bearer $token'},
     );
-    final response = await http.get(uri, headers: {'authorization': 'Bearer $token'});
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw ApiException(data['error'] as String? ?? 'Could not load users');
@@ -383,7 +414,10 @@ class ApiService {
     return (data['users'] as List).cast<Map<String, dynamic>>();
   }
 
-  Future<void> updateUserAsAdmin(String userId, Map<String, dynamic> changes) async {
+  Future<void> updateUserAsAdmin(
+    String userId,
+    Map<String, dynamic> changes,
+  ) async {
     final response = await http.patch(
       Uri.parse('$apiBaseUrl/admin/users/$userId'),
       headers: {

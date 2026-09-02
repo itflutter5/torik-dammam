@@ -4222,6 +4222,12 @@ class _AdminStatsPageState extends State<AdminStatsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final locations = (stats?['visit_locations'] as List? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
+    final sources = (stats?['visit_sources'] as List? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
     final items = <(String, String, IconData)>[
       ('Total users', '${stats?['total_users'] ?? 0}', Icons.people_outline),
       ('Unique visitors', '${stats?['unique_visitors'] ?? 0}', Icons.public),
@@ -4258,36 +4264,112 @@ class _AdminStatsPageState extends State<AdminStatsPage> {
           ? const Center(child: RotatingLoader(size: 38))
           : error != null
           ? Center(child: Text(error!))
-          : GridView.builder(
-              padding: const EdgeInsets.all(18),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 260,
-                mainAxisExtent: 150,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-              ),
-              itemCount: items.length,
-              itemBuilder: (_, index) {
-                final item = items[index];
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(item.$3, size: 34),
-                        const SizedBox(height: 8),
-                        Text(
-                          item.$2,
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(fontWeight: FontWeight.w900),
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.all(18),
+                children: [
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 260,
+                          mainAxisExtent: 150,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 14,
                         ),
-                        Text(tr(item.$1), textAlign: TextAlign.center),
-                      ],
+                    itemCount: items.length,
+                    itemBuilder: (_, index) {
+                      final item = items[index];
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(18),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(item.$3, size: 34),
+                              const SizedBox(height: 8),
+                              Text(
+                                item.$2,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(fontWeight: FontWeight.w900),
+                              ),
+                              Text(tr(item.$1), textAlign: TextAlign.center),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'Where visitors come from',
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Approximate location only. Raw IP addresses are not stored.',
+                  ),
+                  const SizedBox(height: 10),
+                  if (locations.isEmpty)
+                    const Card(
+                      child: ListTile(
+                        leading: Icon(Icons.location_off_outlined),
+                        title: Text('No location data yet'),
+                      ),
+                    )
+                  else
+                    ...locations.map(
+                      (location) => Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.location_on_outlined),
+                          title: Text(
+                            [
+                              location['city'],
+                              location['region'],
+                              location['country'],
+                            ].where((value) => value != null).join(', '),
+                          ),
+                          subtitle: Text(
+                            '${location['unique_visitors'] ?? 0} unique visitors',
+                          ),
+                          trailing: Text(
+                            '${location['visits'] ?? 0} visits',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Traffic sources',
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 10),
+                  ...sources.map(
+                    (source) => Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.link_outlined),
+                        title: Text(
+                          source['source'] as String? ?? 'Direct / app',
+                        ),
+                        subtitle: Text(
+                          '${source['unique_visitors'] ?? 0} unique visitors',
+                        ),
+                        trailing: Text(
+                          '${source['visits'] ?? 0} visits',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
                     ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
     );
   }

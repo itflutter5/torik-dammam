@@ -96,15 +96,36 @@ app.get('/api/categories', async (_req, res, next) => {
 
 app.post('/api/analytics/visit', async (req, res, next) => {
   try {
-    const { visitorId } = z.object({ visitorId: z.string().min(20).max(128) }).parse(req.body);
+    const { visitorId, timezone, source } = z.object({
+      visitorId: z.string().min(20).max(128),
+      timezone: z.string().trim().max(100).optional(),
+      source: z.string().trim().max(200).optional(),
+    }).parse(req.body);
     const visitorHash = crypto.createHash('sha256').update(visitorId).digest('hex');
+    const countryCode =
+      (req.get('cf-ipcountry') ?? req.get('x-vercel-ip-country') ?? '')
+        .trim().slice(0, 2).toUpperCase() || null;
+    const country =
+      (req.get('x-appengine-country') ?? '').trim().slice(0, 100) || null;
+    const region =
+      (req.get('x-appengine-region') ?? req.get('fly-region') ?? '')
+        .trim().slice(0, 100) || null;
+    const city =
+      (req.get('x-appengine-city') ?? '').trim().slice(0, 100) || null;
     await pool.query(
-      `INSERT INTO visitor_days (visitor_hash, visited_on)
-       VALUES ($1, CURRENT_DATE)
+      `INSERT INTO visitor_days
+         (visitor_hash, visited_on, country_code, country, region, city, timezone, source)
+       VALUES ($1, CURRENT_DATE, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (visitor_hash, visited_on) DO UPDATE SET
          visit_count = visitor_days.visit_count + 1,
+         country_code = COALESCE(EXCLUDED.country_code, visitor_days.country_code),
+         country = COALESCE(EXCLUDED.country, visitor_days.country),
+         region = COALESCE(EXCLUDED.region, visitor_days.region),
+         city = COALESCE(EXCLUDED.city, visitor_days.city),
+         timezone = COALESCE(EXCLUDED.timezone, visitor_days.timezone),
+         source = COALESCE(EXCLUDED.source, visitor_days.source),
          last_visited_at = NOW()`,
-      [visitorHash],
+      [visitorHash, countryCode, country, region, city, timezone || null, source || 'Direct / app'],
     );
     res.json({ tracked: true });
   } catch (error) { next(error); }
@@ -565,7 +586,8 @@ app.get('/api/admin/posts', requireAuth, requireAdmin, async (req, res, next) =>
 
 app.get('/api/admin/stats', requireAuth, requireAdmin, async (_req, res, next) => {
   try {
-    const result = await pool.query(
+    const [result, locations, sources] = await Promise.all([
+      pool.query(
       `SELECT
          (SELECT COUNT(*)::int FROM users) AS total_users,
          (SELECT COUNT(*)::int FROM users
@@ -576,8 +598,35 @@ app.get('/api/admin/stats', requireAuth, requireAdmin, async (_req, res, next) =
           WHERE visited_on = CURRENT_DATE) AS visitors_today,
          (SELECT COUNT(*)::int FROM posts) AS total_posts,
          (SELECT COUNT(*)::int FROM posts WHERE status = 'pending') AS pending_posts`,
-    );
-    res.json({ stats: result.rows[0] });
+      ),
+      pool.query(
+        `SELECT
+           COALESCE(NULLIF(city, ''), 'Unknown city') AS city,
+           COALESCE(NULLIF(region, ''), NULLIF(timezone, ''), 'Unknown region') AS region,
+           COALESCE(NULLIF(country, ''), NULLIF(country_code, ''), 'Unknown country') AS country,
+           COUNT(DISTINCT visitor_hash)::int AS unique_visitors,
+           COALESCE(SUM(visit_count), 0)::int AS visits,
+           MAX(last_visited_at) AS last_visit
+         FROM visitor_days
+         GROUP BY 1, 2, 3
+         ORDER BY visits DESC, unique_visitors DESC
+         LIMIT 100`,
+      ),
+      pool.query(
+        `SELECT COALESCE(NULLIF(source, ''), 'Direct / app') AS source,
+                COUNT(DISTINCT visitor_hash)::int AS unique_visitors,
+                COALESCE(SUM(visit_count), 0)::int AS visits
+         FROM visitor_days
+         GROUP BY 1 ORDER BY visits DESC LIMIT 50`,
+      ),
+    ]);
+    res.json({
+      stats: {
+        ...result.rows[0],
+        visit_locations: locations.rows,
+        visit_sources: sources.rows,
+      },
+    });
   } catch (error) { next(error); }
 });
 

@@ -68,10 +68,22 @@ CREATE TABLE IF NOT EXISTS visitor_days (
   visitor_hash CHAR(64) NOT NULL,
   visited_on DATE NOT NULL DEFAULT CURRENT_DATE,
   visit_count INTEGER NOT NULL DEFAULT 1,
+  country_code VARCHAR(2),
+  country VARCHAR(100),
+  region VARCHAR(100),
+  city VARCHAR(100),
+  timezone VARCHAR(100),
+  source VARCHAR(200),
   first_visited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_visited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (visitor_hash, visited_on)
 );
+ALTER TABLE visitor_days ADD COLUMN IF NOT EXISTS country_code VARCHAR(2);
+ALTER TABLE visitor_days ADD COLUMN IF NOT EXISTS country VARCHAR(100);
+ALTER TABLE visitor_days ADD COLUMN IF NOT EXISTS region VARCHAR(100);
+ALTER TABLE visitor_days ADD COLUMN IF NOT EXISTS city VARCHAR(100);
+ALTER TABLE visitor_days ADD COLUMN IF NOT EXISTS timezone VARCHAR(100);
+ALTER TABLE visitor_days ADD COLUMN IF NOT EXISTS source VARCHAR(200);
 CREATE INDEX IF NOT EXISTS visitor_days_visited_on_idx ON visitor_days(visited_on DESC);
 
 CREATE TABLE IF NOT EXISTS app_settings (
