@@ -31,8 +31,89 @@
 
   <title>scrap_market</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #f4f7f3;
+    }
+
+    #app-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(23, 107, 82, 0.12), transparent 32%),
+        #f4f7f3;
+      transition: opacity 260ms ease, visibility 260ms ease;
+    }
+
+    #app-loader.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .startup-card {
+      display: flex;
+      min-width: 190px;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 34px;
+      border: 1px solid rgba(23, 107, 82, 0.16);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 18px 55px rgba(23, 107, 82, 0.13);
+      font-family: Arial, sans-serif;
+    }
+
+    .startup-icon {
+      display: grid;
+      width: 66px;
+      height: 66px;
+      place-items: center;
+      border: 3px solid rgba(23, 107, 82, 0.16);
+      border-top-color: #176b52;
+      border-radius: 50%;
+      color: #176b52;
+      font-size: 38px;
+      line-height: 1;
+      animation: startup-spin 900ms linear infinite;
+    }
+
+    .startup-title {
+      margin-top: 16px;
+      color: #153d31;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    #startup-status {
+      margin-top: 7px;
+      color: #68766f;
+      font-size: 12px;
+    }
+
+    @keyframes startup-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .startup-icon { animation-duration: 1800ms; }
+    }
+  </style>
 </head>
 <body>
+  <div id="app-loader" role="status" aria-live="polite">
+    <div class="startup-card">
+      <div class="startup-icon" aria-hidden="true">♻</div>
+      <div class="startup-title">Torik Dammam</div>
+      <div id="startup-status">Loading marketplace…</div>
+    </div>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -41,6 +122,6 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js" defer></script>
 </body>
 </html>
