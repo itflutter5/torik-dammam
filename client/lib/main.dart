@@ -3601,6 +3601,32 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
     }
   }
 
+  Future<void> _showPaymentProof(String proofUrl) => showDialog<void>(
+    context: context,
+    builder: (dialogContext) => Dialog.fullscreen(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(tr('Payment proof')),
+          leading: IconButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            icon: const Icon(Icons.close),
+          ),
+        ),
+        body: Center(
+          child: InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 5,
+            child: Image.network(
+              proofUrl,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => Text(tr('Payment proof could not be loaded')),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -3669,7 +3695,34 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                               Text(post['description'] as String? ?? ''),
                               if (proofUrl != null) ...[
                                 const SizedBox(height: 12),
-                                Image.network(proofUrl, height: 260, fit: BoxFit.contain),
+                                Text(
+                                  tr('Uploaded payment proof'),
+                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 8),
+                                InkWell(
+                                  onTap: () => _showPaymentProof(proofUrl),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      proofUrl,
+                                      height: 260,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, _, _) => SizedBox(
+                                        height: 120,
+                                        child: Center(
+                                          child: Text(tr('Payment proof could not be loaded')),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () => _showPaymentProof(proofUrl),
+                                  icon: const Icon(Icons.fullscreen),
+                                  label: Text(tr('View payment proof full screen')),
+                                ),
                               ],
                               const SizedBox(height: 12),
                               Row(
