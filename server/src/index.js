@@ -34,7 +34,7 @@ const registerSchema = z.object({
   phone,
   email: z.string().email().max(254),
   password: z.string().min(8).max(100),
-  storeNumber: z.string().regex(/^\d{4}$/),
+  storeNumber: z.string().regex(/^\d{1,4}$/),
   verificationMethod: z.enum(['phone', 'email']),
 });
 const loginSchema = z.object({ phone, password: z.string().min(1).max(100) });
@@ -44,7 +44,7 @@ const postSchema = z.object({
   description: z.string().trim().min(10).max(5000),
   price: z.union([z.literal(''), z.coerce.number().nonnegative().max(9999999999)]).optional(),
   unit: z.string().trim().max(30).optional().default(''),
-  storeNumber: z.string().regex(/^\d{4}$/),
+  storeNumber: z.string().regex(/^\d{1,4}$/),
 });
 
 const publicUser = (row) => ({
@@ -203,7 +203,7 @@ app.get('/api/auth/me', requireAuth, async (req, res, next) => {
 app.patch('/api/users/me', requireAuth, async (req, res, next) => {
   try {
     const input = z.object({
-      storeNumber: z.string().regex(/^\d{4}$/),
+      storeNumber: z.string().regex(/^\d{1,4}$/),
     }).parse(req.body);
     const result = await pool.query(
       `UPDATE users

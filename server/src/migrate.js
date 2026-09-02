@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(254) UNIQUE,
   google_sub VARCHAR(255) UNIQUE,
   password_hash TEXT,
-  store_number CHAR(4) NOT NULL DEFAULT '0000',
+  store_number VARCHAR(4) NOT NULL DEFAULT '0000',
   store_number_changed_at TIMESTAMPTZ,
   profile_image_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -22,6 +22,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS google_sub VARCHAR(255) UNIQUE;
 ALTER TABLE users ALTER COLUMN phone DROP NOT NULL;
 ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
 ALTER TABLE users ALTER COLUMN store_number SET DEFAULT '0000';
+ALTER TABLE users ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
 
@@ -31,7 +32,7 @@ CREATE TABLE IF NOT EXISTS pending_registrations (
   phone VARCHAR(20),
   email VARCHAR(254),
   password_hash TEXT NOT NULL,
-  store_number CHAR(4) NOT NULL,
+  store_number VARCHAR(4) NOT NULL,
   verification_method VARCHAR(10) NOT NULL CHECK (verification_method IN ('phone', 'email')),
   code_hash CHAR(64) NOT NULL,
   attempts INTEGER NOT NULL DEFAULT 0,
@@ -63,7 +64,7 @@ CREATE TABLE IF NOT EXISTS posts (
   description TEXT NOT NULL,
   price NUMERIC(12, 2),
   unit VARCHAR(30),
-  store_number CHAR(4) NOT NULL,
+  store_number VARCHAR(4) NOT NULL,
   image_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '30 days'
@@ -74,6 +75,8 @@ CREATE INDEX IF NOT EXISTS posts_user_id_idx ON posts(user_id);
 CREATE INDEX IF NOT EXISTS posts_expires_at_idx ON posts(expires_at);
 
 ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_category_check;
+ALTER TABLE posts ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
+ALTER TABLE pending_registrations ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
 DO $$
 BEGIN
   IF NOT EXISTS (

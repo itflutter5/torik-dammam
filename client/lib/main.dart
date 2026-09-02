@@ -291,10 +291,10 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
         (registering && (name.text.trim().length < 2 ||
             !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
                 .hasMatch(email.text.trim()) ||
-            !RegExp(r'^\d{4}$').hasMatch(storeNumber.text.trim())))) {
+            !RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())))) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(
-          'Check your name, +9665XXXXXXXX phone, password (8+ characters), and 4-digit store number',
+          'Check your name, +9665XXXXXXXX phone, password (8+ characters), and store number (up to 4 digits)',
         )),
       );
       return;
@@ -1231,7 +1231,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
   Future<void> _publish() async {
     if (type == null || title.text.trim().length < 3 ||
         description.text.trim().length < 10 ||
-        !RegExp(r'^\d{4}$').hasMatch(storeNumber.text.trim())) {
+        !RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Select a category and complete all required fields'),
       ));
@@ -1527,9 +1527,9 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _saveProfile() async {
-    if (!RegExp(r'^\d{4}$').hasMatch(storeNumber.text.trim())) {
+    if (!RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Store number must contain exactly 4 digits'),
+        content: Text('Store number must contain 1 to 4 digits'),
       ));
       return;
     }
