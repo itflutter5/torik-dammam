@@ -1945,7 +1945,7 @@ class _HomePageState extends State<HomePage> {
               builder: (context, _) => SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 1,
-                  mainAxisExtent: 410,
+                  mainAxisExtent: 430,
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 14,
                 ),
@@ -1983,6 +1983,16 @@ class _ListingCardState extends State<ListingCard> {
   late bool saved = widget.listing.isSaved;
   bool saving = false;
   Listing get listing => widget.listing;
+  Color get categoryColor => switch (listing.type) {
+    'Need Job' => const Color(0xff2563eb),
+    'Need Worker' => const Color(0xffe87918),
+    'Buy Scrap' => const Color(0xff16845b),
+    'Sell Scrap' => const Color(0xff0f766e),
+    'Driver' => const Color(0xff4f46e5),
+    'Serviceman' => const Color(0xff7c3aed),
+    'House Items' => const Color(0xffa15c22),
+    _ => const Color(0xff176b52),
+  };
 
   @override
   void didUpdateWidget(covariant ListingCard oldWidget) {
@@ -2040,13 +2050,24 @@ class _ListingCardState extends State<ListingCard> {
       ),
     ),
     child: Card(
-      elevation: 0,
+      margin: EdgeInsets.zero,
+      elevation: 3,
+      shadowColor: categoryColor.withValues(alpha: 0.2),
+      surfaceTintColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: categoryColor.withValues(alpha: 0.24),
+          width: 1.2,
+        ),
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          ColoredBox(color: categoryColor, child: const SizedBox(height: 5)),
           SizedBox(
-            height: 150,
+            height: 155,
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -2069,6 +2090,57 @@ class _ListingCardState extends State<ListingCard> {
                       ),
                     ),
                   ),
+                const Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x33000000),
+                          Colors.transparent,
+                          Color(0x66000000),
+                        ],
+                        stops: [0, 0.48, 1],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 10,
+                  top: 10,
+                  child: DecoratedBox(
+                    key: const Key('post-category-right'),
+                    decoration: BoxDecoration(
+                      color: categoryColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black26, blurRadius: 6),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(listing.icon, color: Colors.white, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            tr(listing.type),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 if (listing.imageUrls.length > 1)
                   Positioned(
                     left: 0,
@@ -2098,8 +2170,8 @@ class _ListingCardState extends State<ListingCard> {
                   ),
                 if (listing.imageUrls.length > 1)
                   Positioned(
-                    top: 8,
-                    right: 8,
+                    bottom: 8,
+                    right: 10,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: Colors.black54,
@@ -2123,11 +2195,11 @@ class _ListingCardState extends State<ListingCard> {
                   ),
                 if (listing.postNumber.isNotEmpty)
                   Positioned(
-                    left: 8,
-                    top: 8,
+                    left: 10,
+                    top: 10,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: const Color(0xdd111827),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: const [
                           BoxShadow(color: Colors.black26, blurRadius: 5),
@@ -2155,110 +2227,107 @@ class _ListingCardState extends State<ListingCard> {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.fromLTRB(15, 12, 15, 11),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: 40,
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Row(
-                            key: const Key('post-time-left'),
-                            children: [
-                              const Icon(
-                                Icons.schedule_outlined,
-                                size: 15,
-                                color: Colors.black45,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                listing.postedAt,
-                                style: const TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              IconButton(
-                                tooltip: saved
-                                    ? 'Remove from saved'
-                                    : 'Save post',
-                                visualDensity: VisualDensity.compact,
-                                onPressed: saving
-                                    ? null
-                                    : () => _toggleSaved(!saved),
-                                icon: saving
-                                    ? const RotatingLoader(size: 19)
-                                    : Icon(
-                                        saved
-                                            ? Icons.bookmark
-                                            : Icons.bookmark_border,
-                                        size: 21,
-                                      ),
-                              ),
-                            ],
+                  Row(
+                    key: const Key('post-time-left'),
+                    children: [
+                      Icon(
+                        Icons.schedule_outlined,
+                        size: 15,
+                        color: categoryColor,
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          listing.postedAt,
+                          style: const TextStyle(
+                            color: Colors.black54,
+                            fontSize: 12,
                           ),
                         ),
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: Chip(
-                            key: const Key('post-category-right'),
-                            label: Text(tr(listing.type)),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                        ),
-                      ],
+                      ),
+                      IconButton.filledTonal(
+                        tooltip: saved ? 'Remove from saved' : 'Save post',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: saving ? null : () => _toggleSaved(!saved),
+                        icon: saving
+                            ? const RotatingLoader(size: 18)
+                            : Icon(
+                                saved ? Icons.bookmark : Icons.bookmark_border,
+                                size: 20,
+                                color: categoryColor,
+                              ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    listing.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      height: 1.18,
                     ),
                   ),
                   const SizedBox(height: 5),
-                  Text(
-                    listing.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
                   Text(
                     listing.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Colors.black54, height: 1.35),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    listing.price,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: Theme.of(context).colorScheme.primary,
+                  const SizedBox(height: 7),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: categoryColor.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(11),
                     ),
-                  ),
-                  Text(
-                    '${tr('Store number')}: ${listing.storeNumber}',
-                    style: const TextStyle(color: Colors.black54, fontSize: 12),
-                  ),
-                  if (listing.postNumber.isNotEmpty)
-                    Text(
-                      '${tr('Post number')}: ${listing.postNumber}',
-                      style: const TextStyle(
-                        color: Colors.black54,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 7,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              listing.price,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                color: categoryColor,
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.storefront_outlined, size: 16),
+                          const SizedBox(width: 5),
+                          Text(
+                            listing.storeNumber,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  const Divider(height: 18),
+                  ),
+                  const Spacer(),
+                  Divider(
+                    height: 14,
+                    color: categoryColor.withValues(alpha: 0.2),
+                  ),
                   Row(
                     children: [
                       CircleAvatar(
                         radius: 16,
+                        backgroundColor: categoryColor.withValues(alpha: 0.12),
                         backgroundImage: listing.profileImageUrl == null
                             ? null
                             : NetworkImage(listing.profileImageUrl!),
@@ -2287,10 +2356,15 @@ class _ListingCardState extends State<ListingCard> {
                           ],
                         ),
                       ),
-                      IconButton(
-                        tooltip: '${tr('Call')} ${listing.userName}',
+                      FilledButton.tonalIcon(
                         onPressed: _callPhone,
-                        icon: const Icon(Icons.call_outlined),
+                        icon: const Icon(Icons.call_outlined, size: 18),
+                        label: Text(tr('Call')),
+                        style: FilledButton.styleFrom(
+                          foregroundColor: categoryColor,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          visualDensity: VisualDensity.compact,
+                        ),
                       ),
                     ],
                   ),
