@@ -494,7 +494,10 @@ app.post('/api/posts', requireAuth, upload.fields([
        (id, user_id, category, title, description, price, unit, store_number, image_urls,
         post_number, status, payment_proof_url, payment_currency, payment_amount)
        SELECT id, $1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8::jsonb,
-              CASE WHEN LENGTH(id::text) < 11 THEN LPAD(id::text, 11, '0') ELSE id::text END,
+              CASE
+                WHEN LENGTH(id::text) < 11 THEN '#' || LPAD(id::text, 11, '0')
+                ELSE '#' || id::text
+              END,
               $9, $10, $11, $12
        FROM next_post
        RETURNING *`,

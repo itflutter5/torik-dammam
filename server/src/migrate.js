@@ -118,10 +118,10 @@ ALTER TABLE posts ADD COLUMN IF NOT EXISTS post_number VARCHAR(30);
 ALTER TABLE posts ALTER COLUMN post_number TYPE VARCHAR(30);
 UPDATE posts
 SET post_number = CASE
-  WHEN LENGTH(id::text) < 11 THEN LPAD(id::text, 11, '0')
-  ELSE id::text
+  WHEN LENGTH(id::text) < 11 THEN '#' || LPAD(id::text, 11, '0')
+  ELSE '#' || id::text
 END
-WHERE post_number IS NULL OR post_number !~ '^[0-9]{11,}$';
+WHERE post_number IS NULL OR post_number !~ '^#[0-9]{11,}$';
 ALTER TABLE posts ALTER COLUMN post_number SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS posts_post_number_unique_idx ON posts(post_number);
 ALTER TABLE pending_registrations ALTER COLUMN store_number TYPE VARCHAR(4) USING TRIM(store_number);
