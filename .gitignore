@@ -10,3 +10,4 @@ client/android/local.properties
 .env
 .env.*
 !.env.example
+/Torik-Dammam-Play-Release.aab
