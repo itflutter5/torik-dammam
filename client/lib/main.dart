@@ -1436,10 +1436,29 @@ class _MarketplaceShellState extends State<MarketplaceShell> {
     ];
     return Scaffold(
       body: pages[index],
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openPost,
-        icon: const Icon(Icons.add),
-        label: Text(tr('Post')),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.small(
+            heroTag: 'whatsapp-help',
+            tooltip: 'WhatsApp Business Help',
+            backgroundColor: const Color(0xff25D366),
+            foregroundColor: Colors.white,
+            onPressed: () => launchUrl(
+              Uri.parse('https://wa.me/8801726466000'),
+              mode: LaunchMode.externalApplication,
+            ),
+            child: const Icon(Icons.chat_rounded),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton.extended(
+            heroTag: 'create-post',
+            onPressed: _openPost,
+            icon: const Icon(Icons.add),
+            label: Text(tr('Post')),
+          ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
