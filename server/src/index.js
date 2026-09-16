@@ -753,6 +753,10 @@ app.get('/refresh', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.redirect(302, '/?refreshed=1');
 });
+app.get('/buklin', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.sendFile(path.resolve(staticDirectory, 'buklin', 'index.html'));
+});
 app.use(express.static(staticDirectory, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('index.html') ||
