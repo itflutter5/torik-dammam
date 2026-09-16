@@ -757,6 +757,11 @@ app.get('/buklin', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.resolve(staticDirectory, 'buklin', 'index.html'));
 });
+app.get('/buklin/buklin.apk', (_req, res) => {
+  res.type('application/vnd.android.package-archive');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.download(path.resolve(staticDirectory, 'buklin', 'buklin.apk'), 'buklin.apk');
+});
 app.use(express.static(staticDirectory, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('index.html') ||
