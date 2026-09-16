@@ -1692,6 +1692,29 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: FilledButton.icon(
+                            onPressed: () => launchUrl(
+                              Uri.parse('https://www.torik-dammam.com/buklin'),
+                              webOnlyWindowName: '_self',
+                            ),
+                            icon: const Icon(Icons.android_rounded, size: 18),
+                            label: const Text('BUKLIN'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xffff9800),
+                              foregroundColor: const Color(0xff15100a),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              textStyle: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final compact = constraints.maxWidth < 680;
