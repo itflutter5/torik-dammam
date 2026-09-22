@@ -83,7 +83,6 @@ class ApiService {
     required String email,
     required String password,
     required String storeNumber,
-    required String verificationMethod,
   }) async {
     return _jsonRequest('/auth/register/start', {
       'name': name,
@@ -91,7 +90,7 @@ class ApiService {
       'email': email,
       'password': password,
       'storeNumber': storeNumber,
-      'verificationMethod': verificationMethod,
+      'verificationMethod': 'email',
     });
   }
 

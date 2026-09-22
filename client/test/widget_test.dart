@@ -1,8 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scrap_market/main.dart';
+import 'package:scrap_market/api.dart';
 
 void main() {
+  for (final age in [
+    Duration.zero,
+    const Duration(days: 29, hours: 23, minutes: 59),
+    const Duration(days: 30),
+  ]) {
+    testWidgets('profile store number lock at account age $age', (
+      tester,
+    ) async {
+      ApiService.instance.currentUser = {
+        'name': 'Test User',
+        'phone': '+966512345678',
+        'storeNumber': '0101',
+        'storeNumberChangedAt': DateTime.now()
+            .toUtc()
+            .subtract(age)
+            .toIso8601String(),
+      };
+      addTearDown(() => ApiService.instance.currentUser = null);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: ProfilePage(onSignOut: () async {})),
+        ),
+      );
+      final field = tester.widget<TextField>(
+        find.byWidgetPredicate(
+          (widget) => widget is TextField && widget.controller?.text == '0101',
+        ),
+      );
+      expect(field.readOnly, age < const Duration(days: 30));
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
+
   testWidgets('shows public home and opens login from Post', (tester) async {
     await tester.pumpWidget(const ScrapMarketApp());
     expect(find.text('Torik Dammam Marketplace'), findsOneWidget);

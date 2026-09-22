@@ -83,9 +83,10 @@ flow.
 ### Registration verification
 
 Registration collects both a Saudi mobile number and an email address. The
-user chooses whether to receive the six-digit verification code by
-transactional SMS or email. Codes expire after 10 minutes and are limited to
+six-digit verification code is sent by email only. Codes expire after 10 minutes and are limited to
 five attempts. The Neon user is created only after successful verification.
+The registered store number appears in the profile and is locked for 30 days
+from account creation. Each subsequent change starts another 30-day lock.
 
 ## GitHub and Render deployment
 

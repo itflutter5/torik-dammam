@@ -22,6 +22,8 @@ const languageNames = {
 
 const translations = <String, Map<String, String>>{
   'bn': {
+    'Code sent to your email': 'আপনার ইমেইলে কোড পাঠানো হয়েছে',
+    'Check Gmail or your email inbox for the code. Check Spam if you cannot find it.': 'কোডের জন্য Gmail বা আপনার ইমেইল ইনবক্স দেখুন। খুঁজে না পেলে স্প্যাম ফোল্ডার দেখুন।',
     'Home': 'হোম',
     'Saved': 'সংরক্ষিত',
     'My posts': 'আমার পোস্ট',
@@ -57,6 +59,8 @@ const translations = <String, Map<String, String>>{
     'Privacy Policy': 'গোপনীয়তা নীতি',
   },
   'ur': {
+    'Code sent to your email': 'کوڈ آپ کے ای میل پر بھیج دیا گیا ہے',
+    'Check Gmail or your email inbox for the code. Check Spam if you cannot find it.': 'کوڈ کے لیے Gmail یا اپنا ای میل ان باکس دیکھیں۔ نہ ملے تو اسپیم فولڈر دیکھیں۔',
     'Home': 'ہوم',
     'Saved': 'محفوظ',
     'My posts': 'میری پوسٹس',
@@ -93,6 +97,8 @@ const translations = <String, Map<String, String>>{
     'Privacy Policy': 'رازداری کی پالیسی',
   },
   'hi': {
+    'Code sent to your email': 'आपके ईमेल पर कोड भेज दिया गया है',
+    'Check Gmail or your email inbox for the code. Check Spam if you cannot find it.': 'कोड के लिए Gmail या अपना ईमेल इनबॉक्स देखें। न मिले तो स्पैम फ़ोल्डर देखें।',
     'Home': 'होम',
     'Saved': 'सहेजे गए',
     'My posts': 'मेरी पोस्ट',
@@ -962,11 +968,6 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
       );
       return;
     }
-    String? verificationMethod;
-    if (registering) {
-      verificationMethod = await _chooseVerificationMethod();
-      if (verificationMethod == null || !mounted) return;
-    }
     setState(() => loading = true);
     try {
       if (registering) {
@@ -976,7 +977,6 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
           email: email.text.trim().toLowerCase(),
           password: password.text,
           storeNumber: storeNumber.text.trim(),
-          verificationMethod: verificationMethod!,
         );
         if (!mounted) return;
         final code = await _askForVerificationCode(
@@ -1007,30 +1007,6 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
       if (mounted) setState(() => loading = false);
     }
   }
-
-  Future<String?> _chooseVerificationMethod() => showDialog<String>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(tr('Verify your account')),
-      content: Text(tr('Where should we send your 6-digit verification code?')),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: Text(tr('Cancel')),
-        ),
-        OutlinedButton.icon(
-          onPressed: () => Navigator.pop(dialogContext, 'phone'),
-          icon: const Icon(Icons.sms_outlined),
-          label: Text(tr('Phone')),
-        ),
-        FilledButton.icon(
-          onPressed: () => Navigator.pop(dialogContext, 'email'),
-          icon: const Icon(Icons.email_outlined),
-          label: Text(tr('Email')),
-        ),
-      ],
-    ),
-  );
 
   Future<void> _forgotPassword() async {
     final identifier = TextEditingController(text: phone.text);
@@ -1120,6 +1096,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   }
 
   Future<String?> _askForVerificationCode(String destination) async {
+    final isEmail = destination.contains('@');
     final controller = TextEditingController();
     final result = await showDialog<String>(
       context: context,
@@ -1129,7 +1106,15 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('${tr('We sent a 6-digit code to')} $destination.'),
+            if (isEmail) ...[
+              Text(
+                tr('Code sent to your email'),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 6),
+              Text(destination, textAlign: TextAlign.center),
+            ] else
+              Text('${tr('We sent a 6-digit code to')} $destination.'),
             const SizedBox(height: 14),
             TextField(
               controller: controller,
@@ -1142,6 +1127,28 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                 counterText: '',
               ),
             ),
+            if (isEmail) ...[
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 3),
+                    child: CustomPaint(
+                      size: Size(32, 24),
+                      painter: _GmailIconPainter(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      tr('Check Gmail or your email inbox for the code. Check Spam if you cannot find it.'),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
         actions: [
@@ -1170,6 +1177,37 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     ).push<bool>(MaterialPageRoute(builder: (_) => const RegistrationPage()));
     if (registered == true && mounted) Navigator.of(context).pop(true);
   }
+}
+
+class _GmailIconPainter extends CustomPainter {
+  const _GmailIconPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.18
+      ..strokeCap = StrokeCap.square
+      ..strokeJoin = StrokeJoin.round;
+    void line(Color color, double x1, double y1, double x2, double y2) {
+      paint.color = color;
+      canvas.drawLine(
+        Offset(size.width * x1, size.height * y1),
+        Offset(size.width * x2, size.height * y2),
+        paint,
+      );
+    }
+
+    line(const Color(0xff4285f4), 0.1, 0.35, 0.1, 0.88);
+    line(const Color(0xff34a853), 0.9, 0.35, 0.9, 0.88);
+    line(const Color(0xffea4335), 0.1, 0.16, 0.5, 0.57);
+    line(const Color(0xffea4335), 0.5, 0.57, 0.9, 0.16);
+    line(const Color(0xffc5221f), 0.1, 0.16, 0.1, 0.35);
+    line(const Color(0xfffbbc04), 0.9, 0.16, 0.9, 0.35);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GmailIconPainter oldDelegate) => false;
 }
 
 class RegistrationPage extends StatelessWidget {
@@ -3806,7 +3844,7 @@ class _ProfilePageState extends State<ProfilePage> {
         .add(const Duration(days: 30))
         .difference(DateTime.now());
     if (remaining.isNegative || remaining == Duration.zero) return 0;
-    return (remaining.inHours / 24).ceil();
+    return (remaining.inMicroseconds / Duration.microsecondsPerDay).ceil();
   }
 
   @override

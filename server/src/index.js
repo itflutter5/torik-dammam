@@ -39,7 +39,7 @@ const registerSchema = z.object({
   email: z.string({ error: 'Email is required' }).trim().toLowerCase().email('Enter a valid email').max(254),
   password: z.string({ error: 'Password is required' }).min(8, 'Password must be at least 8 characters').max(100),
   storeNumber: z.string({ error: 'Store number is required' }).regex(/^\d{1,4}$/, 'Store number must contain 1 to 4 digits'),
-  verificationMethod: z.enum(['phone', 'email'], { error: 'Choose phone or email verification' }),
+  verificationMethod: z.literal('email').default('email'),
 });
 const loginSchema = z.object({ phone, password: z.string().min(1).max(100) });
 const postSchema = z.object({
@@ -149,7 +149,7 @@ app.post('/api/auth/register/start', async (req, res, next) => {
       [verificationId, input.name, input.phone, input.email, passwordHash,
         input.storeNumber, input.verificationMethod, hashCode(code)],
     );
-    const destination = input.verificationMethod === 'email' ? input.email : input.phone;
+    const destination = input.email;
     try {
       await sendVerification({ method: input.verificationMethod, destination, name: input.name, code });
     } catch (deliveryError) {
@@ -172,7 +172,8 @@ app.post('/api/auth/register/verify', async (req, res, next) => {
     await client.query('BEGIN');
     const pendingResult = await client.query(
       `SELECT * FROM pending_registrations
-       WHERE id = $1 AND expires_at > NOW() AND attempts < 5 FOR UPDATE`,
+       WHERE id = $1 AND verification_method = 'email'
+         AND expires_at > NOW() AND attempts < 5 FOR UPDATE`,
       [input.verificationId],
     );
     const pending = pendingResult.rows[0];
@@ -186,8 +187,9 @@ app.post('/api/auth/register/verify', async (req, res, next) => {
     }
     const result = await client.query(
       `INSERT INTO users
-       (name, phone, email, password_hash, store_number, phone_verified, email_verified)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
+       (name, phone, email, password_hash, store_number, phone_verified, email_verified,
+        store_number_changed_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
        RETURNING id, name, phone, email, store_number,
                  store_number_changed_at, profile_image_url, is_admin`,
       [pending.name, pending.phone, pending.email, pending.password_hash,
