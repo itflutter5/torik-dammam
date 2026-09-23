@@ -237,11 +237,11 @@ try {
     )) WHERE post_balance IS NULL;
     ALTER TABLE users ALTER COLUMN post_balance SET DEFAULT 5;
     ALTER TABLE users ALTER COLUMN post_balance SET NOT NULL;
-    DO $ BEGIN
+    DO $$ BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_post_balance_nonnegative') THEN
         ALTER TABLE users ADD CONSTRAINT users_post_balance_nonnegative CHECK (post_balance >= 0);
       END IF;
-    END $;
+    END $$;
   `);
   console.log('Database schema is ready.');
 } finally {
