@@ -8,6 +8,9 @@ plugins {
 }
 
 val keystoreProperties = Properties()
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
 val keystorePropertiesFile = rootProject.file("key.properties")
 val hasReleaseSigning = keystorePropertiesFile.exists()
 if (hasReleaseSigning) {

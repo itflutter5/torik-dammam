@@ -13,6 +13,7 @@ import crypto from 'node:crypto';
 import { createCode, hashCode, sendVerification } from './verification.js';
 import { passwordLoginSchema } from './login_credentials.js';
 import { postSchema, postPhotosSchema } from './post_validation.js';
+import { startPostPushWorker } from './push_notifications.js';
 
 const app = express();
 const googleClient = new OAuth2Client();
@@ -794,3 +795,4 @@ app.use((error, _req, res, _next) => {
 
 const port = Number(process.env.PORT ?? 10000);
 app.listen(port, '0.0.0.0', () => console.log(`ScrapMarket API listening on ${port}`));
+startPostPushWorker(pool);

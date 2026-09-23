@@ -179,6 +179,28 @@ END $$;
 
 try {
   await pool.query(sql);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS post_push_queue (
+      post_id BIGINT PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      attempts INTEGER NOT NULL DEFAULT 0,
+      sent_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS post_push_queue_pending_idx
+      ON post_push_queue(next_attempt_at) WHERE sent_at IS NULL;
+    CREATE OR REPLACE FUNCTION enqueue_public_post_push() RETURNS TRIGGER AS $$
+    BEGIN
+      IF NEW.status = 'approved' THEN
+        INSERT INTO post_push_queue(post_id) VALUES (NEW.id) ON CONFLICT DO NOTHING;
+      END IF;
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+    CREATE OR REPLACE TRIGGER public_post_push
+      AFTER INSERT OR UPDATE OF status ON posts
+      FOR EACH ROW EXECUTE FUNCTION enqueue_public_post_push();
+  `);
   const adminPhone = process.env.ADMIN_PHONE?.trim();
   if (adminPhone) {
     await pool.query('UPDATE users SET is_admin = (phone = $1)', [adminPhone]);

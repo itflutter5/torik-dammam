@@ -11,3 +11,5 @@ client/android/local.properties
 .env.*
 !.env.example
 /Torik-Dammam-Play-Release.aab
+client/android/app/google-services.json
+**/firebase-service-account*.json

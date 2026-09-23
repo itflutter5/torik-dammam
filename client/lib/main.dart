@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'api.dart';
 import 'post_image_compression.dart';
 import 'post_validation.dart';
+import 'push_notifications.dart';
 import 'google_auth_service.dart';
 import 'google_button.dart';
 
@@ -529,6 +530,7 @@ Future<void> main() async {
   );
   if (languageNames.containsKey(saved)) appLanguage.value = saved!;
   runApp(const ScrapMarketApp());
+  unawaited(PushNotifications.instance.initialize());
   unawaited(ApiService.instance.trackVisit());
 }
 
