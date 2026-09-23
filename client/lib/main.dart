@@ -22,6 +22,18 @@ const languageNames = {
 
 const translations = <String, Map<String, String>>{
   'bn': {
+    '3 SAR': '৩ রিয়াল',
+    'Free posts remaining': 'অবশিষ্ট ফ্রি পোস্ট',
+    'Your 5 free posts are used. Pay and upload proof for admin approval.':
+        'আপনার ৫টি ফ্রি পোস্ট ব্যবহার হয়েছে। অ্যাডমিনের অনুমোদনের জন্য পেমেন্ট করে প্রমাণ আপলোড করুন।',
+    'Upload payment proof *': 'পেমেন্টের প্রমাণ আপলোড করুন *',
+    'Upload payment proof to submit this post':
+        'এই পোস্ট জমা দিতে পেমেন্টের প্রমাণ আপলোড করুন',
+    'Post fee in Bangladeshi taka': 'বাংলাদেশি টাকায় পোস্টের ফি',
+    'Pay 3 SAR using the administrator payment account.':
+        'অ্যাডমিনের পেমেন্ট অ্যাকাউন্টে ৩ রিয়াল পরিশোধ করুন।',
+    'Pay using the administrator payment account':
+        'অ্যাডমিনের পেমেন্ট অ্যাকাউন্টে পরিশোধ করুন',
     'Code sent to your email': 'আপনার ইমেইলে কোড পাঠানো হয়েছে',
     'Check Gmail or your email inbox for the code. Check Spam if you cannot find it.': 'কোডের জন্য Gmail বা আপনার ইমেইল ইনবক্স দেখুন। খুঁজে না পেলে স্প্যাম ফোল্ডার দেখুন।',
     'Home': 'হোম',
@@ -1578,19 +1590,19 @@ class _HomePageState extends State<HomePage> {
   (String, String) get promotionCopy => switch (appLanguage.value) {
     'bn' => (
       'নতুন ব্যবহারকারীদের প্রথম ৫টি পোস্ট ফ্রি!',
-      'এরপর প্রতি পোস্ট মাত্র ৫ রিয়াল অথবা ১৬৫ টাকা',
+      'এরপর প্রতি পোস্ট মাত্র ৩ রিয়াল; বাংলাদেশি টাকায়ও পেমেন্ট করা যাবে',
     ),
     'ur' => (
       'نئے صارفین کے لیے پہلی 5 پوسٹس مفت!',
-      'اس کے بعد ہر پوسٹ صرف 5 ریال یا 165 ٹکا',
+      'اس کے بعد ہر پوسٹ صرف 3 ریال؛ بنگلہ دیشی ٹکا میں بھی ادائیگی دستیاب ہے',
     ),
     'hi' => (
       'नए उपयोगकर्ताओं की पहली 5 पोस्ट मुफ़्त!',
-      'उसके बाद प्रति पोस्ट केवल 5 रियाल या 165 टका',
+      'उसके बाद प्रति पोस्ट केवल 3 रियाल; बांग्लादेशी टका में भी भुगतान उपलब्ध है',
     ),
     _ => (
       'New users get their first 5 posts FREE!',
-      'After that, only 5 SAR or ৳165 per post',
+      'After that, only 3 SAR per post. Bangladeshi taka accepted too.',
     ),
   };
 
@@ -2963,6 +2975,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
   @override
   void initState() {
     super.initState();
+    storeNumber.text =
+        ApiService.instance.currentUser?['storeNumber'] as String? ?? '';
     _loadCategories();
     _loadQuota();
   }
@@ -3307,6 +3321,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
               const SizedBox(height: 12),
               TextField(
                 controller: storeNumber,
+                readOnly: true,
                 keyboardType: TextInputType.number,
                 maxLength: 4,
                 inputFormatters: [
@@ -3346,13 +3361,17 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             const SizedBox(height: 10),
                             SegmentedButton<String>(
                               segments: [
-                                const ButtonSegment(
+                                ButtonSegment(
                                   value: 'SAR',
-                                  label: Text('5 SAR'),
+                                  label: Text(tr('3 SAR')),
                                 ),
                                 ButtonSegment(
                                   value: 'BDT',
-                                  label: Text('$bdtAmount BDT'),
+                                  label: Text(
+                                    appLanguage.value == 'bn'
+                                        ? '৳$bdtAmount টাকা'
+                                        : '৳$bdtAmount BDT',
+                                  ),
                                 ),
                               ],
                               selected: {paymentCurrency},
@@ -3367,11 +3386,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
                               paymentCurrency == 'SAR'
                                   ? (instructionsSar.isEmpty
                                         ? tr(
-                                            'Pay 5 SAR using the administrator payment account.',
+                                            'Pay 3 SAR using the administrator payment account.',
                                           )
                                         : instructionsSar)
                                   : (instructionsBdt.isEmpty
-                                        ? '${tr('Pay using the administrator payment account')}: $bdtAmount BDT'
+                                        ? '${tr('Pay using the administrator payment account')}: ৳$bdtAmount'
                                         : instructionsBdt),
                             ),
                             const SizedBox(height: 12),
@@ -4663,7 +4682,7 @@ class _AdminPaymentSettingsPageState extends State<AdminPaymentSettingsPage> {
                             decimal: true,
                           ),
                           decoration: InputDecoration(
-                            labelText: tr('BDT amount equivalent to 5 SAR'),
+                            labelText: tr('Post fee in Bangladeshi taka'),
                             prefixIcon: const Icon(Icons.currency_exchange),
                           ),
                         ),

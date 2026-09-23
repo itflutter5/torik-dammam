@@ -509,7 +509,7 @@ app.get('/api/posts/quota', requireAuth, async (req, res, next) => {
     const used = result.rows[0].used;
     res.json({
       freeRemaining: Math.max(0, 5 - used),
-      sarAmount: 5,
+      sarAmount: 3,
       bdtAmount: payment.bdtAmount,
       instructionsSar: payment.sarNumber,
       instructionsBdt: payment.bdtNumber,
@@ -523,6 +523,8 @@ app.post('/api/posts', requireAuth, upload.fields([
 ]), async (req, res, next) => {
   try {
     const input = postSchema.parse(req.body);
+    const owner = await pool.query('SELECT store_number FROM users WHERE id = $1', [req.auth.sub]);
+    if (!owner.rows[0]) return res.status(404).json({ error: 'User not found' });
     const employmentPost = input.category === 'Need Worker' || input.category === 'Need Job';
     const files = req.files ?? {};
     const imageUrls = await Promise.all((files.images ?? []).map((file) => uploadImage(file, req.auth.sub)));
@@ -544,7 +546,7 @@ app.post('/api/posts', requireAuth, upload.fields([
     const status = requiresPayment ? 'pending' : 'approved';
     const paymentSettings = requiresPayment ? await getPaymentSettings() : null;
     const paymentAmount = requiresPayment
-      ? (paymentCurrency === 'SAR' ? 5 : paymentSettings.bdtAmount)
+      ? (paymentCurrency === 'SAR' ? 3 : paymentSettings.bdtAmount)
       : null;
     const result = await pool.query(
       `WITH next_post AS (
@@ -562,7 +564,7 @@ app.post('/api/posts', requireAuth, upload.fields([
        FROM next_post
        RETURNING *`,
       [req.auth.sub, input.category, input.title, input.description,
-        input.price === '' ? null : input.price, employmentPost ? '' : input.unit, input.storeNumber,
+        input.price === '' ? null : input.price, employmentPost ? '' : input.unit, owner.rows[0].store_number,
         JSON.stringify(imageUrls), status, paymentProofUrl, paymentCurrency, paymentAmount],
     );
     res.status(201).json({ post: result.rows[0], pendingApproval: requiresPayment });
