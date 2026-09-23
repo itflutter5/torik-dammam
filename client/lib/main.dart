@@ -2954,7 +2954,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
   final title = TextEditingController();
   final description = TextEditingController();
   final price = TextEditingController();
-  final unit = TextEditingController();
+  String? selectedUnit;
   final storeNumber = TextEditingController();
   final images = <UploadImage>[];
   UploadImage? paymentProof;
@@ -2965,7 +2965,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
   bool publishing = false;
   bool loadingQuota = true;
   int freeRemaining = 5;
-  int bdtAmount = 165;
+  int bdtAmount = 96;
   String paymentCurrency = 'SAR';
   String instructionsSar = '';
   String instructionsBdt = '';
@@ -2987,7 +2987,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       if (mounted)
         setState(() {
           freeRemaining = quota['freeRemaining'] as int? ?? 0;
-          bdtAmount = (quota['bdtAmount'] as num?)?.round() ?? 165;
+          bdtAmount = (quota['bdtAmount'] as num?)?.round() ?? 96;
           instructionsSar = quota['instructionsSar'] as String? ?? '';
           instructionsBdt = quota['instructionsBdt'] as String? ?? '';
           loadingQuota = false;
@@ -3015,7 +3015,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
     title.dispose();
     description.dispose();
     price.dispose();
-    unit.dispose();
     storeNumber.dispose();
     super.dispose();
   }
@@ -3111,7 +3110,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
         title: title.text.trim(),
         description: description.text.trim(),
         price: price.text.trim(),
-        unit: usesSalary ? '' : unit.text.trim(),
+        unit: usesSalary ? '' : selectedUnit ?? '',
         storeNumber: storeNumber.text.trim(),
         images: images,
         paymentProof: freeRemaining == 0 ? paymentProof : null,
@@ -3202,7 +3201,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         selected: type == category,
                         onSelected: (selected) => setState(() {
                           type = selected ? category : null;
-                          if (usesSalary) unit.clear();
+                          if (usesSalary) selectedUnit = null;
                         }),
                       ),
                     )
@@ -3308,11 +3307,18 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: TextField(
-                        controller: unit,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: selectedUnit,
+                        items: const [
+                          DropdownMenuItem(value: 'Ton', child: Text('Ton')),
+                          DropdownMenuItem(value: 'kg', child: Text('kg')),
+                          DropdownMenuItem(value: 'pics', child: Text('pics')),
+                        ],
+                        onChanged: publishing
+                            ? null
+                            : (value) => setState(() => selectedUnit = value),
                         decoration: InputDecoration(
                           labelText: tr('Unit (optional)'),
-                          hintText: 'kg / item',
                         ),
                       ),
                     ),
@@ -4588,7 +4594,7 @@ class _AdminPaymentSettingsPageState extends State<AdminPaymentSettingsPage> {
       final settings = await ApiService.instance.fetchPaymentSettings();
       sarNumber.text = settings['sarNumber'] as String? ?? '';
       bdtNumber.text = settings['bdtNumber'] as String? ?? '';
-      bdtAmount.text = '${settings['bdtAmount'] ?? 165}';
+      bdtAmount.text = '${settings['bdtAmount'] ?? 96}';
       if (mounted)
         setState(() {
           loading = false;

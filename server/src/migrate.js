@@ -186,7 +186,7 @@ try {
   const defaultSettings = [
     ['payment_number_sar', process.env.PAYMENT_INSTRUCTIONS_SAR ?? ''],
     ['payment_number_bdt', process.env.PAYMENT_INSTRUCTIONS_BDT ?? ''],
-    ['payment_bdt_amount', process.env.PAYMENT_BDT_AMOUNT ?? '165'],
+    ['payment_bdt_amount', process.env.PAYMENT_BDT_AMOUNT ?? '96'],
   ];
   for (const [key, value] of defaultSettings) {
     await pool.query(
@@ -195,6 +195,17 @@ try {
       [key, value],
     );
   }
+  // Apply the new fee once, preserving subsequent administrator changes.
+  await pool.query(
+    `WITH applied AS (
+       INSERT INTO app_settings (key, value)
+       VALUES ('migration_post_fee_96_bdt', 'done')
+       ON CONFLICT (key) DO NOTHING
+       RETURNING key
+     )
+     UPDATE app_settings SET value = '96', updated_at = NOW()
+     WHERE key = 'payment_bdt_amount' AND EXISTS (SELECT 1 FROM applied)`,
+  );
   console.log('Database schema is ready.');
 } finally {
   await pool.end();

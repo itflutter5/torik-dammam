@@ -68,7 +68,7 @@ async function getPaymentSettings() {
   return {
     sarNumber: values.payment_number_sar ?? '',
     bdtNumber: values.payment_number_bdt ?? '',
-    bdtAmount: Number(values.payment_bdt_amount ?? 165),
+    bdtAmount: Number(values.payment_bdt_amount ?? 96),
   };
 }
 
@@ -79,7 +79,7 @@ app.get('/health', async (_req, res, next) => {
 app.get('/api/config', (_req, res) => {
   res.json({
     googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
-    paymentBdtAmount: Number(process.env.PAYMENT_BDT_AMOUNT ?? 165),
+    paymentBdtAmount: Number(process.env.PAYMENT_BDT_AMOUNT ?? 96),
     paymentInstructionsSar: process.env.PAYMENT_INSTRUCTIONS_SAR ?? '',
     paymentInstructionsBdt: process.env.PAYMENT_INSTRUCTIONS_BDT ?? '',
   });
