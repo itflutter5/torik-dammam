@@ -760,6 +760,11 @@ app.get('/buklin', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.resolve(staticDirectory, 'buklin', 'index.html'));
 });
+app.get('/android.apk', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Robots-Tag', 'noindex');
+  res.redirect(302, 'https://github.com/itflutter5/torik-dammam/releases/download/android-latest/torik-dammam.apk');
+});
 app.get('/buklin/buklin.apk', (_req, res) => {
   res.type('application/vnd.android.package-archive');
   res.setHeader('Cache-Control', 'no-cache');

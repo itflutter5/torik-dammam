@@ -1,0 +1,63 @@
+name: Publish Android download
+
+on:
+  workflow_run:
+    workflows: [Flutter checks]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Flutter checks run ID to publish
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: publish-android-download
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify build source
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ inputs.run_id || github.event.workflow_run.id }}
+        run: |
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || exit 1
+          gh api "repos/$GH_REPO/actions/runs/$RUN_ID" > run.json
+          jq -e '.name == "Flutter checks" and .conclusion == "success" and .head_branch == "main" and .event == "push"' run.json > /dev/null
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "sha=$(jq -r .head_sha run.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Download verified Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: torik-dammam-android
+          path: android-download
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.source.outputs.run_id }}
+
+      - name: Publish website download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BUILD_SHA: ${{ steps.source.outputs.sha }}
+          BUILD_RUN_ID: ${{ steps.source.outputs.run_id }}
+        run: |
+          test -s android-download/app-release.apk
+          mv android-download/app-release.apk android-download/torik-dammam.apk
+          printf 'Android APK from verified build %s.\nCommit: %s\n' "$BUILD_RUN_ID" "$BUILD_SHA" > release-notes.txt
+          if ! gh release view android-latest > /dev/null 2>&1; then
+            gh release create android-latest --target "$BUILD_SHA" --title "Torik Dammam for Android" --notes-file release-notes.txt
+          fi
+          gh release upload android-latest android-download/torik-dammam.apk --clobber
+          gh release edit android-latest --title "Torik Dammam for Android" --notes-file release-notes.txt
