@@ -51,11 +51,12 @@ const publicUser = (row) => ({
   storeNumber: row.store_number, profileImageUrl: row.profile_image_url,
   storeNumberChangedAt: row.store_number_changed_at,
   isAdmin: row.is_admin === true,
+  postBalance: row.post_balance,
   suspendedUntil: row.suspended_until,
 });
 
-async function getPaymentSettings() {
-  const result = await pool.query(
+async function getPaymentSettings(database = pool) {
+  const result = await database.query(
     `SELECT key, value FROM app_settings
      WHERE key IN ('payment_number_sar', 'payment_number_bdt', 'payment_bdt_amount')`,
   );
@@ -186,7 +187,7 @@ app.post('/api/auth/register/verify', async (req, res, next) => {
         store_number_changed_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
        RETURNING id, name, phone, email, store_number,
-                 store_number_changed_at, profile_image_url, is_admin`,
+                 store_number_changed_at, profile_image_url, post_balance, is_admin`,
       [pending.name, pending.phone, pending.email, pending.password_hash,
         pending.store_number, pending.verification_method === 'phone',
         pending.verification_method === 'email'],
@@ -355,7 +356,7 @@ app.post('/api/auth/google', async (req, res, next) => {
          profile_image_url = EXCLUDED.profile_image_url,
          updated_at = NOW()
        RETURNING id, name, phone, email, store_number,
-                 store_number_changed_at, profile_image_url, is_admin`,
+                 store_number_changed_at, profile_image_url, post_balance, is_admin`,
       [payload.name ?? googleEmail.split('@')[0], googleEmail,
         payload.sub, payload.picture ?? null],
     );
@@ -373,7 +374,7 @@ app.get('/api/auth/me', requireAuth, async (req, res, next) => {
   try {
     const result = await pool.query(
       `SELECT id, name, phone, email, store_number, store_number_changed_at,
-              profile_image_url, is_admin
+              profile_image_url, post_balance, is_admin
        FROM users WHERE id = $1`,
       [req.auth.sub],
     );
@@ -399,7 +400,7 @@ app.patch('/api/users/me', requireAuth, async (req, res, next) => {
          store_number_changed_at <= NOW() - INTERVAL '30 days'
        )
        RETURNING id, name, phone, store_number, store_number_changed_at,
-                 profile_image_url, is_admin`,
+                 profile_image_url, post_balance, is_admin`,
       [input.storeNumber, req.auth.sub],
     );
     if (!result.rows[0]) {
@@ -417,7 +418,7 @@ app.patch('/api/users/me/image', requireAuth, upload.single('image'), async (req
       `UPDATE users SET profile_image_url = $1, updated_at = NOW()
        WHERE id = $2
        RETURNING id, name, phone, email, store_number,
-                 store_number_changed_at, profile_image_url, is_admin`,
+                 store_number_changed_at, profile_image_url, post_balance, is_admin`,
       [imageUrl, req.auth.sub],
     );
     res.json({ user: publicUser(result.rows[0]) });
@@ -501,12 +502,12 @@ app.get('/api/posts/quota', requireAuth, async (req, res, next) => {
   try {
     const payment = await getPaymentSettings();
     const result = await pool.query(
-      `SELECT COUNT(*)::int AS used FROM posts
-       WHERE user_id = $1 AND status <> 'rejected'`, [req.auth.sub],
+      'SELECT post_balance FROM users WHERE id = $1', [req.auth.sub],
     );
-    const used = result.rows[0].used;
+    if (!result.rows[0]) return res.status(404).json({ error: 'User not found' });
     res.json({
-      freeRemaining: Math.max(0, 5 - used),
+      freeRemaining: result.rows[0].post_balance,
+      postBalance: result.rows[0].post_balance,
       sarAmount: 3,
       bdtAmount: payment.bdtAmount,
       instructionsSar: payment.sarNumber,
@@ -519,35 +520,35 @@ app.post('/api/posts', requireAuth, upload.fields([
   { name: 'images', maxCount: 3 },
   { name: 'paymentProof', maxCount: 1 },
 ]), async (req, res, next) => {
+  let connection;
+  let committed = false;
   try {
+    connection = await pool.connect();
+    await connection.query('BEGIN');
     const input = postSchema.parse(req.body);
     const files = req.files ?? {};
     const photos = postPhotosSchema.parse(files.images ?? []);
-    const owner = await pool.query('SELECT store_number FROM users WHERE id = $1', [req.auth.sub]);
+    const owner = await connection.query('SELECT store_number, post_balance FROM users WHERE id = $1 FOR UPDATE', [req.auth.sub]);
     if (!owner.rows[0]) return res.status(404).json({ error: 'User not found' });
     const employmentPost = input.category === 'Need Worker' || input.category === 'Need Job';
-    const countResult = await pool.query(
-      `SELECT COUNT(*)::int AS used FROM posts WHERE user_id = $1 AND status <> 'rejected'`,
-      [req.auth.sub],
-    );
-    const requiresPayment = countResult.rows[0].used >= 5;
+    const requiresPayment = owner.rows[0].post_balance === 0;
+    const proofFile = files.paymentProof?.[0];
+    if (requiresPayment && !proofFile) {
+      return res.status(402).json({ error: 'Payment proof is required when your post balance is zero' });
+    }
     const paymentCurrency = requiresPayment
       ? z.enum(['SAR', 'BDT']).parse(req.body.paymentCurrency)
       : null;
-    const proofFile = files.paymentProof?.[0];
-    if (requiresPayment && !proofFile) {
-      return res.status(402).json({ error: 'Payment proof is required after 5 free posts' });
-    }
     const imageUrls = await Promise.all(photos.map((file) => uploadImage(file, req.auth.sub)));
     const paymentProofUrl = proofFile
       ? await uploadImage(proofFile, req.auth.sub, 'payment-proofs')
       : null;
     const status = requiresPayment ? 'pending' : 'approved';
-    const paymentSettings = requiresPayment ? await getPaymentSettings() : null;
+    const paymentSettings = requiresPayment ? await getPaymentSettings(connection) : null;
     const paymentAmount = requiresPayment
       ? (paymentCurrency === 'SAR' ? 3 : paymentSettings.bdtAmount)
       : null;
-    const result = await pool.query(
+    const result = await connection.query(
       `WITH next_post AS (
          SELECT nextval(pg_get_serial_sequence('posts', 'id')) AS id
        )
@@ -566,10 +567,21 @@ app.post('/api/posts', requireAuth, upload.fields([
         input.price, employmentPost ? '' : input.unit, owner.rows[0].store_number,
         JSON.stringify(imageUrls), status, paymentProofUrl, paymentCurrency, paymentAmount],
     );
+    if (!requiresPayment) {
+      await connection.query('UPDATE users SET post_balance = post_balance - 1 WHERE id = $1', [req.auth.sub]);
+    }
+    await connection.query('COMMIT');
+    committed = true;
     res.status(201).json({ post: result.rows[0], pendingApproval: requiresPayment });
   } catch (error) {
     if (error.code === '23503') return res.status(400).json({ error: 'Invalid or inactive category' });
     next(error);
+  } finally {
+    if (connection) {
+      try {
+        if (!committed) await connection.query('ROLLBACK');
+      } finally { connection.release(); }
+    }
   }
 });
 
@@ -675,7 +687,7 @@ app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res, next) =>
     const search = z.string().trim().max(100).optional().parse(req.query.search) ?? '';
     const result = await pool.query(
       `SELECT u.id, u.name, u.phone, u.email, u.store_number, u.profile_image_url,
-              u.phone_verified, u.email_verified, u.is_admin, u.suspended_until,
+              u.phone_verified, u.email_verified, u.is_admin, u.suspended_until, u.post_balance,
               u.created_at, u.updated_at, COUNT(p.id)::int AS post_count
        FROM users u LEFT JOIN posts p ON p.user_id = u.id
        WHERE $1 = '' OR u.name ILIKE '%' || $1 || '%'
@@ -696,6 +708,7 @@ app.patch('/api/admin/users/:userId', requireAuth, requireAdmin, async (req, res
       phone: z.union([phone, z.literal('')]),
       email: z.union([z.string().trim().toLowerCase().email().max(254), z.literal('')]),
       storeNumber: z.string().regex(/^\d{1,4}$/),
+      postBalance: z.number().int().min(0).max(2147483647).optional(),
       newPassword: z.string().min(8).max(100).optional(),
       suspendedUntil: z.string().datetime().nullable(),
     }).parse(req.body);
@@ -711,13 +724,13 @@ app.patch('/api/admin/users/:userId', requireAuth, requireAdmin, async (req, res
          store_number = $4,
          password_hash = COALESCE($5, password_hash),
          password_changed_at = CASE WHEN $5::text IS NULL THEN password_changed_at ELSE NOW() END,
-         suspended_until = $6, updated_at = NOW()
+         suspended_until = $6, post_balance = COALESCE($8, post_balance), updated_at = NOW()
        WHERE id = $7
        RETURNING id, name, phone, email, store_number, profile_image_url,
                  phone_verified, email_verified, is_admin, suspended_until,
                  created_at, updated_at`,
       [input.name, input.phone, input.email, input.storeNumber,
-        passwordHash, input.suspendedUntil, userId],
+        passwordHash, input.suspendedUntil, userId, input.postBalance ?? null],
     );
     if (!result.rows[0]) return res.status(404).json({ error: 'User not found' });
     res.json({ user: result.rows[0] });

@@ -13,6 +13,15 @@ targets Android and the web.
 
 ## Run
 
+Users see their remaining post balance in Profile, below the profile picture
+control. Administrators can set each user's balance in Admin panel → Manage users
+→ Edit user. Each successful balance-funded post consumes one unit; at zero,
+the existing payment-proof and administrator-approval flow applies.
+
+The startup migration preserves existing unused posts from the original five-post
+allowance. New accounts start with five units. Deleting a post does not restore
+spent balance; administrators can adjust it when needed.
+
 ```powershell
 cd client
 C:\flutter\bin\flutter.bat pub get

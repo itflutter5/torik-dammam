@@ -228,6 +228,21 @@ try {
      UPDATE app_settings SET value = '96', updated_at = NOW()
      WHERE key = 'payment_bdt_amount' AND EXISTS (SELECT 1 FROM applied)`,
   );
+  // Backfill once from the old allowance and preserve administrator edits.
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS post_balance INTEGER;
+    UPDATE users u SET post_balance = GREATEST(0, 5 - (
+      SELECT COUNT(*)::int FROM posts p
+      WHERE p.user_id = u.id AND p.status <> 'rejected'
+    )) WHERE post_balance IS NULL;
+    ALTER TABLE users ALTER COLUMN post_balance SET DEFAULT 5;
+    ALTER TABLE users ALTER COLUMN post_balance SET NOT NULL;
+    DO $ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_post_balance_nonnegative') THEN
+        ALTER TABLE users ADD CONSTRAINT users_post_balance_nonnegative CHECK (post_balance >= 0);
+      END IF;
+    END $;
+  `);
   console.log('Database schema is ready.');
 } finally {
   await pool.end();

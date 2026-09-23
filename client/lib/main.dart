@@ -25,12 +25,19 @@ const languageNames = {
 
 const translations = <String, Map<String, String>>{
   'bn': {
+    'Post balance': 'পোস্ট ব্যালেন্স',
+    'Your post balance is 0. Pay and upload proof for admin approval.': 'আপনার পোস্ট ব্যালেন্স ০। অ্যাডমিনের অনুমোদনের জন্য পেমেন্ট করে প্রমাণ আপলোড করুন।',
+    'Could not load post balance. Tap to retry.':
+        'পোস্ট ব্যালেন্স লোড হয়নি। আবার চেষ্টা করতে ট্যাপ করুন।',
+    'Enter a valid post balance': 'সঠিক পোস্ট ব্যালেন্স লিখুন',
     'Price': 'মূল্য',
     'Unit': 'একক',
     'Select a category': 'একটি বিভাগ নির্বাচন করুন',
     'Add at least one photo': 'অন্তত একটি ছবি যোগ করুন',
-    'Enter a title with 3 to 150 characters': '৩ থেকে ১৫০ অক্ষরের শিরোনাম লিখুন',
-    'Enter a description with 10 to 5000 characters': '১০ থেকে ৫০০০ অক্ষরের বিবরণ লিখুন',
+    'Enter a title with 3 to 150 characters':
+        '৩ থেকে ১৫০ অক্ষরের শিরোনাম লিখুন',
+    'Enter a description with 10 to 5000 characters':
+        '১০ থেকে ৫০০০ অক্ষরের বিবরণ লিখুন',
     'Enter a valid price or salary': 'সঠিক মূল্য অথবা বেতন লিখুন',
     'Select a unit': 'একটি একক নির্বাচন করুন',
     'Log in with your email or Saudi phone number.':
@@ -44,8 +51,7 @@ const translations = <String, Map<String, String>>{
         'এই ছবিটি প্রস্তুত করা যায়নি। অন্য একটি ছবি বেছে নিন।',
     '3 SAR': '৩ রিয়াল',
     'Free posts remaining': 'অবশিষ্ট ফ্রি পোস্ট',
-    'Your 5 free posts are used. Pay and upload proof for admin approval.':
-        'আপনার ৫টি ফ্রি পোস্ট ব্যবহার হয়েছে। অ্যাডমিনের অনুমোদনের জন্য পেমেন্ট করে প্রমাণ আপলোড করুন।',
+    'Your 5 free posts are used. Pay and upload proof for admin approval.': 'আপনার ৫টি ফ্রি পোস্ট ব্যবহার হয়েছে। অ্যাডমিনের অনুমোদনের জন্য পেমেন্ট করে প্রমাণ আপলোড করুন।',
     'Upload payment proof *': 'পেমেন্টের প্রমাণ আপলোড করুন *',
     'Upload payment proof to submit this post':
         'এই পোস্ট জমা দিতে পেমেন্টের প্রমাণ আপলোড করুন',
@@ -91,12 +97,18 @@ const translations = <String, Map<String, String>>{
     'Privacy Policy': 'গোপনীয়তা নীতি',
   },
   'ur': {
+    'Post balance': 'پوسٹ بیلنس',
+    'Your post balance is 0. Pay and upload proof for admin approval.': 'آپ کا پوسٹ بیلنس 0 ہے۔ ایڈمن کی منظوری کے لیے ادائیگی کریں اور ثبوت اپ لوڈ کریں۔',
+    'Could not load post balance. Tap to retry.':
+        'پوسٹ بیلنس لوڈ نہیں ہو سکا۔ دوبارہ کوشش کے لیے ٹیپ کریں۔',
+    'Enter a valid post balance': 'درست پوسٹ بیلنس درج کریں',
     'Price': 'قیمت',
     'Unit': 'اکائی',
     'Select a category': 'ایک زمرہ منتخب کریں',
     'Add at least one photo': 'کم از کم ایک تصویر شامل کریں',
     'Enter a title with 3 to 150 characters': '3 سے 150 حروف کا عنوان درج کریں',
-    'Enter a description with 10 to 5000 characters': '10 سے 5000 حروف کی تفصیل درج کریں',
+    'Enter a description with 10 to 5000 characters':
+        '10 سے 5000 حروف کی تفصیل درج کریں',
     'Enter a valid price or salary': 'درست قیمت یا تنخواہ درج کریں',
     'Select a unit': 'ایک اکائی منتخب کریں',
     'Log in with your email or Saudi phone number.':
@@ -143,12 +155,19 @@ const translations = <String, Map<String, String>>{
     'Privacy Policy': 'رازداری کی پالیسی',
   },
   'hi': {
+    'Post balance': 'पोस्ट बैलेंस',
+    'Your post balance is 0. Pay and upload proof for admin approval.': 'आपका पोस्ट बैलेंस 0 है। एडमिन की मंज़ूरी के लिए भुगतान करके प्रमाण अपलोड करें।',
+    'Could not load post balance. Tap to retry.':
+        'पोस्ट बैलेंस लोड नहीं हुआ। फिर से कोशिश करने के लिए टैप करें।',
+    'Enter a valid post balance': 'सही पोस्ट बैलेंस दर्ज करें',
     'Price': 'मूल्य',
     'Unit': 'इकाई',
     'Select a category': 'एक श्रेणी चुनें',
     'Add at least one photo': 'कम से कम एक फ़ोटो जोड़ें',
-    'Enter a title with 3 to 150 characters': '3 से 150 अक्षरों का शीर्षक दर्ज करें',
-    'Enter a description with 10 to 5000 characters': '10 से 5000 अक्षरों का विवरण दर्ज करें',
+    'Enter a title with 3 to 150 characters':
+        '3 से 150 अक्षरों का शीर्षक दर्ज करें',
+    'Enter a description with 10 to 5000 characters':
+        '10 से 5000 अक्षरों का विवरण दर्ज करें',
     'Enter a valid price or salary': 'सही मूल्य या वेतन दर्ज करें',
     'Select a unit': 'एक इकाई चुनें',
     'Log in with your email or Saudi phone number.':
@@ -869,7 +888,8 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                         selected: {loginMethod},
                         onSelectionChanged: loading
                             ? null
-                            : (value) => setState(() => loginMethod = value.first),
+                            : (value) =>
+                                  setState(() => loginMethod = value.first),
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -894,18 +914,19 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    if (registering || loginMethod == 'phone') TextField(
-                      controller: phone,
-                      keyboardType: TextInputType.phone,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        labelText: registering
-                            ? '${tr('Saudi phone number')} *'
-                            : tr('Saudi phone number'),
-                        hintText: '+9665XXXXXXXX',
-                        prefixIcon: const Icon(Icons.phone_outlined),
+                    if (registering || loginMethod == 'phone')
+                      TextField(
+                        controller: phone,
+                        keyboardType: TextInputType.phone,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: registering
+                              ? '${tr('Saudi phone number')} *'
+                              : tr('Saudi phone number'),
+                          hintText: '+9665XXXXXXXX',
+                          prefixIcon: const Icon(Icons.phone_outlined),
+                        ),
                       ),
-                    ),
                     if (registering || loginMethod == 'email') ...[
                       if (registering) const SizedBox(height: 12),
                       TextField(
@@ -1042,7 +1063,8 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
     if (((registering || loginMethod == 'phone') &&
             !RegExp(r'^\+9665\d{8}$').hasMatch(phone.text.trim())) ||
         ((!registering && loginMethod == 'email') &&
-            !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email.text.trim())) ||
+            !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                .hasMatch(email.text.trim())) ||
         password.text.length < (registering ? 8 : 1) ||
         (registering &&
             (name.text.trim().length < 2 ||
@@ -1054,9 +1076,11 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
           content: Text(
             registering
                 ? 'Check your name, email, +9665XXXXXXXX phone, password (8+ characters), and store number (up to 4 digits)'
-                : tr(loginMethod == 'email'
-                    ? 'Enter a valid email address and password'
-                    : 'Enter a valid +9665XXXXXXXX phone number and password'),
+                : tr(
+                    loginMethod == 'email'
+                        ? 'Enter a valid email address and password'
+                        : 'Enter a valid +9665XXXXXXXX phone number and password',
+                  ),
           ),
         ),
       );
@@ -1083,7 +1107,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
         );
       } else {
         await ApiService.instance.login(
-          email: loginMethod == 'email' ? email.text.trim().toLowerCase() : null,
+          email: loginMethod == 'email'
+              ? email.text.trim().toLowerCase()
+              : null,
           phone: loginMethod == 'phone' ? phone.text.trim() : null,
           password: password.text,
         );
@@ -1239,7 +1265,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      tr('Check Gmail or your email inbox for the code. Check Spam if you cannot find it.'),
+                      tr(
+                        'Check Gmail or your email inbox for the code. Check Spam if you cannot find it.',
+                      ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
@@ -1840,7 +1868,9 @@ class _HomePageState extends State<HomePage> {
                             style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xffff9800),
                               foregroundColor: const Color(0xff15100a),
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               textStyle: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
@@ -3050,7 +3080,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
   String? type;
   bool publishing = false;
   bool loadingQuota = true;
-  int freeRemaining = 5;
+  int freeRemaining = 0;
+  bool quotaFailed = false;
   int bdtAmount = 96;
   String paymentCurrency = 'SAR';
   String instructionsSar = '';
@@ -3068,18 +3099,29 @@ class _CreatePostPageState extends State<CreatePostPage> {
   }
 
   Future<void> _loadQuota() async {
+    setState(() {
+      loadingQuota = true;
+      quotaFailed = false;
+    });
     try {
       final quota = await ApiService.instance.fetchPostQuota();
       if (mounted)
         setState(() {
-          freeRemaining = quota['freeRemaining'] as int? ?? 0;
+          freeRemaining =
+              quota['postBalance'] as int? ??
+              quota['freeRemaining'] as int? ??
+              0;
           bdtAmount = (quota['bdtAmount'] as num?)?.round() ?? 96;
           instructionsSar = quota['instructionsSar'] as String? ?? '';
           instructionsBdt = quota['instructionsBdt'] as String? ?? '';
           loadingQuota = false;
         });
     } catch (_) {
-      if (mounted) setState(() => loadingQuota = false);
+      if (mounted)
+        setState(() {
+          loadingQuota = false;
+          quotaFailed = true;
+        });
     }
   }
 
@@ -3107,10 +3149,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   Future<void> _pickImage() => _pickCompressedPhoto();
 
-  Future<void> _pickPaymentProof() => _pickCompressedPhoto(isPaymentProof: true);
+  Future<void> _pickPaymentProof() =>
+      _pickCompressedPhoto(isPaymentProof: true);
 
   Future<void> _pickCompressedPhoto({bool isPaymentProof = false}) async {
-    if (processingPhoto || publishing || (!isPaymentProof && images.length >= 3)) {
+    if (processingPhoto ||
+        publishing ||
+        (!isPaymentProof && images.length >= 3)) {
       return;
     }
     setState(() => processingPhoto = true);
@@ -3141,11 +3186,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(tr(
-              error is PlatformException
-                  ? 'Camera or photo access is not available'
-                  : 'Could not process this photo. Please choose another image.',
-            )),
+            content: Text(
+              tr(
+                error is PlatformException
+                    ? 'Camera or photo access is not available'
+                    : 'Could not process this photo. Please choose another image.',
+              ),
+            ),
           ),
         );
       }
@@ -3153,8 +3200,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
       if (mounted) setState(() => processingPhoto = false);
     }
   }
+
   Future<void> _publish() async {
-    if (processingPhoto || publishing) return;
+    if (processingPhoto || publishing || loadingQuota || quotaFailed) return;
     final validationError = validatePostFields(
       category: type,
       title: title.text,
@@ -3165,13 +3213,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
       photoCount: images.length,
     );
     if (validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            tr(validationError),
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr(validationError))));
       return;
     }
     if (freeRemaining == 0 && paymentProof == null) {
@@ -3207,6 +3250,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       );
       Navigator.pop(context, true);
     } on ApiException catch (error) {
+      if (mounted) await _loadQuota();
       if (mounted)
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(error.message)));
@@ -3309,7 +3353,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             padding: EdgeInsets.zero,
                           ),
                           clipBehavior: Clip.antiAlias,
-                          onPressed: publishing || processingPhoto || index > images.length
+                          onPressed:
+                              publishing ||
+                                  processingPhoto ||
+                                  index > images.length
                               ? null
                               : () {
                                   if (index < images.length) {
@@ -3364,7 +3411,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
               TextField(
                 controller: description,
                 maxLines: 4,
-                decoration: InputDecoration(labelText: '${tr('Description')} *'),
+                decoration: InputDecoration(
+                  labelText: '${tr('Description')} *',
+                ),
               ),
               const SizedBox(height: 12),
               if (usesSalary)
@@ -3431,9 +3480,17 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   padding: const EdgeInsets.all(16),
                   child: loadingQuota
                       ? const Center(child: RotatingLoader(size: 26))
+                      : quotaFailed
+                      ? TextButton.icon(
+                          onPressed: _loadQuota,
+                          icon: const Icon(Icons.refresh),
+                          label: Text(
+                            tr('Could not load post balance. Tap to retry.'),
+                          ),
+                        )
                       : freeRemaining > 0
                       ? Text(
-                          '${tr('Free posts remaining')}: $freeRemaining / 5',
+                          '${tr('Post balance')}: $freeRemaining',
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         )
                       : Column(
@@ -3441,7 +3498,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           children: [
                             Text(
                               tr(
-                                'Your 5 free posts are used. Pay and upload proof for admin approval.',
+                                'Your post balance is 0. Pay and upload proof for admin approval.',
                               ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
@@ -3484,7 +3541,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             ),
                             const SizedBox(height: 12),
                             OutlinedButton.icon(
-                              onPressed: publishing || processingPhoto ? null : _pickPaymentProof,
+                              onPressed: publishing || processingPhoto
+                                  ? null
+                                  : _pickPaymentProof,
                               icon: const Icon(Icons.receipt_long_outlined),
                               label: Text(
                                 paymentProof == null
@@ -3510,7 +3569,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
               ),
               const SizedBox(height: 22),
               FilledButton(
-                onPressed: publishing || processingPhoto ? null : _publish,
+                onPressed:
+                    publishing || processingPhoto || loadingQuota || quotaFailed
+                    ? null
+                    : _publish,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   child: publishing
@@ -3804,6 +3866,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final phone = TextEditingController();
   final storeNumber = TextEditingController();
   String savedStoreNumber = '';
+  int? postBalance;
   DateTime lastStoreNumberChange = DateTime.now().subtract(
     const Duration(days: 31),
   );
@@ -3826,6 +3889,7 @@ class _ProfilePageState extends State<ProfilePage> {
     phone.text = user['phone'] as String? ?? '';
     savedStoreNumber = user['storeNumber'] as String? ?? '';
     profileImageUrl = user['profileImageUrl'] as String?;
+    postBalance = user['postBalance'] as int? ?? postBalance;
     storeNumber.text = savedStoreNumber;
     final changedAt = user['storeNumberChangedAt'] as String?;
     lastStoreNumberChange = changedAt == null
@@ -4035,6 +4099,22 @@ class _ProfilePageState extends State<ProfilePage> {
                       profileImageUrl == null
                           ? tr('Add profile picture')
                           : tr('Change profile picture'),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(
+                        Icons.account_balance_wallet_outlined,
+                      ),
+                      title: Text(tr('Post balance')),
+                      trailing: Text(
+                        postBalance?.toString() ?? '...',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -5028,6 +5108,9 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
     final store = TextEditingController(
       text: user['store_number'] as String? ?? '',
     );
+    final postBalance = TextEditingController(
+      text: '${user['post_balance'] ?? 0}',
+    );
     final newPassword = TextEditingController();
     DateTime? restrictedUntil = user['suspended_until'] == null
         ? null
@@ -5061,6 +5144,13 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                   TextField(
                     controller: store,
                     decoration: InputDecoration(labelText: tr('Store number')),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: postBalance,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(labelText: tr('Post balance')),
                   ),
                   const SizedBox(height: 10),
                   TextField(
@@ -5123,7 +5213,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
               child: Text(tr('Cancel')),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
+              onPressed: () {
+                final balance = int.tryParse(postBalance.text);
+                if (balance == null || balance < 0 || balance > 2147483647) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('Enter a valid post balance'))),
+                  );
+                  return;
+                }
+                Navigator.pop(dialogContext, true);
+              },
               child: Text(tr('Save')),
             ),
           ],
@@ -5137,6 +5236,8 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
           'phone': phone.text.trim(),
           'email': email.text.trim().toLowerCase(),
           'storeNumber': store.text.trim(),
+          if (postBalance.text != '${user['post_balance'] ?? 0}')
+            'postBalance': int.parse(postBalance.text),
           if (newPassword.text.isNotEmpty) 'newPassword': newPassword.text,
           'suspendedUntil': restrictedUntil?.toUtc().toIso8601String(),
         });
@@ -5152,6 +5253,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
     email.dispose();
     store.dispose();
     newPassword.dispose();
+    postBalance.dispose();
   }
 
   @override
@@ -5212,6 +5314,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                           '${user['phone'] ?? '-'}\n${user['email'] ?? '-'}\n'
                           '${tr('Store number')}: ${user['store_number']}  |  '
                           '${tr('Posts')}: ${user['post_count']}\n'
+                          '${tr('Post balance')}: ${user['post_balance']}\n'
                           '${restricted ? tr('Restricted') : tr('Active')}',
                         ),
                         isThreeLine: true,
