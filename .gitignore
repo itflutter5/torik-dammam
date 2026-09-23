@@ -13,3 +13,4 @@ client/android/local.properties
 /Torik-Dammam-Play-Release.aab
 client/android/app/google-services.json
 **/firebase-service-account*.json
+**/*firebase-adminsdk*.json

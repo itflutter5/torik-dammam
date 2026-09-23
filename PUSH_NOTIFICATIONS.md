@@ -29,8 +29,10 @@ installations must update to a build containing this integration.
 7. Deploy the server (its startup migration creates the notification queue),
    rebuild the Android app, install it, open it, and grant notification permission.
 
-The app and server still run without Firebase configuration, but push delivery is
-disabled. Configuring only one side does not enable delivery.
+Android builds require `google-services.json`, supplied locally or by the GitHub
+Actions repository variable. The server still runs without its Firebase service
+account, but push delivery is disabled. Configuring only one side does not enable
+delivery.
 
 ## Delivery and checks
 
