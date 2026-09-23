@@ -12,6 +12,7 @@ import { uploadImage } from './imagekit.js';
 import crypto from 'node:crypto';
 import { createCode, hashCode, sendVerification } from './verification.js';
 import { passwordLoginSchema } from './login_credentials.js';
+import { postSchema, postPhotosSchema } from './post_validation.js';
 
 const app = express();
 const googleClient = new OAuth2Client();
@@ -43,14 +44,6 @@ const registerSchema = z.object({
   verificationMethod: z.literal('email').default('email'),
 });
 const loginSchema = z.object({ phone, password: z.string().min(1).max(100) });
-const postSchema = z.object({
-  category: z.string().trim().min(2).max(30),
-  title: z.string().trim().min(3).max(150),
-  description: z.string().trim().min(10).max(5000),
-  price: z.union([z.literal(''), z.coerce.number().nonnegative().max(9999999999)]).optional(),
-  unit: z.string().trim().max(30).optional().default(''),
-  storeNumber: z.string().regex(/^\d{1,4}$/),
-});
 
 const publicUser = (row) => ({
   id: String(row.id), name: row.name, phone: row.phone, email: row.email,
@@ -527,11 +520,11 @@ app.post('/api/posts', requireAuth, upload.fields([
 ]), async (req, res, next) => {
   try {
     const input = postSchema.parse(req.body);
+    const files = req.files ?? {};
+    const photos = postPhotosSchema.parse(files.images ?? []);
     const owner = await pool.query('SELECT store_number FROM users WHERE id = $1', [req.auth.sub]);
     if (!owner.rows[0]) return res.status(404).json({ error: 'User not found' });
     const employmentPost = input.category === 'Need Worker' || input.category === 'Need Job';
-    const files = req.files ?? {};
-    const imageUrls = await Promise.all((files.images ?? []).map((file) => uploadImage(file, req.auth.sub)));
     const countResult = await pool.query(
       `SELECT COUNT(*)::int AS used FROM posts WHERE user_id = $1 AND status <> 'rejected'`,
       [req.auth.sub],
@@ -544,6 +537,7 @@ app.post('/api/posts', requireAuth, upload.fields([
     if (requiresPayment && !proofFile) {
       return res.status(402).json({ error: 'Payment proof is required after 5 free posts' });
     }
+    const imageUrls = await Promise.all(photos.map((file) => uploadImage(file, req.auth.sub)));
     const paymentProofUrl = proofFile
       ? await uploadImage(proofFile, req.auth.sub, 'payment-proofs')
       : null;
@@ -568,7 +562,7 @@ app.post('/api/posts', requireAuth, upload.fields([
        FROM next_post
        RETURNING *`,
       [req.auth.sub, input.category, input.title, input.description,
-        input.price === '' ? null : input.price, employmentPost ? '' : input.unit, owner.rows[0].store_number,
+        input.price, employmentPost ? '' : input.unit, owner.rows[0].store_number,
         JSON.stringify(imageUrls), status, paymentProofUrl, paymentCurrency, paymentAmount],
     );
     res.status(201).json({ post: result.rows[0], pendingApproval: requiresPayment });

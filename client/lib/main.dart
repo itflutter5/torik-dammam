@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'api.dart';
 import 'post_image_compression.dart';
+import 'post_validation.dart';
 import 'google_auth_service.dart';
 import 'google_button.dart';
 
@@ -23,6 +24,14 @@ const languageNames = {
 
 const translations = <String, Map<String, String>>{
   'bn': {
+    'Price': 'মূল্য',
+    'Unit': 'একক',
+    'Select a category': 'একটি বিভাগ নির্বাচন করুন',
+    'Add at least one photo': 'অন্তত একটি ছবি যোগ করুন',
+    'Enter a title with 3 to 150 characters': '৩ থেকে ১৫০ অক্ষরের শিরোনাম লিখুন',
+    'Enter a description with 10 to 5000 characters': '১০ থেকে ৫০০০ অক্ষরের বিবরণ লিখুন',
+    'Enter a valid price or salary': 'সঠিক মূল্য অথবা বেতন লিখুন',
+    'Select a unit': 'একটি একক নির্বাচন করুন',
     'Log in with your email or Saudi phone number.':
         'আপনার ইমেইল অথবা সৌদি ফোন নম্বর দিয়ে লগইন করুন।',
     'Enter a valid email address and password':
@@ -81,6 +90,14 @@ const translations = <String, Map<String, String>>{
     'Privacy Policy': 'গোপনীয়তা নীতি',
   },
   'ur': {
+    'Price': 'قیمت',
+    'Unit': 'اکائی',
+    'Select a category': 'ایک زمرہ منتخب کریں',
+    'Add at least one photo': 'کم از کم ایک تصویر شامل کریں',
+    'Enter a title with 3 to 150 characters': '3 سے 150 حروف کا عنوان درج کریں',
+    'Enter a description with 10 to 5000 characters': '10 سے 5000 حروف کی تفصیل درج کریں',
+    'Enter a valid price or salary': 'درست قیمت یا تنخواہ درج کریں',
+    'Select a unit': 'ایک اکائی منتخب کریں',
     'Log in with your email or Saudi phone number.':
         'اپنے ای میل یا سعودی فون نمبر سے لاگ اِن کریں۔',
     'Enter a valid email address and password':
@@ -125,6 +142,14 @@ const translations = <String, Map<String, String>>{
     'Privacy Policy': 'رازداری کی پالیسی',
   },
   'hi': {
+    'Price': 'मूल्य',
+    'Unit': 'इकाई',
+    'Select a category': 'एक श्रेणी चुनें',
+    'Add at least one photo': 'कम से कम एक फ़ोटो जोड़ें',
+    'Enter a title with 3 to 150 characters': '3 से 150 अक्षरों का शीर्षक दर्ज करें',
+    'Enter a description with 10 to 5000 characters': '10 से 5000 अक्षरों का विवरण दर्ज करें',
+    'Enter a valid price or salary': 'सही मूल्य या वेतन दर्ज करें',
+    'Select a unit': 'एक इकाई चुनें',
     'Log in with your email or Saudi phone number.':
         'अपने ईमेल या सऊदी फ़ोन नंबर से लॉग इन करें।',
     'Enter a valid email address and password':
@@ -3128,14 +3153,20 @@ class _CreatePostPageState extends State<CreatePostPage> {
   }
   Future<void> _publish() async {
     if (processingPhoto || publishing) return;
-    if (type == null ||
-        title.text.trim().length < 3 ||
-        description.text.trim().length < 10 ||
-        !RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())) {
+    final validationError = validatePostFields(
+      category: type,
+      title: title.text,
+      description: description.text,
+      price: price.text,
+      unit: selectedUnit,
+      storeNumber: storeNumber.text.trim(),
+      photoCount: images.length,
+    );
+    if (validationError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            tr('Select a category and complete all required fields'),
+            tr(validationError),
           ),
         ),
       );
@@ -3253,7 +3284,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
               ),
               const SizedBox(height: 22),
               Text(
-                tr('Photos (maximum 3)'),
+                '${tr('Photos (maximum 3)')} *',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               if (processingPhoto) ...[
@@ -3261,6 +3292,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 const LinearProgressIndicator(),
                 Text(tr('Preparing photo…')),
               ],
+              Text(tr('Add at least one photo')),
               const SizedBox(height: 10),
               Row(
                 children: List.generate(
@@ -3324,13 +3356,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
               const SizedBox(height: 16),
               TextField(
                 controller: title,
-                decoration: InputDecoration(labelText: tr('Title')),
+                decoration: InputDecoration(labelText: '${tr('Title')} *'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: description,
                 maxLines: 4,
-                decoration: InputDecoration(labelText: tr('Description')),
+                decoration: InputDecoration(labelText: '${tr('Description')} *'),
               ),
               const SizedBox(height: 12),
               if (usesSalary)
@@ -3338,7 +3370,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   controller: price,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: tr('Salary (optional)'),
+                    labelText: '${tr('Salary')} *',
                     prefixIcon: const Icon(Icons.payments_outlined),
                   ),
                 )
@@ -3350,7 +3382,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         controller: price,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          labelText: tr('Price (optional)'),
+                          labelText: '${tr('Price')} *',
                         ),
                       ),
                     ),
@@ -3367,7 +3399,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             ? null
                             : (value) => setState(() => selectedUnit = value),
                         decoration: InputDecoration(
-                          labelText: tr('Unit (optional)'),
+                          labelText: '${tr('Unit')} *',
                         ),
                       ),
                     ),
@@ -3384,7 +3416,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   LengthLimitingTextInputFormatter(4),
                 ],
                 decoration: InputDecoration(
-                  labelText: tr('Store number'),
+                  labelText: '${tr('Store number')} *',
                   hintText: tr('Example: 0101'),
                   prefixIcon: const Icon(Icons.store_outlined),
                   counterText: '',
