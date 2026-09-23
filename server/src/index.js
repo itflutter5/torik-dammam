@@ -11,6 +11,7 @@ import { pool } from './db.js';
 import { uploadImage } from './imagekit.js';
 import crypto from 'node:crypto';
 import { createCode, hashCode, sendVerification } from './verification.js';
+import { passwordLoginSchema } from './login_credentials.js';
 
 const app = express();
 const googleClient = new OAuth2Client();
@@ -303,11 +304,14 @@ app.post('/api/auth/password-reset/verify', async (req, res, next) => {
 
 app.post('/api/auth/login', async (req, res, next) => {
   try {
-    const input = loginSchema.parse(req.body);
-    const result = await pool.query('SELECT * FROM users WHERE phone = $1', [input.phone]);
+    const input = passwordLoginSchema.parse(req.body);
+    const result = await pool.query(
+      input.email ? 'SELECT * FROM users WHERE LOWER(email) = $1' : 'SELECT * FROM users WHERE phone = $1',
+      [input.email ?? input.phone],
+    );
     const user = result.rows[0];
-    if (!user || !await bcrypt.compare(input.password, user.password_hash)) {
-      return res.status(401).json({ error: 'Incorrect phone number or password' });
+    if (!user?.password_hash || !await bcrypt.compare(input.password, user.password_hash)) {
+      return res.status(401).json({ error: 'Incorrect email, phone number or password' });
     }
     if (!user.is_admin && user.suspended_until && new Date(user.suspended_until) > new Date()) {
       return res.status(403).json({

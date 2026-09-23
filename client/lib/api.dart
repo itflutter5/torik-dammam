@@ -108,9 +108,10 @@ class ApiService {
     );
   }
 
-  Future<void> login({required String phone, required String password}) async {
+  Future<void> login({String? email, String? phone, required String password}) async {
     final data = await _jsonRequest('/auth/login', {
-      'phone': phone,
+      if (email != null) 'email': email,
+      if (phone != null) 'phone': phone,
       'password': password,
     });
     await _saveSession(

@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'api.dart';
+import 'post_image_compression.dart';
 import 'google_auth_service.dart';
 import 'google_button.dart';
 
@@ -22,6 +23,15 @@ const languageNames = {
 
 const translations = <String, Map<String, String>>{
   'bn': {
+    'Log in with your email or Saudi phone number.':
+        'আপনার ইমেইল অথবা সৌদি ফোন নম্বর দিয়ে লগইন করুন।',
+    'Enter a valid email address and password':
+        'সঠিক ইমেইল ঠিকানা এবং পাসওয়ার্ড লিখুন',
+    'Enter a valid +9665XXXXXXXX phone number and password':
+        'সঠিক +9665XXXXXXXX ফোন নম্বর এবং পাসওয়ার্ড লিখুন',
+    'Preparing photo…': 'ছবি প্রস্তুত করা হচ্ছে…',
+    'Could not process this photo. Please choose another image.':
+        'এই ছবিটি প্রস্তুত করা যায়নি। অন্য একটি ছবি বেছে নিন।',
     '3 SAR': '৩ রিয়াল',
     'Free posts remaining': 'অবশিষ্ট ফ্রি পোস্ট',
     'Your 5 free posts are used. Pay and upload proof for admin approval.':
@@ -71,6 +81,12 @@ const translations = <String, Map<String, String>>{
     'Privacy Policy': 'গোপনীয়তা নীতি',
   },
   'ur': {
+    'Log in with your email or Saudi phone number.':
+        'اپنے ای میل یا سعودی فون نمبر سے لاگ اِن کریں۔',
+    'Enter a valid email address and password':
+        'درست ای میل پتہ اور پاس ورڈ درج کریں',
+    'Enter a valid +9665XXXXXXXX phone number and password':
+        'درست +9665XXXXXXXX فون نمبر اور پاس ورڈ درج کریں',
     'Code sent to your email': 'کوڈ آپ کے ای میل پر بھیج دیا گیا ہے',
     'Check Gmail or your email inbox for the code. Check Spam if you cannot find it.': 'کوڈ کے لیے Gmail یا اپنا ای میل ان باکس دیکھیں۔ نہ ملے تو اسپیم فولڈر دیکھیں۔',
     'Home': 'ہوم',
@@ -109,6 +125,12 @@ const translations = <String, Map<String, String>>{
     'Privacy Policy': 'رازداری کی پالیسی',
   },
   'hi': {
+    'Log in with your email or Saudi phone number.':
+        'अपने ईमेल या सऊदी फ़ोन नंबर से लॉग इन करें।',
+    'Enter a valid email address and password':
+        'सही ईमेल पता और पासवर्ड दर्ज करें',
+    'Enter a valid +9665XXXXXXXX phone number and password':
+        'सही +9665XXXXXXXX फ़ोन नंबर और पासवर्ड दर्ज करें',
     'Code sent to your email': 'आपके ईमेल पर कोड भेज दिया गया है',
     'Check Gmail or your email inbox for the code. Check Spam if you cannot find it.': 'कोड के लिए Gmail या अपना ईमेल इनबॉक्स देखें। न मिले तो स्पैम फ़ोल्डर देखें।',
     'Home': 'होम',
@@ -704,6 +726,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   final storeNumber = TextEditingController();
   bool loading = false;
   bool obscurePassword = true;
+  String loginMethod = 'email';
   bool googleReady = false;
   StreamSubscription<String>? googleSubscription;
 
@@ -797,11 +820,32 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                     Text(
                       registering
                           ? tr('Create your marketplace account.')
-                          : tr('Log in with your Saudi phone number.'),
+                          : tr('Log in with your email or Saudi phone number.'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.black54),
                     ),
                     const SizedBox(height: 26),
+                    if (!registering) ...[
+                      SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(
+                            value: 'email',
+                            label: Text(tr('Email')),
+                            icon: const Icon(Icons.email_outlined),
+                          ),
+                          ButtonSegment(
+                            value: 'phone',
+                            label: Text(tr('Phone')),
+                            icon: const Icon(Icons.phone_outlined),
+                          ),
+                        ],
+                        selected: {loginMethod},
+                        onSelectionChanged: loading
+                            ? null
+                            : (value) => setState(() => loginMethod = value.first),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     if (registering) ...[
                       Text(
                         tr('All fields marked * are required'),
@@ -823,7 +867,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    TextField(
+                    if (registering || loginMethod == 'phone') TextField(
                       controller: phone,
                       keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.next,
@@ -835,14 +879,17 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                         prefixIcon: const Icon(Icons.phone_outlined),
                       ),
                     ),
-                    if (registering) ...[
-                      const SizedBox(height: 12),
+                    if (registering || loginMethod == 'email') ...[
+                      if (registering) const SizedBox(height: 12),
                       TextField(
+                        key: const Key('login-email'),
                         controller: email,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
-                          labelText: '${tr('Email address')} *',
+                          labelText: registering
+                              ? '${tr('Email address')} *'
+                              : tr('Email address'),
                           prefixIcon: const Icon(Icons.email_outlined),
                         ),
                       ),
@@ -953,6 +1000,7 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   );
 
   Future<void> _enterApp() async {
+    if (loading) return;
     if (registering &&
         (name.text.trim().isEmpty ||
             phone.text.trim().isEmpty ||
@@ -964,7 +1012,10 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
       );
       return;
     }
-    if (!RegExp(r'^\+9665\d{8}$').hasMatch(phone.text.trim()) ||
+    if (((registering || loginMethod == 'phone') &&
+            !RegExp(r'^\+9665\d{8}$').hasMatch(phone.text.trim())) ||
+        ((!registering && loginMethod == 'email') &&
+            !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email.text.trim())) ||
         password.text.length < (registering ? 8 : 1) ||
         (registering &&
             (name.text.trim().length < 2 ||
@@ -972,9 +1023,13 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
                     .hasMatch(email.text.trim()) ||
                 !RegExp(r'^\d{1,4}$').hasMatch(storeNumber.text.trim())))) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Check your name, email, +9665XXXXXXXX phone, password (8+ characters), and store number (up to 4 digits)',
+            registering
+                ? 'Check your name, email, +9665XXXXXXXX phone, password (8+ characters), and store number (up to 4 digits)'
+                : tr(loginMethod == 'email'
+                    ? 'Enter a valid email address and password'
+                    : 'Enter a valid +9665XXXXXXXX phone number and password'),
           ),
         ),
       );
@@ -1001,7 +1056,8 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
         );
       } else {
         await ApiService.instance.login(
-          phone: phone.text.trim(),
+          email: loginMethod == 'email' ? email.text.trim().toLowerCase() : null,
+          phone: loginMethod == 'phone' ? phone.text.trim() : null,
           password: password.text,
         );
       }
@@ -1021,7 +1077,9 @@ class _PasswordAccessPageState extends State<PasswordAccessPage> {
   }
 
   Future<void> _forgotPassword() async {
-    final identifier = TextEditingController(text: phone.text);
+    final identifier = TextEditingController(
+      text: loginMethod == 'email' ? email.text : phone.text,
+    );
     final newPassword = TextEditingController();
     final values = await showDialog<List<String>>(
       context: context,
@@ -1590,19 +1648,19 @@ class _HomePageState extends State<HomePage> {
   (String, String) get promotionCopy => switch (appLanguage.value) {
     'bn' => (
       'নতুন ব্যবহারকারীদের প্রথম ৫টি পোস্ট ফ্রি!',
-      'এরপর প্রতি পোস্ট মাত্র ৩ রিয়াল; বাংলাদেশি টাকায়ও পেমেন্ট করা যাবে',
+      'এরপর প্রতি পোস্ট মাত্র ৩ রিয়াল অথবা ৯৬ টাকা পেমেন্ট করুন',
     ),
     'ur' => (
       'نئے صارفین کے لیے پہلی 5 پوسٹس مفت!',
-      'اس کے بعد ہر پوسٹ صرف 3 ریال؛ بنگلہ دیشی ٹکا میں بھی ادائیگی دستیاب ہے',
+      'اس کے بعد ہر پوسٹ کے لیے صرف 3 ریال یا 96 بنگلہ دیشی ٹکا ادا کریں',
     ),
     'hi' => (
       'नए उपयोगकर्ताओं की पहली 5 पोस्ट मुफ़्त!',
-      'उसके बाद प्रति पोस्ट केवल 3 रियाल; बांग्लादेशी टका में भी भुगतान उपलब्ध है',
+      'उसके बाद प्रति पोस्ट केवल 3 रियाल या 96 बांग्लादेशी टका का भुगतान करें',
     ),
     _ => (
       'New users get their first 5 posts FREE!',
-      'After that, only 3 SAR per post. Bangladeshi taka accepted too.',
+      'After that, pay only 3 SAR or 96 BDT per post.',
     ),
   };
 
@@ -2958,6 +3016,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
   final storeNumber = TextEditingController();
   final images = <UploadImage>[];
   UploadImage? paymentProof;
+  bool processingPhoto = false;
   final imagePicker = ImagePicker();
   List<String> categories = [];
   bool loadingCategories = true;
@@ -3019,71 +3078,56 @@ class _CreatePostPageState extends State<CreatePostPage> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    if (images.length >= 3) return;
-    final source = await chooseImageSource(context);
-    if (source == null || !mounted) return;
-    XFile? image;
+  Future<void> _pickImage() => _pickCompressedPhoto();
+
+  Future<void> _pickPaymentProof() => _pickCompressedPhoto(isPaymentProof: true);
+
+  Future<void> _pickCompressedPhoto({bool isPaymentProof = false}) async {
+    if (processingPhoto || publishing || (!isPaymentProof && images.length >= 3)) {
+      return;
+    }
+    setState(() => processingPhoto = true);
     try {
-      image = await imagePicker.pickImage(
+      final source = await chooseImageSource(context);
+      if (source == null || !mounted) return;
+      final image = await imagePicker.pickImage(
         source: source,
-        imageQuality: 82,
+        imageQuality: 90,
         maxWidth: 1800,
+        maxHeight: 1800,
       );
-    } on PlatformException {
+      if (image == null || !mounted) return;
+      final bytes = await compressPostImage(await image.readAsBytes());
+      if (!mounted) return;
+      final photo = UploadImage(
+        '${isPaymentProof ? 'payment-proof' : 'post-photo'}.jpg',
+        bytes,
+      );
+      setState(() {
+        if (isPaymentProof) {
+          paymentProof = photo;
+        } else {
+          images.add(photo);
+        }
+      });
+    } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(tr('Camera or photo access is not available')),
+            content: Text(tr(
+              error is PlatformException
+                  ? 'Camera or photo access is not available'
+                  : 'Could not process this photo. Please choose another image.',
+            )),
           ),
         );
       }
-      return;
-    }
-    if (image == null) return;
-    final selectedImage = image;
-    final bytes = await selectedImage.readAsBytes();
-    if (bytes.length > 8 * 1024 * 1024) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr('Each image must be smaller than 8 MB'))),
-        );
-      return;
-    }
-    setState(() => images.add(UploadImage(selectedImage.name, bytes)));
-  }
-
-  Future<void> _pickPaymentProof() async {
-    final source = await chooseImageSource(context);
-    if (source == null || !mounted) return;
-    try {
-      final image = await imagePicker.pickImage(
-        source: source,
-        imageQuality: 82,
-        maxWidth: 1800,
-      );
-      if (image == null) return;
-      final bytes = await image.readAsBytes();
-      if (bytes.length > 8 * 1024 * 1024) {
-        throw const ApiException('Image must be smaller than 8 MB');
-      }
-      if (mounted)
-        setState(() => paymentProof = UploadImage(image.name, bytes));
-    } catch (error) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              error is ApiException
-                  ? tr(error.message)
-                  : tr('Camera or photo access is not available'),
-            ),
-          ),
-        );
+    } finally {
+      if (mounted) setState(() => processingPhoto = false);
     }
   }
-
   Future<void> _publish() async {
+    if (processingPhoto || publishing) return;
     if (type == null ||
         title.text.trim().length < 3 ||
         description.text.trim().length < 10 ||
@@ -3212,6 +3256,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 tr('Photos (maximum 3)'),
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
+              if (processingPhoto) ...[
+                const SizedBox(height: 8),
+                const LinearProgressIndicator(),
+                Text(tr('Preparing photo…')),
+              ],
               const SizedBox(height: 10),
               Row(
                 children: List.generate(
@@ -3226,7 +3275,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             padding: EdgeInsets.zero,
                           ),
                           clipBehavior: Clip.antiAlias,
-                          onPressed: publishing || index > images.length
+                          onPressed: publishing || processingPhoto || index > images.length
                               ? null
                               : () {
                                   if (index < images.length) {
@@ -3401,7 +3450,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             ),
                             const SizedBox(height: 12),
                             OutlinedButton.icon(
-                              onPressed: publishing ? null : _pickPaymentProof,
+                              onPressed: publishing || processingPhoto ? null : _pickPaymentProof,
                               icon: const Icon(Icons.receipt_long_outlined),
                               label: Text(
                                 paymentProof == null
@@ -3427,7 +3476,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
               ),
               const SizedBox(height: 22),
               FilledButton(
-                onPressed: publishing ? null : _publish,
+                onPressed: publishing || processingPhoto ? null : _publish,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   child: publishing
