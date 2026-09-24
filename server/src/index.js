@@ -780,8 +780,8 @@ app.get('/android.apk', (_req, res) => {
 });
 app.get('/buklin/buklin.apk', (_req, res) => {
   res.type('application/vnd.android.package-archive');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.download(path.resolve(staticDirectory, 'buklin', 'buklin.apk'), 'buklin.apk');
+  res.setHeader('Cache-Control', 'no-store');
+  res.download(path.resolve(staticDirectory, 'buklin', 'buklin.apk'), 'buklin-4.apk');
 });
 app.use(express.static(staticDirectory, {
   setHeaders: (res, filePath) => {
