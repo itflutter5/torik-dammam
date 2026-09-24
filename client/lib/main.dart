@@ -4613,6 +4613,20 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                     final id = post['id'].toString();
                     final proofUrl = post['payment_proof_url'] as String?;
                     final status = post['status'] as String? ?? 'approved';
+                    final createdAt = DateTime.tryParse(
+                      post['created_at']?.toString() ?? '',
+                    );
+                    final ageDays = createdAt == null
+                        ? null
+                        : DateTime.now()
+                              .toUtc()
+                              .difference(createdAt.toUtc())
+                              .inDays;
+                    final ageLabel = ageDays == null
+                        ? 'Unknown'
+                        : ageDays < 1
+                        ? 'Less than 1 day'
+                        : '$ageDays ${ageDays == 1 ? 'day' : 'days'}';
                     return Card(
                       margin: const EdgeInsets.only(bottom: 14),
                       child: Padding(
@@ -4634,6 +4648,7 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
                               ),
                             ),
                             Text('${tr('Status')}: ${tr(status)}'),
+                            Text('Post age: $ageLabel'),
                             Text(
                               '${tr('Category')}: ${tr(post['category'] as String? ?? '')}',
                             ),
