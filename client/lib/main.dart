@@ -1866,7 +1866,7 @@ class _HomePageState extends State<HomePage> {
                                 webOnlyWindowName: '_self',
                               ),
                               icon: const Icon(Icons.android_rounded, size: 18),
-                              label: const Text('Install app'),
+                              label: const Text('buklin'),
                               style: FilledButton.styleFrom(
                                 backgroundColor: const Color(0xffff9800),
                                 foregroundColor: const Color(0xff15100a),
