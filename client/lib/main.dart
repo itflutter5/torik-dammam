@@ -4548,6 +4548,13 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
           icon: const Icon(Icons.manage_accounts_outlined),
         ),
         IconButton(
+          tooltip: tr('Post duration'),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AdminPostDurationPage()),
+          ),
+          icon: const Icon(Icons.timer_outlined),
+        ),
+        IconButton(
           tooltip: tr('Payment settings'),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const AdminPaymentSettingsPage()),
@@ -4736,6 +4743,157 @@ class _AdminReviewPageState extends State<AdminReviewPage> {
         ),
       ],
     ),
+  );
+}
+
+class AdminPostDurationPage extends StatefulWidget {
+  const AdminPostDurationPage({super.key});
+
+  @override
+  State<AdminPostDurationPage> createState() => _AdminPostDurationPageState();
+}
+
+class _AdminPostDurationPageState extends State<AdminPostDurationPage> {
+  final daysController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  bool loading = true;
+  bool saving = false;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+    try {
+      final days = await ApiService.instance.fetchPostDuration();
+      if (!mounted) return;
+      daysController.text = '$days';
+    } catch (exception) {
+      if (!mounted) return;
+      error = exception is ApiException
+          ? exception.message
+          : 'Could not load post duration';
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> _save() async {
+    if (!formKey.currentState!.validate()) return;
+    setState(() => saving = true);
+    try {
+      await ApiService.instance.updatePostDuration(
+        int.parse(daysController.text.trim()),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post duration saved for all posts')),
+      );
+    } catch (exception) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            exception is ApiException
+                ? exception.message
+                : 'Could not save post duration',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    daysController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Post duration')),
+    body: loading
+        ? const Center(child: RotatingLoader(size: 38))
+        : error != null
+        ? Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(error!),
+                TextButton(onPressed: _load, child: const Text('Retry')),
+              ],
+            ),
+          )
+        : Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Choose how long all existing and new posts stay on the website, counted from the date they were posted.',
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'The home page continues to show only 30 days. Older posts remain in My posts and Saved posts until this duration ends. Expired posts remain available to admins.',
+                      ),
+                      const SizedBox(height: 20),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final days in [30, 60, 90, 180, 365])
+                            OutlinedButton(
+                              onPressed: saving
+                                  ? null
+                                  : () => daysController.text = '$days',
+                              child: Text('$days days'),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: daysController,
+                        enabled: !saving,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Number of days',
+                          helperText: '30 to 3650 days',
+                        ),
+                        validator: (value) {
+                          final days = int.tryParse(value?.trim() ?? '');
+                          return days == null || days < 30 || days > 3650
+                              ? 'Enter a whole number from 30 to 3650'
+                              : null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      FilledButton.icon(
+                        onPressed: saving ? null : _save,
+                        icon: saving
+                            ? const RotatingLoader(size: 20)
+                            : const Icon(Icons.save_outlined),
+                        label: const Text('Save post duration'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
   );
 }
 

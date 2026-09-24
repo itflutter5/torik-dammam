@@ -14,6 +14,7 @@ import { createCode, hashCode, sendVerification } from './verification.js';
 import { passwordLoginSchema } from './login_credentials.js';
 import { postSchema, postPhotosSchema } from './post_validation.js';
 import { startPostPushWorker } from './push_notifications.js';
+import { getPostSettings, updatePostSettings } from './post_settings.js';
 
 const app = express();
 const googleClient = new OAuth2Client();
@@ -432,6 +433,7 @@ app.get('/api/posts', async (_req, res, next) => {
               u.profile_image_url AS user_profile_image_url
        FROM posts p JOIN users u ON u.id = p.user_id
        WHERE p.expires_at > NOW() AND p.status = 'approved'
+         AND p.created_at > NOW() - INTERVAL '30 days'
        ORDER BY p.created_at DESC LIMIT 100`,
     );
     res.json({ posts: result.rows });
@@ -444,7 +446,7 @@ app.get('/api/posts/mine', requireAuth, async (req, res, next) => {
       `SELECT p.*, u.name AS user_name, u.phone,
               u.profile_image_url AS user_profile_image_url
        FROM posts p JOIN users u ON u.id = p.user_id
-       WHERE p.user_id = $1 ORDER BY p.created_at DESC`,
+       WHERE p.user_id = $1 AND p.expires_at > NOW() ORDER BY p.created_at DESC`,
       [req.auth.sub],
     );
     res.json({ posts: result.rows });
@@ -460,7 +462,7 @@ app.get('/api/posts/saved', requireAuth, async (req, res, next) => {
        FROM saved_posts s
        JOIN posts p ON p.id = s.post_id
        JOIN users u ON u.id = p.user_id
-       WHERE s.user_id = $1
+       WHERE s.user_id = $1 AND p.expires_at > NOW()
        ORDER BY s.created_at DESC`,
       [req.auth.sub],
     );
@@ -642,6 +644,18 @@ app.get('/api/admin/stats', requireAuth, requireAdmin, async (_req, res, next) =
         visit_sources: sources.rows,
       },
     });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/admin/post-settings', requireAuth, requireAdmin, async (_req, res, next) => {
+  try {
+    res.json({ settings: await getPostSettings(pool) });
+  } catch (error) { next(error); }
+});
+
+app.put('/api/admin/post-settings', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    res.json({ settings: await updatePostSettings(pool, req.body) });
   } catch (error) { next(error); }
 });
 

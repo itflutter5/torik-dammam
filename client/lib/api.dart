@@ -108,7 +108,11 @@ class ApiService {
     );
   }
 
-  Future<void> login({String? email, String? phone, required String password}) async {
+  Future<void> login({
+    String? email,
+    String? phone,
+    required String password,
+  }) async {
     final data = await _jsonRequest('/auth/login', {
       if (email != null) 'email': email,
       if (phone != null) 'phone': phone,
@@ -357,6 +361,37 @@ class ApiService {
       );
     }
     return data['stats'] as Map<String, dynamic>;
+  }
+
+  Future<int> fetchPostDuration() async {
+    final response = await http.get(
+      Uri.parse('$apiBaseUrl/admin/post-settings'),
+      headers: {'authorization': 'Bearer $token'},
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(
+        data['error'] as String? ?? 'Could not load post duration',
+      );
+    }
+    return (data['settings'] as Map<String, dynamic>)['retentionDays'] as int;
+  }
+
+  Future<void> updatePostDuration(int days) async {
+    final response = await http.put(
+      Uri.parse('$apiBaseUrl/admin/post-settings'),
+      headers: {
+        'authorization': 'Bearer $token',
+        'content-type': 'application/json',
+      },
+      body: jsonEncode({'retentionDays': days}),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      throw ApiException(
+        data['error'] as String? ?? 'Could not save post duration',
+      );
+    }
   }
 
   Future<Map<String, dynamic>> fetchPaymentSettings() async {

@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { pool } from './db.js';
+import { postRetentionMigration } from './post_settings.js';
 
 const sql = `
 CREATE TABLE IF NOT EXISTS users (
@@ -243,6 +244,7 @@ try {
       END IF;
     END $$;
   `);
+  await pool.query(postRetentionMigration);
   console.log('Database schema is ready.');
 } finally {
   await pool.end();
