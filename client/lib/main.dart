@@ -1862,7 +1862,7 @@ class _HomePageState extends State<HomePage> {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: FilledButton.icon(
                               onPressed: () => launchUrl(
-                                Uri.base.resolve('/android.apk'),
+                                Uri.base.resolve('/buklin'),
                                 webOnlyWindowName: '_self',
                               ),
                               icon: const Icon(Icons.android_rounded, size: 18),
